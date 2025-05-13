@@ -1,7 +1,9 @@
 import 'package:fe_core_vips/presentation/feactures/auth/bloc/blocs.dart';
+import 'package:fe_core_vips/presentation/routes/app_router.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -109,14 +111,13 @@ class _SidebarWidgetState extends State<SidebarWidget>
 
         if (state is AuthUnauthenticated) {
           if (state.message != null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message!)));
+            debugPrint(state.message!);
+            context.pushReplacementNamed(AppRoutes.login);
           }
         } else if (state is AuthFailure) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
+          ScaffoldMessenger.of(context)
+            ..removeCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(state.message)));
         }
       },
       child: AnimatedBuilder(

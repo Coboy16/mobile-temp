@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:chopper/chopper.dart' as chopper;
 
 import '/core/errors/exceptions.dart';
