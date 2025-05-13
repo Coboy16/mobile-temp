@@ -1,7 +1,9 @@
+import 'package:fe_core_vips/presentation/feactures/auth/bloc/blocs.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '/presentation/feactures/home/bloc/blocs.dart';
 import '/presentation/resources/resources.dart';
@@ -97,167 +99,189 @@ class _SidebarWidgetState extends State<SidebarWidget>
       currentRoute,
     );
 
-    return AnimatedBuilder(
-      animation: _widthAnimation,
-      builder: (context, child) {
-        final double expandedOpacity = 1.0 - _animationController.value;
-        final double collapsedOpacity = _animationController.value;
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated || state is AuthFailure) {
+          if (Navigator.of(context, rootNavigator: true).canPop()) {
+            Navigator.of(context, rootNavigator: true).pop();
+          }
+        }
 
-        return Container(
-          width: _widthAnimation.value,
-          color: AppColors.sidebarBackground,
-          child: Column(
-            children: [
-              SidebarHeaderWithToggle(
-                isExpanded: isExpanded,
-                onToggle: toggleSidebar,
-                widthAnimation: _widthAnimation,
-              ),
+        if (state is AuthUnauthenticated) {
+          if (state.message != null) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message!)));
+          }
+        } else if (state is AuthFailure) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+        }
+      },
+      child: AnimatedBuilder(
+        animation: _widthAnimation,
+        builder: (context, child) {
+          final double expandedOpacity = 1.0 - _animationController.value;
+          final double collapsedOpacity = _animationController.value;
 
-              // UserInfo con ClipRect para prevenir overflow
-              ClipRect(
-                child: AnimatedOpacity(
-                  duration: _animationDuration,
-                  opacity: (expandedOpacity * 1.2).clamp(0.0, 1.0),
-                  child:
-                      isExpanded || _animationController.value < 0.5
-                          ? const UserInfo()
-                          : const SizedBox.shrink(),
+          return Container(
+            width: _widthAnimation.value,
+            color: AppColors.sidebarBackground,
+            child: Column(
+              children: [
+                SidebarHeaderWithToggle(
+                  isExpanded: isExpanded,
+                  onToggle: toggleSidebar,
+                  widthAnimation: _widthAnimation,
                 ),
-              ),
 
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: ClipRect(
-                    child: Stack(
-                      clipBehavior: Clip.hardEdge,
-                      children: [
-                        // Contenido expandido
-                        AnimatedOpacity(
-                          duration: _animationDuration,
-                          opacity: (expandedOpacity * 1.2).clamp(0.0, 1.0),
-                          child: IgnorePointer(
-                            ignoring: !isExpanded,
-                            child: ExpandedSidebarContent(
-                              currentRoute: currentRoute,
-                              portalEmpleadoRoutes: portalEmpleadoRoutes,
-                              reclutamientoRoutes: reclutamientoRoutes,
-                              portalCandidatoRoutes: portalCandidatoRoutes,
-                              isPortalEmpleadoSelected:
-                                  isPortalEmpleadoSelected,
-                              isReclutamientoSelected: isReclutamientoSelected,
-                              isPortalCandidatoSelected:
-                                  isPortalCandidatoSelected,
-                              onNavigate: (index) {
-                                setState(() => currentIndex = index);
-                                _navigationBarBloc.add(
-                                  UpdateIndexNavegationEvent(index),
-                                );
-                              },
+                // UserInfo con ClipRect para prevenir overflow
+                ClipRect(
+                  child: AnimatedOpacity(
+                    duration: _animationDuration,
+                    opacity: (expandedOpacity * 1.2).clamp(0.0, 1.0),
+                    child:
+                        isExpanded || _animationController.value < 0.5
+                            ? const UserInfo()
+                            : const SizedBox.shrink(),
+                  ),
+                ),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: ClipRect(
+                      child: Stack(
+                        clipBehavior: Clip.hardEdge,
+                        children: [
+                          // Contenido expandido
+                          AnimatedOpacity(
+                            duration: _animationDuration,
+                            opacity: (expandedOpacity * 1.2).clamp(0.0, 1.0),
+                            child: IgnorePointer(
+                              ignoring: !isExpanded,
+                              child: ExpandedSidebarContent(
+                                currentRoute: currentRoute,
+                                portalEmpleadoRoutes: portalEmpleadoRoutes,
+                                reclutamientoRoutes: reclutamientoRoutes,
+                                portalCandidatoRoutes: portalCandidatoRoutes,
+                                isPortalEmpleadoSelected:
+                                    isPortalEmpleadoSelected,
+                                isReclutamientoSelected:
+                                    isReclutamientoSelected,
+                                isPortalCandidatoSelected:
+                                    isPortalCandidatoSelected,
+                                onNavigate: (index) {
+                                  setState(() => currentIndex = index);
+                                  _navigationBarBloc.add(
+                                    UpdateIndexNavegationEvent(index),
+                                  );
+                                },
+                              ),
                             ),
                           ),
-                        ),
 
-                        // Contenido colapsado
-                        AnimatedOpacity(
-                          duration: _animationDuration,
-                          opacity: (collapsedOpacity * 1.2).clamp(0.0, 1.0),
-                          child: IgnorePointer(
-                            ignoring: isExpanded,
-                            child: CollapsedSidebarContent(
-                              currentRoute: currentRoute,
-                              portalEmpleadoRoutes: portalEmpleadoRoutes,
-                              reclutamientoRoutes: reclutamientoRoutes,
-                              portalCandidatoRoutes: portalCandidatoRoutes,
+                          // Contenido colapsado
+                          AnimatedOpacity(
+                            duration: _animationDuration,
+                            opacity: (collapsedOpacity * 1.2).clamp(0.0, 1.0),
+                            child: IgnorePointer(
+                              ignoring: isExpanded,
+                              child: CollapsedSidebarContent(
+                                currentRoute: currentRoute,
+                                portalEmpleadoRoutes: portalEmpleadoRoutes,
+                                reclutamientoRoutes: reclutamientoRoutes,
+                                portalCandidatoRoutes: portalCandidatoRoutes,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              Divider(
-                color: AppColors.dividerColor.withOpacity(0.1),
-                height: 1,
-                thickness: 1,
-              ),
-
-              // Área de botones inferiores
-              ClipRect(
-                child: Stack(
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.hardEdge,
-                  children: [
-                    // Botones expandidos
-                    AnimatedOpacity(
-                      duration: _animationDuration,
-                      opacity: (expandedOpacity * 1.2).clamp(0.0, 1.0),
-                      child: IgnorePointer(
-                        ignoring: !isExpanded,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SidebarItem(
-                              title: 'Ayuda y Soporte',
-                              icon: LucideIcons.circleHelp,
-                              isSelected: currentRoute == 'Ayuda',
-                              onTap: () => print('Navegar a Ayuda'),
-                            ),
-                            SidebarItem(
-                              title: 'Configuración',
-                              icon: LucideIcons.settings,
-                              isSelected: currentRoute == 'Configuracion',
-                              onTap: () => print('Navegar a Configuración'),
-                            ),
-                            SidebarItem(
-                              title: 'Cerrar Sesión',
-                              icon: LucideIcons.logOut,
-                              onTap: () => print('Cerrar Sesión'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Botones colapsados
-                    AnimatedOpacity(
-                      duration: _animationDuration,
-                      opacity: (collapsedOpacity * 1.2).clamp(0.0, 1.0),
-                      child: IgnorePointer(
-                        ignoring: isExpanded,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildCollapsedItem(
-                              LucideIcons.circleHelp,
-                              currentRoute == 'Ayuda',
-                              () => print('Navegar a Ayuda'),
-                            ),
-                            _buildCollapsedItem(
-                              LucideIcons.settings,
-                              currentRoute == 'Configuracion',
-                              () => print('Navegar a Configuración'),
-                            ),
-                            _buildCollapsedItem(
-                              LucideIcons.logOut,
-                              false,
-                              () => print('Cerrar Sesión'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                Divider(
+                  color: AppColors.dividerColor.withOpacity(0.1),
+                  height: 1,
+                  thickness: 1,
                 ),
-              ),
-              const SizedBox(height: 10),
-            ],
-          ),
-        );
-      },
+
+                // Área de botones inferiores
+                ClipRect(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.hardEdge,
+                    children: [
+                      // Botones expandidos
+                      AnimatedOpacity(
+                        duration: _animationDuration,
+                        opacity: (expandedOpacity * 1.2).clamp(0.0, 1.0),
+                        child: IgnorePointer(
+                          ignoring: !isExpanded,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SidebarItem(
+                                title: 'Ayuda y Soporte',
+                                icon: LucideIcons.circleHelp,
+                                isSelected: currentRoute == 'Ayuda',
+                                onTap: () => print('Navegar a Ayuda'),
+                              ),
+                              SidebarItem(
+                                title: 'Configuración',
+                                icon: LucideIcons.settings,
+                                isSelected: currentRoute == 'Configuracion',
+                                onTap: () => print('Navegar a Configuración'),
+                              ),
+                              SidebarItem(
+                                title: 'Cerrar Sesión',
+                                icon: LucideIcons.logOut,
+                                onTap: () => _handleLogout(context),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // Botones colapsados
+                      AnimatedOpacity(
+                        duration: _animationDuration,
+                        opacity: (collapsedOpacity * 1.2).clamp(0.0, 1.0),
+                        child: IgnorePointer(
+                          ignoring: isExpanded,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildCollapsedItem(
+                                LucideIcons.circleHelp,
+                                currentRoute == 'Ayuda',
+                                () => print('Navegar a Ayuda'),
+                              ),
+                              _buildCollapsedItem(
+                                LucideIcons.settings,
+                                currentRoute == 'Configuracion',
+                                () => print('Navegar a Configuración'),
+                              ),
+                              _buildCollapsedItem(
+                                LucideIcons.logOut,
+                                false,
+                                () => _handleLogout(context),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -301,5 +325,32 @@ class _SidebarWidgetState extends State<SidebarWidget>
     if (icon == LucideIcons.settings) return 'Configuración';
     if (icon == LucideIcons.logOut) return 'Cerrar Sesión';
     return '';
+  }
+
+  void _handleLogout(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final bool? confirmLogout = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const ConfirmLogoutDialog(),
+    );
+
+    if (confirmLogout == true) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext loadingContext) {
+          return PopScope(
+            canPop: false,
+            child: CustomLoadingHotech(
+              overlay: true,
+              message: l10n.loggingOutMessage,
+            ),
+          );
+        },
+      );
+
+      context.read<AuthBloc>().add(const AuthLogoutRequested());
+    }
   }
 }

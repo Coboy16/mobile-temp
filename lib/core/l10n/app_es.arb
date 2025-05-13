@@ -43,5 +43,10 @@
   "userBlockedDialogTitle": "Cuenta Bloqueada",
   "userBlockedDialogMessage": "Tu cuenta ha sido bloqueada temporalmente. Por favor, intenta de nuevo en {minutes} minutos.",
   "userAccountBlockedGeneric": "Tu cuenta se encuentra bloqueada. Por favor, inténtalo más tarde.",
-  "okButtonLabel": "Aceptar"
+  "okButtonLabel": "Aceptar",
+  "confirmLogoutDialogTitle": "Confirmar Cierre de Sesión",
+  "confirmLogoutDialogMessage": "¿Estás seguro de que quieres cerrar sesión?",
+  "cancelButtonLabel": "Cancelar",
+  "logoutButtonLabel": "Cerrar Sesión",
+  "loggingOutMessage": "Cerrando sesión..."
 }

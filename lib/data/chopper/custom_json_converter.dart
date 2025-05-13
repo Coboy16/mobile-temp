@@ -1,7 +1,6 @@
-// custom_json_converter.dart
 import 'dart:convert';
 import 'package:chopper/chopper.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import '/data/data.dart';
 
 class CustomJsonConverter extends JsonConverter {
@@ -9,7 +8,6 @@ class CustomJsonConverter extends JsonConverter {
   Request convertRequest(Request request) {
     final req = super.convertRequest(request);
 
-    // Si el body es null o ya es una cadena, devuelve la request sin modificar
     if (req.body == null || req.body is String || req.body is List<int>) {
       return req;
     }
@@ -18,43 +16,39 @@ class CustomJsonConverter extends JsonConverter {
       String jsonBody;
       final dynamic body = req.body;
 
-      // Verificar si es un Map
-      if (body is Map<String, dynamic>) {
-        jsonBody = json.encode(body);
-      }
-      // Verificar si es uno de nuestros modelos conocidos
-      else if (body is GoogleLoginRequestModel) {
+      if (body is GoogleLoginRequestModel) {
         jsonBody = json.encode(body.toJson());
       } else if (body is LoginRequestModel) {
         jsonBody = json.encode(body.toJson());
       } else if (body is ValidationRequestModel) {
         jsonBody = json.encode(body.toJson());
-      }
-      // Para otros objetos, intentar usar toJson si existe
-      else {
+      } else if (body is LogoutRequestModel) {
+        jsonBody = json.encode(body.toJson());
+      } else if (body is Map<String, dynamic>) {
+        jsonBody = json.encode(body);
+      } else {
         try {
-          // Intenta llamar toJson() si el objeto lo tiene
           final toJsonMethod = body.toJson;
           if (toJsonMethod != null && toJsonMethod is Function) {
             jsonBody = json.encode(toJsonMethod());
           } else {
             jsonBody = json.encode(body);
           }
-        } catch (_) {
-          // Si falla, intentar serializar directamente
-          jsonBody = json.encode(body);
+        } catch (e) {
+          debugPrint(
+            'CustomJsonConverter: Error dynamically serializing request body of type ${body.runtimeType}: $e. Returning original request.',
+          );
+          return req;
         }
       }
-
-      debugPrint('Converting request body to JSON: $jsonBody');
-
       return req.copyWith(
         body: jsonBody,
         headers: {...req.headers, 'Content-Type': 'application/json'},
       );
     } catch (e) {
-      debugPrint('Error converting request body: $e');
-      // En caso de error, devolver la request original
+      debugPrint(
+        'CustomJsonConverter: Error converting request body to JSON: $e',
+      );
       return req;
     }
   }
@@ -64,29 +58,49 @@ class CustomJsonConverter extends JsonConverter {
     Response response,
   ) async {
     final Response dynamicResponse = await super.convertResponse(response);
-
-    debugPrint('Response status code: ${response.statusCode}');
-    debugPrint('Response body: ${response.bodyString}');
-
     final body = dynamicResponse.body;
+
     if (body == null) {
       return dynamicResponse.copyWith(body: null);
     }
 
-    try {
-      if (BodyType == LoginResponseModel) {
-        final model = LoginResponseModel.fromJson(body as Map<String, dynamic>);
-        return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
-      } else if (BodyType == ValidationResponseModel) {
-        final model = ValidationResponseModel.fromJson(
-          body as Map<String, dynamic>,
+    if (body is! Map<String, dynamic>) {
+      debugPrint(
+        'CustomJsonConverter: Response body is not a Map<String, dynamic>. Actual type: ${body.runtimeType}. BodyType expected: $BodyType.',
+      );
+      try {
+        return dynamicResponse.copyWith<BodyType>(body: body as BodyType);
+      } catch (e) {
+        debugPrint(
+          'CustomJsonConverter: Error casting raw body to BodyType: $e. BodyType: $BodyType, Actual body type: ${body.runtimeType}',
         );
-        return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
+        rethrow;
       }
-    } catch (e) {
-      debugPrint('Error converting response: $e');
     }
 
-    return dynamicResponse.copyWith<BodyType>(body: body);
+    try {
+      if (BodyType == LoginResponseModel) {
+        final model = LoginResponseModel.fromJson(body);
+        return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
+      } else if (BodyType == ValidationResponseModel) {
+        final model = ValidationResponseModel.fromJson(body);
+        return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
+      } else if (BodyType == LogoutResponseModel) {
+        final model = LogoutResponseModel.fromJson(body);
+        return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
+      }
+
+      debugPrint(
+        'CustomJsonConverter: BodyType $BodyType not explicitly handled for fromJson. Returning Map<String, dynamic> as BodyType.',
+      );
+      return dynamicResponse.copyWith<BodyType>(body: body as BodyType);
+    } catch (e, stackTrace) {
+      debugPrint(
+        'CustomJsonConverter: Error during specific model fromJson conversion (BodyType: $BodyType): $e',
+      );
+      debugPrint('CustomJsonConverter - StackTrace: $stackTrace');
+      chopperLogger.warning('Error converting response: $e');
+      rethrow;
+    }
   }
 }

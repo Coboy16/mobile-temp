@@ -43,5 +43,10 @@
   "userBlockedDialogTitle": "Compte Bloqué",
   "userBlockedDialogMessage": "Votre compte a été temporairement bloqué. Veuillez réessayer dans {minutes} minutes.",
   "userAccountBlockedGeneric": "Votre compte est bloqué. Veuillez réessayer plus tard.",
-  "okButtonLabel": "Accepter"
+  "okButtonLabel": "Accepter",
+  "confirmLogoutDialogTitle": "Confirmer la Déconnexion",
+  "confirmLogoutDialogMessage": "Êtes-vous sûr de vouloir vous déconnecter ?",
+  "cancelButtonLabel": "Annuler",
+  "logoutButtonLabel": "Se Déconnecter",
+  "loggingOutMessage": "Déconnexion en cours..."
 }

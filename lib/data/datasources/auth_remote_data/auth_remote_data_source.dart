@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:chopper/chopper.dart' as chopper;
 
 import '/core/errors/exceptions.dart';
@@ -154,37 +156,49 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final response = await chopperService.logout(body: requestModel);
 
       if (response.isSuccessful && response.body != null) {
-        return response.body!;
+        return response.body!; // response.body es LogoutResponseModel
       } else {
-        String errorMessage = "Error del servidor";
+        String errorMessage = "Error del servidor al cerrar sesión";
         int? statusCode = response.statusCode;
 
         if (response.error != null) {
-          if (response.error is Map<String, dynamic>) {
-            final errorMap = response.error as Map<String, dynamic>;
-
-            if (errorMap.containsKey('data') &&
-                errorMap['data'] is Map<String, dynamic>) {
-              final dataMap = errorMap['data'] as Map<String, dynamic>;
-              if (dataMap.containsKey('mesage')) {
-                errorMessage = dataMap['mesage'].toString();
-              }
-            } else if (errorMap.containsKey('message')) {
-              errorMessage = errorMap['message'].toString();
+          if (response.error is LogoutResponseModel) {
+            final errorBody = response.error as LogoutResponseModel;
+            if (errorBody.data.containsKey('MESSAGES')) {
+              errorMessage = errorBody.data['MESSAGES'].toString();
+            } else if (errorBody.data.containsKey('message')) {
+              errorMessage = errorBody.data['message'].toString();
             }
-          } else if (response.error is String) {
+          } else if (response.error is Map<String, dynamic>) {
+            final errorMap = response.error as Map<String, dynamic>;
+            if (errorMap.containsKey('message')) {
+              errorMessage = errorMap['message'].toString();
+            } else if (errorMap.containsKey('data') &&
+                errorMap['data'] is Map) {
+              final dataMap = errorMap['data'] as Map<String, dynamic>;
+              if (dataMap.containsKey('MESSAGES')) {
+                // Coincide con tu log
+                errorMessage = dataMap['MESSAGES'].toString();
+              } else if (dataMap.containsKey('message')) {
+                errorMessage = dataMap['message'].toString();
+              }
+            }
+          } else if (response.error is String &&
+              (response.error as String).isNotEmpty) {
             errorMessage = response.error.toString();
           }
         } else if (response.base.reasonPhrase != null &&
             response.base.reasonPhrase!.isNotEmpty) {
           errorMessage = response.base.reasonPhrase!;
         }
-
         throw ServerException(message: errorMessage, statusCode: statusCode);
       }
+    } on ServerException {
+      rethrow;
     } catch (e) {
-      if (e is ServerException) rethrow;
-      throw ServerException(message: 'Error al cerrar sesión: ${e.toString()}');
+      throw ServerException(
+        message: 'Error de comunicación al cerrar sesión: ${e.toString()}',
+      );
     }
   }
 

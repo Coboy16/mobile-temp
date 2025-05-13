@@ -64,5 +64,25 @@
   "userBlockedDialogTitle": "Account Locked",
   "userBlockedDialogMessage": "Your account has been temporarily locked. Please try again in {minutes} minutes.",
   "userAccountBlockedGeneric": "Your account is currently locked. Please try again later.",
-  "okButtonLabel": "OK"
+  "okButtonLabel": "OK",
+  "confirmLogoutDialogTitle": "Confirm Logout",
+  "@confirmLogoutDialogTitle": {
+    "description": "Title for the logout confirmation dialog"
+  },
+  "confirmLogoutDialogMessage": "Are you sure you want to log out?",
+  "@confirmLogoutDialogMessage": {
+    "description": "Message for the logout confirmation dialog"
+  },
+  "cancelButtonLabel": "Cancel",
+  "@cancelButtonLabel": {
+    "description": "Label for the cancel button"
+  },
+  "logoutButtonLabel": "Log Out",
+  "@logoutButtonLabel": {
+    "description": "Label for the logout button"
+  },
+  "loggingOutMessage": "Logging out...",
+  "@loggingOutMessage": {
+    "description": "Message shown while logging out"
+  }
 }

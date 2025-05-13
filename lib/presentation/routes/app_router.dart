@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+
 import 'package:go_router/go_router.dart';
+import 'package:fe_core_vips/presentation/bloc/blocs.dart';
+import 'package:fe_core_vips/core/injection/di.dart';
+import 'package:fe_core_vips/domain/use_cases/use_cases.dart';
 
 import '/presentation/feactures/splash/splash.dart';
 import '/presentation/feactures/auth/auth.dart';
 import '/presentation/feactures/home/home.dart';
+import 'go_router_refresh_stream.dart';
 
 class AppRoutes {
-  static const String splash = '/'; // Ruta raíz
+  static const String splash = '/';
   static const String auth = '/auth';
   static const String authRegister = 'register';
   static const String authForgotPassword = 'forgot-password';
   static const String authOtp = 'otp';
   static const String home = '/home';
 
-  // Nombres completos para goNamed
   static const String login = auth;
   static const String register = '$auth/$authRegister';
   static const String forgotPassword = '$auth/$authForgotPassword';
@@ -24,7 +28,55 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.splash,
     debugLogDiagnostics: true,
-    // --- Definición de las rutas ---
+    refreshListenable: GoRouterRefreshStream(sl<AuthBloc>().stream),
+    redirect: (BuildContext context, GoRouterState state) async {
+      final getCurrentUserUseCase = sl<GetCurrentUserUseCase>();
+      final failureOrUser = await getCurrentUserUseCase();
+      final bool loggedIn = failureOrUser.fold(
+        (l) => false,
+        (user) => user != null,
+      );
+
+      final String location = state.uri.toString();
+
+      final authRoutes = [
+        AppRoutes.login,
+        AppRoutes.register,
+        AppRoutes.forgotPassword,
+        AppRoutes.otp,
+      ];
+
+      authRoutes.any((authRoute) {
+        if (location == authRoute) return true;
+        if (authRoute.startsWith(AppRoutes.auth) &&
+            location.startsWith(authRoute)) {
+          return true;
+        }
+        return false;
+      });
+      final bool isTryingToAccessAuthPath = location.startsWith(AppRoutes.auth);
+
+      final bool isGoingToSplash = location == AppRoutes.splash;
+
+      if (isGoingToSplash) {
+        return null;
+      }
+
+      // Caso 1: Usuario logueado intenta acceder a rutas de autenticación
+      if (loggedIn && isTryingToAccessAuthPath) {
+        // Redirigir a home
+        return AppRoutes.home;
+      }
+
+      // Caso 2: Usuario NO logueado intenta acceder a rutas protegidas (que no son de autenticación ni splash)
+      if (!loggedIn && !isTryingToAccessAuthPath && !isGoingToSplash) {
+        // Redirigir a login
+        return AppRoutes.login;
+      }
+
+      // En cualquier otro caso, permitir la navegación (retornar null)
+      return null;
+    },
     routes: <RouteBase>[
       GoRoute(
         path: AppRoutes.splash,
@@ -35,32 +87,29 @@ class AppRouter {
       ),
       GoRoute(
         path: AppRoutes.auth,
-        name: AppRoutes.login, // Usar nombre específico
+        name: AppRoutes.login,
         builder: (BuildContext context, GoRouterState state) {
-          // Redirige a LoginView directamente
           return const LoginView();
         },
         routes: <RouteBase>[
           GoRoute(
             path: AppRoutes.authRegister,
-            name: AppRoutes.register, // Usar nombre específico
+            name: AppRoutes.register,
             builder: (BuildContext context, GoRouterState state) {
               return const RegisterView();
             },
           ),
           GoRoute(
             path: AppRoutes.authForgotPassword,
-            name: AppRoutes.forgotPassword, // Usar nombre específico
+            name: AppRoutes.forgotPassword,
             builder: (BuildContext context, GoRouterState state) {
               return const ForgotPasswordEmailView();
             },
           ),
           GoRoute(
             path: AppRoutes.authOtp,
-            name: AppRoutes.otp, // Usar nombre específico
+            name: AppRoutes.otp,
             builder: (BuildContext context, GoRouterState state) {
-              // Pasa el email como parámetro de ruta (o extra)
-              // Usaremos extra aquí por simplicidad
               final email = state.extra as String?;
               return ForgotPasswordOtpView(emailForOtp: email);
             },
@@ -75,8 +124,6 @@ class AppRouter {
         },
       ),
     ],
-
-    // --- Manejo de Errores  ---
     errorBuilder:
         (context, state) => Scaffold(
           appBar: AppBar(title: const Text('Página no encontrada')),

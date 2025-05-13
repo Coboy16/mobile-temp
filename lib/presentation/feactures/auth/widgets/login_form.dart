@@ -34,10 +34,8 @@ class _LoginFormState extends State<LoginForm> {
   // Modificado para primero verificar el estado de bloqueo
   void _onLoginAttempt() {
     if (_formKey.currentState?.saveAndValidate() ?? false) {
-      final username = // El nombre de tu campo de email/usuario
+      final username =
           _formKey.currentState?.fields['username']?.value as String;
-      // final password =
-      //     _formKey.currentState?.fields['password']?.value as String; // Lo obtendremos después si no está bloqueado
 
       // Disparar evento para verificar estado de bloqueo
       context.read<CheckLockStatusBloc>().add(

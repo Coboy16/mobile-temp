@@ -93,12 +93,41 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthLogoutRequested event,
     Emitter<AuthState> emit,
   ) async {
+    final currentState = state;
+    String? userEmail;
+
+    if (currentState is AuthAuthenticated) {
+      userEmail = currentState.user.email;
+    } else {
+      final failureOrUser = await _getCurrentUserUseCase();
+      final potentialUser = failureOrUser.getOrElse(() => null);
+      if (potentialUser != null) {
+        userEmail = potentialUser.email;
+      } else {
+        emit(
+          const AuthFailure(
+            message: "No se pudo determinar el usuario para cerrar sesión.",
+          ),
+        );
+        return;
+      }
+    }
+
+    if (userEmail.isEmpty) {
+      emit(
+        const AuthFailure(
+          message: "Email de usuario no encontrado para cerrar sesión.",
+        ),
+      );
+      return;
+    }
+
     emit(AuthLoading());
-    final failureOrSuccess = await _logoutUserUseCase('oayoso@gmail.com');
+
+    final failureOrSuccess = await _logoutUserUseCase(userEmail);
+
     failureOrSuccess.fold(
-      (failure) => emit(
-        AuthFailure(message: _mapFailureToMessage(failure)),
-      ), // Considerar qué estado es mejor aquí
+      (failure) => emit(AuthFailure(message: _mapFailureToMessage(failure))),
       (_) => emit(
         const AuthUnauthenticated(message: "Sesión cerrada correctamente"),
       ),

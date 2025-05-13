@@ -93,7 +93,6 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
-  @override
   Future<Either<Failure, void>> logout({required String email}) async {
     if (await networkInfo.isConnected) {
       try {
@@ -104,9 +103,14 @@ class AuthRepositoryImpl implements AuthRepository {
           await localDataSource.clearUser();
           return const Right(null);
         } else {
+          String messageFromServer = "Error al cerrar sesión en el servidor";
+          if (logoutResponse.data.containsKey('message')) {
+            messageFromServer = logoutResponse.data['message'].toString();
+          }
+
           return Left(
             ServerFailure(
-              message: "Error al cerrar sesión en el servidor",
+              message: messageFromServer,
               statusCode: logoutResponse.statusCode,
             ),
           );
@@ -117,16 +121,15 @@ class AuthRepositoryImpl implements AuthRepository {
           await localDataSource.clearUser();
           return const Right(null);
         }
-
         return Left(
           ServerFailure(
-            message: e.message ?? "Error al cerrar sesión",
+            message: e.message ?? "Error desconocido al cerrar sesión",
             statusCode: e.statusCode,
           ),
         );
       } on CacheException catch (e) {
         return Left(
-          CacheFailure(message: e.message ?? "Error al limpiar la caché"),
+          CacheFailure(message: e.message ?? "Error al limpiar la caché local"),
         );
       }
     } else {
@@ -136,7 +139,9 @@ class AuthRepositoryImpl implements AuthRepository {
         return const Right(null);
       } on CacheException catch (e) {
         return Left(
-          CacheFailure(message: e.message ?? "Error al limpiar la caché"),
+          CacheFailure(
+            message: e.message ?? "Error al limpiar la caché sin conexión",
+          ),
         );
       }
     }
