@@ -1,0 +1,42 @@
+{
+  "@@locale": "es",
+  "selectLanguage": "Seleccionar Idioma",
+  "languageEnglish": "Inglés",
+  "languageSpanish": "Español",
+  "languageFrench": "Francés",
+  "loginTitle": "Iniciar Sesión",
+  "@loginTitle": {},
+  "registerTitle": "Crear Cuenta",
+  "@registerTitle": {},
+  "forgotPasswordEmailTitle": "Recuperar Contraseña",
+  "@forgotPasswordEmailTitle": {},
+  "forgotPasswordOtpTitle": "Verificar Código",
+  "@forgotPasswordOtpTitle": {},
+  "loginSubtitle": "Ingresa tus credenciales para acceder al sistema",
+  "@loginSubtitle": {},
+  "registerSubtitle": "Completa el formulario para unirte a Ho-Tech",
+  "@registerSubtitle": {},
+  "forgotPasswordEmailSubtitle": "Ingresa tu correo para enviar un código de recuperación.",
+  "@forgotPasswordEmailSubtitle": {},
+  "forgotPasswordOtpSubtitle": "Ingresa el código de 6 dígitos enviado a {emailAddress}.",
+  "@forgotPasswordOtpSubtitle": {
+    "placeholders": {
+      "emailAddress": {
+        "type": "String"
+      }
+    }
+  },
+  "copyrightNotice": "© {year} Ho-Tech. Todos los derechos reservados.",
+  "@copyrightNotice": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "loadingMessage": "Cargando...",
+  "@loadingMessage": {},
+  "validationSuccessMessage": "Validación exitosa. Continúe con el proceso.",
+  "@validationSuccessMessage": {},
+  "yourEmailFallback": "tu correo"
+}

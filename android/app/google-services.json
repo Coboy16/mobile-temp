@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "457788399972",
+    "project_id": "ho-tech-wm",
+    "storage_bucket": "ho-tech-wm.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:457788399972:android:e30f1422d5b806745c9a71",
+        "android_client_info": {
+          "package_name": "com.hotech.hotechwm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "457788399972-9vsdcptr9gvvf9fk16iu09rhdb11edng.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hotech.hotechwm",
+            "certificate_hash": "f50f6b21aed3ba1324671a1863c9bcedd96f729f"
+          }
+        },
+        {
+          "client_id": "457788399972-7gb70ooi9vl8plnvfsduea3kgj84eb15.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgw1EthORXqmZdqDDeFRz5xVZRcicf3k0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "457788399972-7gb70ooi9vl8plnvfsduea3kgj84eb15.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

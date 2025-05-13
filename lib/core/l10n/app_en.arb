@@ -1,0 +1,63 @@
+{
+  "@@locale": "en",
+  "selectLanguage": "Select Language",
+  "@selectLanguage": {
+    "description": "Label for language selection prompt"
+  },
+  "languageEnglish": "English",
+  "languageSpanish": "Spanish",
+  "languageFrench": "French",
+  "loginTitle": "Sign In",
+  "@loginTitle": {
+    "description": "Title for the login screen"
+  },
+  "registerTitle": "Create Account",
+  "@registerTitle": {
+    "description": "Title for the registration screen"
+  },
+  "forgotPasswordEmailTitle": "Recover Password",
+  "@forgotPasswordEmailTitle": {
+    "description": "Title for the forgot password (email input) screen"
+  },
+  "forgotPasswordOtpTitle": "Verify Code",
+  "@forgotPasswordOtpTitle": {
+    "description": "Title for the forgot password (OTP input) screen"
+  },
+  "loginSubtitle": "Enter your credentials to access the system",
+  "@loginSubtitle": {
+    "description": "Subtitle instruction on the login screen"
+  },
+  "registerSubtitle": "Complete the form to join Ho-Tech",
+  "@registerSubtitle": {
+    "description": "Subtitle instruction on the registration screen"
+  },
+  "forgotPasswordEmailSubtitle": "Enter your email to send a recovery code.",
+  "@forgotPasswordEmailSubtitle": {
+    "description": "Subtitle instruction on the forgot password (email input) screen"
+  },
+  "forgotPasswordOtpSubtitle": "Ingresa el código de 6 dígitos enviado a {emailAddress}.",
+  "@forgotPasswordOtpSubtitle": {
+    "placeholders": {
+      "emailAddress": {
+        "type": "String"
+      }
+    }
+  },
+  "copyrightNotice": "© {year} Ho-Tech. All rights reserved.",
+  "@copyrightNotice": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "loadingMessage": "Loading...",
+  "@loadingMessage": {
+    "description": "Generic loading message"
+  },
+  "validationSuccessMessage": "Validation successful. Please continue with the process.",
+  "@validationSuccessMessage": {
+    "description": "Message shown when a validation step (like OTP) succeeds"
+  },
+  "yourEmailFallback": "your email"
+}
