@@ -162,11 +162,18 @@ class AuthLayout extends StatelessWidget {
                 ),
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, authState) {
+                    final currentAuthBlocState =
+                        context.watch<AuthBloc>().state;
                     final googleState = context.watch<AuthGoogleBloc>().state;
+                    final checkLockStatusState =
+                        context.watch<CheckLockStatusBloc>().state;
+
                     final bool isLoading =
-                        authState is AuthLoading ||
-                        authState is AuthValidationInProgress ||
-                        googleState is AuthGoogleLoading;
+                        currentAuthBlocState is AuthLoading ||
+                        currentAuthBlocState
+                            is AuthValidationInProgress || // Tu AuthBloc tiene este estado
+                        googleState is AuthGoogleLoading ||
+                        checkLockStatusState is CheckLockStatusLoading;
 
                     if (isLoading) {
                       String loadingMessage =

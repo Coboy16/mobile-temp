@@ -57,6 +57,9 @@ Future<void> initServiceLocator() async {
   sl.registerLazySingleton(() => LoginWithGoogleUseCase(sl()));
   sl.registerLazySingleton(() => LogoutFromGoogleUseCase(sl()));
 
+  // validate user
+  sl.registerLazySingleton(() => CheckUserLockStatusUseCase(sl()));
+
   // BLoC
   sl.registerFactory(
     () => AuthBloc(
@@ -72,6 +75,12 @@ Future<void> initServiceLocator() async {
       loginWithGoogleUseCase: sl(),
       logoutFromGoogleUseCase: sl(),
       getCurrentUserUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => CheckLockStatusBloc(
+      checkUserLockStatusUseCase: sl<CheckUserLockStatusUseCase>(),
     ),
   );
 }

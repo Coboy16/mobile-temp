@@ -94,7 +94,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
-    final failureOrSuccess = await _logoutUserUseCase('');
+    final failureOrSuccess = await _logoutUserUseCase('oayoso@gmail.com');
     failureOrSuccess.fold(
       (failure) => emit(
         AuthFailure(message: _mapFailureToMessage(failure)),

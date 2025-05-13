@@ -55,6 +55,8 @@ class AuthGoogleBloc extends Bloc<AuthGoogleEvent, AuthGoogleState> {
 
         idToken = await userCredential.user?.getIdToken();
         email = userCredential.user?.email;
+        debugPrint('idToken: $idToken');
+        debugPrint('email: $email');
       } else {
         // Android/iOS: usar google_sign_in + firebase_auth
         final GoogleSignIn googleSignIn = GoogleSignIn();
@@ -127,7 +129,9 @@ class AuthGoogleBloc extends Bloc<AuthGoogleEvent, AuthGoogleState> {
       }
 
       // Usar el caso de uso para logout del backend
-      final failureOrSuccess = await _logoutFromGoogleUseCase('');
+      final failureOrSuccess = await _logoutFromGoogleUseCase(
+        'oayoso@gmail.com',
+      );
 
       failureOrSuccess.fold(
         (failure) =>

@@ -38,5 +38,10 @@
   "@loadingMessage": {},
   "validationSuccessMessage": "Validation réussie. Veuillez poursuivre le processus.",
   "@validationSuccessMessage": {},
-  "yourEmailFallback": "votre e-mail"
+  "yourEmailFallback": "votre e-mail",
+  "errorDialogTitle": "Erreur",
+  "userBlockedDialogTitle": "Compte Bloqué",
+  "userBlockedDialogMessage": "Votre compte a été temporairement bloqué. Veuillez réessayer dans {minutes} minutes.",
+  "userAccountBlockedGeneric": "Votre compte est bloqué. Veuillez réessayer plus tard.",
+  "okButtonLabel": "Accepter"
 }

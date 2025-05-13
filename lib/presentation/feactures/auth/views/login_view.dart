@@ -41,6 +41,7 @@ class LoginView extends StatelessWidget {
   // Maneja fallos durante el proceso de Google Sign In
   void _handleGoogleFailure(BuildContext context, AuthGoogleError state) {
     //TODO:  cambiar por modal
+
     _showSnackBar(context, state.message);
   }
 

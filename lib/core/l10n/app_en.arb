@@ -59,5 +59,10 @@
   "@validationSuccessMessage": {
     "description": "Message shown when a validation step (like OTP) succeeds"
   },
-  "yourEmailFallback": "your email"
+  "yourEmailFallback": "your email",
+  "errorDialogTitle": "Error",
+  "userBlockedDialogTitle": "Account Locked",
+  "userBlockedDialogMessage": "Your account has been temporarily locked. Please try again in {minutes} minutes.",
+  "userAccountBlockedGeneric": "Your account is currently locked. Please try again later.",
+  "okButtonLabel": "OK"
 }

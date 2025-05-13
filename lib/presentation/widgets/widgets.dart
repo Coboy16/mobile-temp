@@ -21,4 +21,7 @@ export 'laoding/custom_loading_hotech_widget.dart';
 //locale
 export './locale/language_selector_overlay.dart';
 
+//dialog
+export './dialog/user_blocked_dialog.dart';
+
 export './gradient_background.dart';

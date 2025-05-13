@@ -25,6 +25,11 @@ abstract class AuthChopperService extends ChopperService {
     @Body() required ValidationRequestModel body,
   });
 
+  @POST(path: ApiEndpoints.checkUserLockStatus)
+  Future<Response<ValidationResponseModel>> checkUserLockStatus({
+    @Body() required ValidationRequestModel body,
+  });
+
   @POST(path: ApiEndpoints.login)
   Future<Response<LoginResponseModel>> login({
     @Body() required LoginRequestModel body,

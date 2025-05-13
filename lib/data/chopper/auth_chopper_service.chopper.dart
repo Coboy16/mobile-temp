@@ -31,10 +31,22 @@ final class _$AuthChopperService extends AuthChopperService {
   }
 
   @override
+  Future<Response<ValidationResponseModel>> checkUserLockStatus({
+    required ValidationRequestModel body,
+  }) {
+    final Uri $url = Uri.parse('/auth/attemp/validation');
+    final $body = body;
+    final Request $request = Request('POST', $url, client.baseUrl, body: $body);
+    return client.send<ValidationResponseModel, ValidationResponseModel>(
+      $request,
+    );
+  }
+
+  @override
   Future<Response<LoginResponseModel>> login({
     required LoginRequestModel body,
   }) {
-    final Uri $url = Uri.parse('/auth/login');
+    final Uri $url = Uri.parse('/auth/self/login');
     final $body = body;
     final Request $request = Request('POST', $url, client.baseUrl, body: $body);
     return client.send<LoginResponseModel, LoginResponseModel>($request);
@@ -44,7 +56,7 @@ final class _$AuthChopperService extends AuthChopperService {
   Future<Response<LoginResponseModel>> loginGoogle({
     required GoogleLoginRequestModel body,
   }) {
-    final Uri $url = Uri.parse('/auth/login-google');
+    final Uri $url = Uri.parse('/auth/self/login-google');
     final $body = body;
     final Request $request = Request('POST', $url, client.baseUrl, body: $body);
     return client.send<LoginResponseModel, LoginResponseModel>($request);
@@ -54,7 +66,7 @@ final class _$AuthChopperService extends AuthChopperService {
   Future<Response<LogoutResponseModel>> logout({
     required LogoutRequestModel body,
   }) {
-    final Uri $url = Uri.parse('/auth/logout');
+    final Uri $url = Uri.parse('/auth/self/logout');
     final $body = body;
     final Request $request = Request('POST', $url, client.baseUrl, body: $body);
     return client.send<LogoutResponseModel, LogoutResponseModel>($request);

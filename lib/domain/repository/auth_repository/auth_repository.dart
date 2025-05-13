@@ -8,6 +8,10 @@ abstract class AuthRepository {
     required String email,
   });
 
+  Future<Either<Failure, ValidationResponseEntity>> checkUserLockStatus({
+    required String email,
+  });
+
   Future<Either<Failure, UserEntity>> login({
     required String email,
     required String cedulaOrPassword,

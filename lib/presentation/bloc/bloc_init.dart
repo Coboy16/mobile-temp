@@ -27,6 +27,12 @@ List<SingleChildWidget> getListBloc() {
             getCurrentUserUseCase: sl<GetCurrentUserUseCase>(),
           ),
     ),
+    BlocProvider(
+      create:
+          (context) => CheckLockStatusBloc(
+            checkUserLockStatusUseCase: sl<CheckUserLockStatusUseCase>(),
+          ),
+    ),
     BlocProvider(create: (context) => FcmBloc()),
     BlocProvider(create: (context) => NavegationBarBloc()),
   ];

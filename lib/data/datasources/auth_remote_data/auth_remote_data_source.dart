@@ -5,6 +5,7 @@ import '/data/data.dart';
 
 abstract class AuthRemoteDataSource {
   Future<ValidationResponseModel> validateUser({required String email});
+  Future<ValidationResponseModel> checkUserLockStatus({required String email});
   Future<LoginResponseModel> login({
     required String email,
     required String cedulaOrPassword,
@@ -184,6 +185,62 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException(message: 'Error al cerrar sesión: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<ValidationResponseModel> checkUserLockStatus({
+    required String email,
+  }) async {
+    final requestModel = ValidationRequestModel(email: email);
+    try {
+      final response = await chopperService.checkUserLockStatus(
+        body: requestModel,
+      );
+
+      if (response.body != null &&
+          (response.isSuccessful ||
+              response.statusCode == 400 ||
+              response.statusCode == 401)) {
+        return response.body!;
+      } else {
+        String errorMessage = "Error del servidor";
+        int? statusCode = response.statusCode;
+
+        if (response.error != null) {
+          if (response.error is Map<String, dynamic>) {
+            final errorMap = response.error as Map<String, dynamic>;
+            if (errorMap.containsKey('data') &&
+                errorMap['data'] is Map &&
+                (errorMap['data'] as Map).containsKey('blocked')) {
+              try {
+                return ValidationResponseModel.fromJson(errorMap);
+              } catch (e) {
+                if (errorMap.containsKey('message')) {
+                  errorMessage = errorMap['message'].toString();
+                } else {
+                  errorMessage =
+                      'Error al procesar respuesta de error: ${e.toString()}';
+                }
+              }
+            } else if (errorMap.containsKey('message')) {
+              errorMessage = errorMap['message'].toString();
+            }
+          } else if (response.error is String) {
+            errorMessage = response.error.toString();
+          }
+        } else if (response.base.reasonPhrase != null &&
+            response.base.reasonPhrase!.isNotEmpty) {
+          errorMessage = response.base.reasonPhrase!;
+        }
+        throw ServerException(message: errorMessage, statusCode: statusCode);
+      }
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException(
+        message:
+            'Error al verificar estado de bloqueo del usuario: ${e.toString()}',
+      );
     }
   }
 }

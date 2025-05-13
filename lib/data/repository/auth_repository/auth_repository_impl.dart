@@ -180,4 +180,32 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(NetworkFailure(message: "No hay conexión a internet"));
     }
   }
+
+  @override
+  Future<Either<Failure, ValidationResponseEntity>> checkUserLockStatus({
+    required String email,
+  }) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final validationResponseModel = await remoteDataSource
+            .checkUserLockStatus(email: email);
+        final entity = ValidationResponseEntity(
+          isBlocked: validationResponseModel.data.blocked.state,
+          minutesBlocked: validationResponseModel.data.blocked.minute,
+        );
+        return Right(entity);
+      } on ServerException catch (e) {
+        return Left(
+          ServerFailure(
+            message:
+                e.message ??
+                "Error del servidor al verificar estado de bloqueo",
+            statusCode: e.statusCode,
+          ),
+        );
+      }
+    } else {
+      return Left(NetworkFailure(message: "No hay conexión a internet"));
+    }
+  }
 }
