@@ -4,4 +4,6 @@ class ApiEndpoints {
   static const String login = '/auth/self/login';
   static const String loginGoogle = '/auth/self/login-google';
   static const String logout = '/auth/self/logout';
+  static const String registerUser = '/auth/user';
+  static const String registerWithGoogle = '/auth/user/gmail';
 }

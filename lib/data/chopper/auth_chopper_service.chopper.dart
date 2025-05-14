@@ -71,4 +71,24 @@ final class _$AuthChopperService extends AuthChopperService {
     final Request $request = Request('POST', $url, client.baseUrl, body: $body);
     return client.send<LogoutResponseModel, LogoutResponseModel>($request);
   }
+
+  @override
+  Future<Response<RegisterResponseModel>> registerUser({
+    required RegisterRequestModel body,
+  }) {
+    final Uri $url = Uri.parse('/auth/user');
+    final $body = body;
+    final Request $request = Request('POST', $url, client.baseUrl, body: $body);
+    return client.send<RegisterResponseModel, RegisterResponseModel>($request);
+  }
+
+  @override
+  Future<Response<RegisterResponseModel>> registerWithGoogle({
+    required RegisterGoogleRequestModel body,
+  }) {
+    final Uri $url = Uri.parse('/auth/user/gmail');
+    final $body = body;
+    final Request $request = Request('POST', $url, client.baseUrl, body: $body);
+    return client.send<RegisterResponseModel, RegisterResponseModel>($request);
+  }
 }

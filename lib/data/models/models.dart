@@ -8,3 +8,8 @@ export 'auth_model/login_response_model.dart';
 export 'auth_model/login_google_request_model.dart';
 export 'auth_model/logout_request_model.dart';
 export 'auth_model/logout_response_model.dart';
+
+// register
+export 'auth_model/register_request_model.dart';
+export 'auth_model/register_google_request_model.dart';
+export 'auth_model/register_response_model.dart';

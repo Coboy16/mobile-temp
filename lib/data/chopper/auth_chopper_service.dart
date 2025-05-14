@@ -44,4 +44,14 @@ abstract class AuthChopperService extends ChopperService {
   Future<Response<LogoutResponseModel>> logout({
     @Body() required LogoutRequestModel body,
   });
+
+  @POST(path: ApiEndpoints.registerUser)
+  Future<Response<RegisterResponseModel>> registerUser({
+    @Body() required RegisterRequestModel body,
+  });
+
+  @POST(path: ApiEndpoints.registerWithGoogle)
+  Future<Response<RegisterResponseModel>> registerWithGoogle({
+    @Body() required RegisterGoogleRequestModel body,
+  });
 }
