@@ -13,3 +13,7 @@ export 'auth_model/logout_response_model.dart';
 export 'auth_model/register_request_model.dart';
 export 'auth_model/register_google_request_model.dart';
 export 'auth_model/register_response_model.dart';
+export 'auth_model/otp_request_model.dart';
+export 'auth_model/otp_verify_request_model.dart';
+export 'auth_model/otp_response_data_model.dart';
+export 'auth_model/otp_general_response_model.dart';

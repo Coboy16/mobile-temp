@@ -1,11 +1,12 @@
-import 'package:fe_core_vips/presentation/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '/presentation/widgets/widgets.dart';
 import '/presentation/resources/resources.dart';
 import '/presentation/bloc/blocs.dart';
 
@@ -46,6 +47,7 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isMobile = MediaQuery.of(context).size.width <= 800;
 
     // Envolver el FormBuilder con BlocListener para CheckLockStatusBloc
@@ -88,14 +90,14 @@ class _LoginFormState extends State<LoginForm> {
           children: [
             FormBuilderTextField(
               name: 'username',
-              decoration: const InputDecoration(
-                labelText: 'Usuario',
-                hintText: 'Ingresa tu nombre de usuario',
-                prefixIcon: Icon(LucideIcons.user),
+              decoration: InputDecoration(
+                labelText: l10n.loginFormUsernameLabel,
+                hintText: l10n.loginFormUsernameHint,
+                prefixIcon: const Icon(LucideIcons.user),
               ),
               validator: FormBuilderValidators.compose([
                 FormBuilderValidators.required(
-                  errorText: 'El correo es requerido',
+                  errorText: l10n.loginFormUsernameErrorRequired,
                 ),
               ]),
               textInputAction: TextInputAction.next,
@@ -105,8 +107,8 @@ class _LoginFormState extends State<LoginForm> {
               name: 'password',
               obscureText: !_isPasswordVisible,
               decoration: InputDecoration(
-                labelText: 'Contraseña',
-                hintText: 'Ingresa tu contraseña',
+                labelText: l10n.loginFormPasswordLabel,
+                hintText: l10n.loginFormPasswordHint,
                 prefixIcon: const Icon(LucideIcons.lock),
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -122,11 +124,11 @@ class _LoginFormState extends State<LoginForm> {
               ),
               validator: FormBuilderValidators.compose([
                 FormBuilderValidators.required(
-                  errorText: 'La contraseña es requerida',
+                  errorText: l10n.loginFormPasswordErrorRequired,
                 ),
                 FormBuilderValidators.minLength(
-                  6, // O la longitud que requieras
-                  errorText: 'La contraseña debe tener al menos 6 caracteres',
+                  6,
+                  errorText: l10n.loginFormPasswordErrorMinLength,
                 ),
               ]),
               textInputAction: TextInputAction.done,
@@ -145,13 +147,13 @@ class _LoginFormState extends State<LoginForm> {
                   shadowColor: Colors.transparent,
                 ),
                 onPressed: widget.onGoToForgotPassword,
-                child: const Text('¿Olvidaste tu contraseña?'),
+                child: Text(l10n.loginFormForgotPasswordButton),
               ),
             ),
             SizedBox(height: isMobile ? 4 : AppDimensions.largeSpacing),
             ElevatedButton(
-              onPressed: _onLoginAttempt, // Ya modificado
-              child: const Text('Iniciar Sesión'),
+              onPressed: _onLoginAttempt,
+              child: Text(l10n.loginFormLoginButton),
             ),
             SizedBox(height: isMobile ? 8 : AppDimensions.itemSpacing),
             if (widget.onGoogleLogin != null)
@@ -164,7 +166,7 @@ class _LoginFormState extends State<LoginForm> {
                           const Icon(LucideIcons.chrome, size: 15),
                 ),
                 label: Text(
-                  'Iniciar Sesión con Google',
+                  l10n.loginFormLoginWithGoogleButton,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
@@ -180,7 +182,7 @@ class _LoginFormState extends State<LoginForm> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '¿No tienes una cuenta? ',
+                  l10n.loginFormNoAccountPrompt,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 TextButton(
@@ -190,7 +192,7 @@ class _LoginFormState extends State<LoginForm> {
                     shadowColor: Colors.transparent,
                   ),
                   onPressed: widget.onGoToRegister,
-                  child: const Text('Crear cuenta'),
+                  child: Text(l10n.loginFormCreateAccountButton),
                 ),
               ],
             ),

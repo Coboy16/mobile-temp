@@ -25,6 +25,7 @@ class ForgotPasswordOtpView extends StatelessWidget {
         email: emailForOtp ?? '',
         onOtpVerified: (otp) {},
         onResendOtp: () {
+          //TODO: poner el loading
           _showSnackBar(context, 'Reenviando OTP...');
         },
         onGoBack: () => context.goNamed(AppRoutes.forgotPassword),

@@ -20,13 +20,13 @@ class ConfirmLogoutDialog extends StatelessWidget {
           },
         ),
         TextButton(
-          child: Text(l10n.logoutButtonLabel),
           style: TextButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.error,
           ),
           onPressed: () {
             Navigator.of(context).pop(true);
           },
+          child: Text(l10n.logoutButtonLabel),
         ),
       ],
     );

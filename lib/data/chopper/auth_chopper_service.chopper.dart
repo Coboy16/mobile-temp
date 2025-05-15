@@ -91,4 +91,28 @@ final class _$AuthChopperService extends AuthChopperService {
     final Request $request = Request('POST', $url, client.baseUrl, body: $body);
     return client.send<RegisterResponseModel, RegisterResponseModel>($request);
   }
+
+  @override
+  Future<Response<OtpGeneralResponseModel>> requestOtp({
+    required OtpRequestModel body,
+  }) {
+    final Uri $url = Uri.parse('/auth/otp/request');
+    final $body = body;
+    final Request $request = Request('POST', $url, client.baseUrl, body: $body);
+    return client.send<OtpGeneralResponseModel, OtpGeneralResponseModel>(
+      $request,
+    );
+  }
+
+  @override
+  Future<Response<OtpGeneralResponseModel>> verifyOtp({
+    required OtpVerifyRequestModel body,
+  }) {
+    final Uri $url = Uri.parse('/auth/otp/verify');
+    final $body = body;
+    final Request $request = Request('POST', $url, client.baseUrl, body: $body);
+    return client.send<OtpGeneralResponseModel, OtpGeneralResponseModel>(
+      $request,
+    );
+  }
 }

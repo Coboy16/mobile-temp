@@ -5,25 +5,31 @@ import 'package:pinput/pinput.dart';
 
 import '/presentation/resources/resources.dart';
 
-class ForgotPasswordOtpForm extends StatefulWidget {
+class OtpFormWidget extends StatefulWidget {
   final String email;
   final Function(String otp) onOtpVerified;
   final VoidCallback onResendOtp;
   final VoidCallback onGoBack;
+  final String? descriptionText;
+  final String? buttonText;
+  final String? resendOtpButtonText;
 
-  const ForgotPasswordOtpForm({
+  const OtpFormWidget({
     super.key,
     required this.email,
     required this.onOtpVerified,
     required this.onResendOtp,
     required this.onGoBack,
+    this.descriptionText,
+    this.buttonText,
+    this.resendOtpButtonText,
   });
 
   @override
-  State<ForgotPasswordOtpForm> createState() => _ForgotPasswordOtpFormState();
+  State<OtpFormWidget> createState() => _OtpFormWidgetState();
 }
 
-class _ForgotPasswordOtpFormState extends State<ForgotPasswordOtpForm> {
+class _OtpFormWidgetState extends State<OtpFormWidget> {
   final TextEditingController _otpController = TextEditingController();
   final FocusNode _otpFocusNode = FocusNode();
   final _formKey = GlobalKey<FormState>();
@@ -67,6 +73,17 @@ class _ForgotPasswordOtpFormState extends State<ForgotPasswordOtpForm> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (widget.descriptionText != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppDimensions.itemSpacing),
+              child: Text(
+                widget.descriptionText!,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.greyTextColor,
+                ),
+              ),
+            ),
           Center(
             child: Pinput(
               length: 6,
@@ -86,9 +103,7 @@ class _ForgotPasswordOtpFormState extends State<ForgotPasswordOtpForm> {
                 ),
               ),
               validator: (s) {
-                return s?.length == 6
-                    ? null
-                    : l10n.forgotPasswordOtpFormValidatorError;
+                return s?.length == 6 ? null : l10n.otpFormValidatorError;
               },
               pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
               showCursor: true,
@@ -102,28 +117,26 @@ class _ForgotPasswordOtpFormState extends State<ForgotPasswordOtpForm> {
           SizedBox(height: isMobile ? 20 : AppDimensions.largeSpacing * 1.2),
           ElevatedButton(
             onPressed: _submitOtp,
-            child: Text(l10n.forgotPasswordOtpFormSubmitButton),
+            child: Text(widget.buttonText ?? l10n.otpFormDefaultSubmitButton),
           ),
           SizedBox(height: isMobile ? 12 : AppDimensions.itemSpacing),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                l10n.forgotPasswordOtpFormDidNotReceiveCode,
+                l10n.otpFormDidNotReceiveCodePrompt,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.greyTextColor,
                 ),
-              ),
-              TextButton(
-                onPressed: widget.onResendOtp,
-                child: Text(l10n.forgotPasswordOtpFormResendCodeButton),
               ),
             ],
           ),
           Center(
             child: TextButton(
-              onPressed: widget.onGoBack,
-              child: Text(l10n.forgotPasswordOtpFormEnterDifferentEmailButton),
+              onPressed: widget.onResendOtp,
+              child: Text(
+                widget.resendOtpButtonText ?? l10n.otpFormDefaultResendButton,
+              ),
             ),
           ),
         ],

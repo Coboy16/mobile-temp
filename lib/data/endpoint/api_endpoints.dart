@@ -6,4 +6,6 @@ class ApiEndpoints {
   static const String logout = '/auth/self/logout';
   static const String registerUser = '/auth/user';
   static const String registerWithGoogle = '/auth/user/gmail';
+  static const String otpRequest = '/auth/otp/request';
+  static const String otpVerify = '/auth/otp/verify';
 }

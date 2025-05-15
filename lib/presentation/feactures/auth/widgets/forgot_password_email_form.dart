@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
+
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import '/presentation/resources/resources.dart';
 
 class ForgotPasswordEmailForm extends StatefulWidget {
@@ -10,7 +13,6 @@ class ForgotPasswordEmailForm extends StatefulWidget {
 
   const ForgotPasswordEmailForm({
     super.key,
-    // required this.isMobile,
     required this.onEmailSubmitted,
     required this.onGoToLogin,
   });
@@ -32,6 +34,7 @@ class _ForgotPasswordEmailFormState extends State<ForgotPasswordEmailForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isMobile = MediaQuery.of(context).size.width <= 800;
 
     return FormBuilder(
@@ -42,17 +45,17 @@ class _ForgotPasswordEmailFormState extends State<ForgotPasswordEmailForm> {
         children: [
           FormBuilderTextField(
             name: 'email',
-            decoration: const InputDecoration(
-              labelText: 'Correo electrónico',
-              hintText: 'Ingresa tu correo electrónico',
-              prefixIcon: Icon(LucideIcons.mail),
+            decoration: InputDecoration(
+              labelText: l10n.forgotPasswordEmailFormLabel,
+              hintText: l10n.forgotPasswordEmailFormHint,
+              prefixIcon: const Icon(LucideIcons.mail),
             ),
             validator: FormBuilderValidators.compose([
               FormBuilderValidators.required(
-                errorText: 'El correo es requerido',
+                errorText: l10n.forgotPasswordEmailFormErrorRequired,
               ),
               FormBuilderValidators.email(
-                errorText: 'Ingresa un correo válido',
+                errorText: l10n.forgotPasswordEmailFormErrorInvalid,
               ),
             ]),
             keyboardType: TextInputType.emailAddress,
@@ -62,13 +65,13 @@ class _ForgotPasswordEmailFormState extends State<ForgotPasswordEmailForm> {
           SizedBox(height: isMobile ? 20 : AppDimensions.largeSpacing * 1.2),
           ElevatedButton(
             onPressed: _submitForm,
-            child: const Text('Enviar código de recuperación'),
+            child: Text(l10n.forgotPasswordEmailFormSubmitButton),
           ),
           SizedBox(height: isMobile ? 12 : AppDimensions.itemSpacing),
           Center(
             child: TextButton(
               onPressed: widget.onGoToLogin,
-              child: const Text('Volver a Iniciar Sesión'),
+              child: Text(l10n.forgotPasswordEmailFormBackToLoginButton),
             ),
           ),
         ],

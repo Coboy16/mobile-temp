@@ -42,7 +42,7 @@ class AuthLayout extends StatelessWidget {
         rightPanelMobileHeightFactor = 0.6;
         break;
       case AuthView.register:
-        cardMaxHeight = 700;
+        cardMaxHeight = 780;
         rightPanelMobileHeightFactor = 0.68;
         break;
       case AuthView.forgotPasswordEmail:
@@ -117,6 +117,7 @@ class AuthLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return LayoutBuilder(
       builder: (context, constraints) {
         final dimensions = _getLayoutDimensions(constraints, authView);
@@ -133,6 +134,12 @@ class AuthLayout extends StatelessWidget {
             listeners: [
               BlocListener<AuthBloc, AuthState>(listener: (context, state) {}),
               BlocListener<AuthGoogleBloc, AuthGoogleState>(
+                listener: (context, state) {},
+              ),
+              BlocListener<RegisterBloc, RegisterState>(
+                listener: (context, state) {},
+              ),
+              BlocListener<GoogleIdTokenBloc, GoogleIdTokenState>(
                 listener: (context, state) {},
               ),
             ],
@@ -167,18 +174,23 @@ class AuthLayout extends StatelessWidget {
                     final googleState = context.watch<AuthGoogleBloc>().state;
                     final checkLockStatusState =
                         context.watch<CheckLockStatusBloc>().state;
+                    final registerBlocState =
+                        context.watch<RegisterBloc>().state;
+                    final googleIdTokenBlocState =
+                        context.watch<GoogleIdTokenBloc>().state;
 
                     final bool isLoading =
                         currentAuthBlocState is AuthLoading ||
-                        currentAuthBlocState
-                            is AuthValidationInProgress || // Tu AuthBloc tiene este estado
+                        currentAuthBlocState is AuthValidationInProgress ||
                         googleState is AuthGoogleLoading ||
-                        checkLockStatusState is CheckLockStatusLoading;
+                        checkLockStatusState is CheckLockStatusLoading ||
+                        registerBlocState is RegisterLoading ||
+                        googleIdTokenBlocState is GoogleIdTokenLoading;
 
                     if (isLoading) {
                       String loadingMessage =
                           AppLocalizations.of(context)?.loadingMessage ??
-                          'Cargando...';
+                          l10n.loadingMessageDefault;
                       return CustomLoadingHotech(
                         overlay: true,
                         message: loadingMessage,

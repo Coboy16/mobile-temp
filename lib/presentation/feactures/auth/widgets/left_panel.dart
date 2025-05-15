@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '/presentation/feactures/auth/widgets/widgets.dart';
 import '/presentation/resources/resources.dart';
@@ -11,89 +12,79 @@ class LeftPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     String title;
     String subtitle;
     List<Widget> highlights;
 
     switch (authView) {
       case AuthView.login:
-        title = 'Bienvenido a Ho-Tech';
-        subtitle =
-            'Plataforma integral para la gestión de recursos humanos en empresas del sector hotelero.';
+        title = l10n.leftPanelLoginTitle;
+        subtitle = l10n.leftPanelLoginSubtitle;
         highlights = [
-          const FeatureHighlight(
+          FeatureHighlight(
             icon: LucideIcons.clipboardCheck,
-            title: 'Gestión de solicitudes',
-            description:
-                'Administra todo tipo de solicitudes desde un solo lugar.',
+            title: l10n.leftPanelLoginHighlight1Title,
+            description: l10n.leftPanelLoginHighlight1Description,
           ),
           const SizedBox(height: AppDimensions.largeSpacing),
-          const FeatureHighlight(
+          FeatureHighlight(
             icon: LucideIcons.users,
-            title: 'Administración de personal',
-            description: 'Contrataciones, evaluaciones, capacitaciones y más.',
+            title: l10n.leftPanelLoginHighlight2Title,
+            description: l10n.leftPanelLoginHighlight2Description,
           ),
           const SizedBox(height: AppDimensions.largeSpacing),
-          const FeatureHighlight(
+          FeatureHighlight(
             icon: LucideIcons.chartNoAxesColumn,
-            title: 'Informes y análisis',
-            description:
-                'Métricas e indicadores para tomar mejores decisiones.',
+            title: l10n.leftPanelLoginHighlight3Title,
+            description: l10n.leftPanelLoginHighlight3Description,
           ),
         ];
         break;
       case AuthView.register:
-        title = 'Únete a Ho-Tech';
-        subtitle =
-            'Regístrate para acceder a una gestión hotelera simplificada y eficiente.';
+        title = l10n.leftPanelRegisterTitle;
+        subtitle = l10n.leftPanelRegisterSubtitle;
         highlights = [
-          const FeatureHighlight(
+          FeatureHighlight(
             icon: LucideIcons.userPlus,
-            title: 'Registro Rápido',
-            description:
-                'Crea tu cuenta en pocos pasos y comienza a transformar tu gestión.',
+            title: l10n.leftPanelRegisterHighlight1Title,
+            description: l10n.leftPanelRegisterHighlight1Description,
           ),
           const SizedBox(height: AppDimensions.largeSpacing),
-          const FeatureHighlight(
+          FeatureHighlight(
             icon: LucideIcons.shieldCheck,
-            title: 'Seguridad Garantizada',
-            description:
-                'Tus datos están protegidos con los más altos estándares.',
+            title: l10n.leftPanelRegisterHighlight2Title,
+            description: l10n.leftPanelRegisterHighlight2Description,
           ),
           const SizedBox(height: AppDimensions.largeSpacing),
-          const FeatureHighlight(
+          FeatureHighlight(
             icon: LucideIcons.layoutDashboard,
-            title: 'Acceso Inmediato',
-            description:
-                'Una vez registrado, explora todas las funcionalidades que Ho-Tech te ofrece.',
+            title: l10n.leftPanelRegisterHighlight3Title,
+            description: l10n.leftPanelRegisterHighlight3Description,
           ),
         ];
         break;
       case AuthView.forgotPasswordEmail:
       case AuthView.forgotPasswordOtp:
-        title = 'Recupera tu Acceso';
-        subtitle =
-            'Sigue los pasos para restablecer tu contraseña y volver a gestionar tus recursos humanos de forma eficiente.';
+        title = l10n.leftPanelForgotPasswordTitle;
+        subtitle = l10n.leftPanelForgotPasswordSubtitle;
         highlights = [
-          const FeatureHighlight(
+          FeatureHighlight(
             icon: LucideIcons.mailQuestion,
-            title: 'Verificación Segura',
-            description:
-                'Ingresa tu correo para recibir un código de verificación y proteger tu cuenta.',
+            title: l10n.leftPanelForgotPasswordHighlight1Title,
+            description: l10n.leftPanelForgotPasswordHighlight1Description,
           ),
           const SizedBox(height: AppDimensions.largeSpacing),
-          const FeatureHighlight(
+          FeatureHighlight(
             icon: LucideIcons.keyRound,
-            title: 'Restablecimiento Fácil',
-            description:
-                'Con el código OTP, podrás crear una nueva contraseña de forma rápida y segura.',
+            title: l10n.leftPanelForgotPasswordHighlight2Title,
+            description: l10n.leftPanelForgotPasswordHighlight2Description,
           ),
           const SizedBox(height: AppDimensions.largeSpacing),
-          const FeatureHighlight(
+          FeatureHighlight(
             icon: LucideIcons.lockKeyhole,
-            title: 'Soporte Continuo',
-            description:
-                'Si tienes problemas, nuestro equipo de soporte está listo para ayudarte.',
+            title: l10n.leftPanelForgotPasswordHighlight3Title,
+            description: l10n.leftPanelForgotPasswordHighlight3Description,
           ),
         ];
         break;

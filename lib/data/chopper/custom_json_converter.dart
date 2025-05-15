@@ -24,6 +24,10 @@ class CustomJsonConverter extends JsonConverter {
         jsonBody = json.encode(body.toJson());
       } else if (body is LogoutRequestModel) {
         jsonBody = json.encode(body.toJson());
+      } else if (body is RegisterRequestModel) {
+        jsonBody = json.encode(body.toJson());
+      } else if (body is RegisterGoogleRequestModel) {
+        jsonBody = json.encode(body.toJson());
       } else if (body is Map<String, dynamic>) {
         jsonBody = json.encode(body);
       } else {
@@ -87,6 +91,9 @@ class CustomJsonConverter extends JsonConverter {
         return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
       } else if (BodyType == LogoutResponseModel) {
         final model = LogoutResponseModel.fromJson(body);
+        return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
+      } else if (BodyType == RegisterResponseModel) {
+        final model = RegisterResponseModel.fromJson(body);
         return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
       }
 

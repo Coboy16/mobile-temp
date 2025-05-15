@@ -83,4 +83,50 @@ Future<void> initServiceLocator() async {
       checkUserLockStatusUseCase: sl<CheckUserLockStatusUseCase>(),
     ),
   );
+
+  // --- Feature: Register ---
+  sl.registerLazySingleton<RegisterRemoteDataSource>(
+    () => RegisterRemoteDataSourceImpl(chopperService: sl()),
+  );
+
+  sl.registerLazySingleton<RegisterRepository>(
+    () => RegisterRepositoryImpl(
+      registerRemoteDataSource: sl(),
+      networkInfo: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton(() => RegisterUserUseCase(sl()));
+
+  sl.registerLazySingleton(() => RegisterWithGoogleUseCase(sl()));
+
+  sl.registerFactory(
+    () => RegisterBloc(
+      registerUserUseCase: sl<RegisterUserUseCase>(),
+      registerWithGoogleUseCase: sl<RegisterWithGoogleUseCase>(),
+    ),
+  );
+
+  // --- Feature: OTP ---
+  // DataSource
+  sl.registerLazySingleton<OtpRemoteDataSource>(
+    () => OtpRemoteDataSourceImpl(chopperService: sl()),
+  );
+  // Repository
+  sl.registerLazySingleton<OtpRepository>(
+    () => OtpRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
+  // UseCases
+  sl.registerLazySingleton(() => RequestOtpUseCase(sl()));
+  sl.registerLazySingleton(() => VerifyOtpUseCase(sl()));
+
+  sl.registerFactory(
+    () => OtpVerificationBloc(
+      requestOtpUseCase: sl<RequestOtpUseCase>(),
+      verifyOtpUseCase: sl<VerifyOtpUseCase>(),
+    ),
+  );
+
+  // --- Feature: Google Utilities ---
+  sl.registerFactory(() => GoogleIdTokenBloc());
 }

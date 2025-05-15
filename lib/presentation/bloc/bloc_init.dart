@@ -33,6 +33,9 @@ List<SingleChildWidget> getListBloc() {
             checkUserLockStatusUseCase: sl<CheckUserLockStatusUseCase>(),
           ),
     ),
+    BlocProvider(create: (context) => sl<RegisterBloc>()),
+    BlocProvider(create: (context) => sl<GoogleIdTokenBloc>()),
+    BlocProvider(create: (context) => sl<OtpVerificationBloc>()),
     BlocProvider(create: (context) => FcmBloc()),
     BlocProvider(create: (context) => NavegationBarBloc()),
   ];

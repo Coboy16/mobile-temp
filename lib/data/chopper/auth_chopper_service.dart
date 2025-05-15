@@ -54,4 +54,14 @@ abstract class AuthChopperService extends ChopperService {
   Future<Response<RegisterResponseModel>> registerWithGoogle({
     @Body() required RegisterGoogleRequestModel body,
   });
+
+  @POST(path: ApiEndpoints.otpRequest)
+  Future<Response<OtpGeneralResponseModel>> requestOtp({
+    @Body() required OtpRequestModel body,
+  });
+
+  @POST(path: ApiEndpoints.otpVerify)
+  Future<Response<OtpGeneralResponseModel>> verifyOtp({
+    @Body() required OtpVerifyRequestModel body,
+  });
 }

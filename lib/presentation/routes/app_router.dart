@@ -14,12 +14,14 @@ class AppRoutes {
   static const String splash = '/';
   static const String auth = '/auth';
   static const String authRegister = 'register';
+  static const String authRegisterOtp = 'register-otp';
   static const String authForgotPassword = 'forgot-password';
   static const String authOtp = 'otp';
   static const String home = '/home';
 
   static const String login = auth;
   static const String register = '$auth/$authRegister';
+  static const String registerOtp = '$auth/$authRegisterOtp';
   static const String forgotPassword = '$auth/$authForgotPassword';
   static const String otp = '$auth/$authOtp';
 }
@@ -42,6 +44,7 @@ class AppRouter {
       final authRoutes = [
         AppRoutes.login,
         AppRoutes.register,
+        AppRoutes.registerOtp,
         AppRoutes.forgotPassword,
         AppRoutes.otp,
       ];
@@ -97,6 +100,22 @@ class AppRouter {
             name: AppRoutes.register,
             builder: (BuildContext context, GoRouterState state) {
               return const RegisterView();
+            },
+          ),
+          GoRoute(
+            path: AppRoutes.authRegisterOtp,
+            name: AppRoutes.registerOtp,
+            builder: (BuildContext context, GoRouterState state) {
+              final args = state.extra as RegisterOtpViewArguments?;
+              if (args == null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  context.goNamed(AppRoutes.register);
+                });
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              return RegisterOtpView(registrationArgs: args);
             },
           ),
           GoRoute(

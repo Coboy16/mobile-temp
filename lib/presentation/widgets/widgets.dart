@@ -24,5 +24,6 @@ export './locale/language_selector_overlay.dart';
 //dialog
 export './dialog/user_blocked_dialog.dart';
 export './dialog/confirm_logout_dialog.dart';
+export './dialog/registration_failed_dialog.dart';
 
 export './gradient_background.dart';

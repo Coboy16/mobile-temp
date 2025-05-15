@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
 import '/presentation/resources/resources.dart';
+import '/presentation/bloc/blocs.dart';
+import '/presentation/routes/app_router.dart';
+import '/presentation/feactures/auth/views/register_otp_view.dart';
+import '/presentation/widgets/widgets.dart';
 
 class RegisterForm extends StatefulWidget {
   final VoidCallback onGoToLogin;
@@ -18,15 +27,15 @@ class _RegisterFormState extends State<RegisterForm> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
-  void _onRegisterAttempt() {
+  void _onRequestOtpAttempt() {
     if (_formKey.currentState?.saveAndValidate() ?? false) {
-      debugPrint(
-        'Formulario de registro válido: ${_formKey.currentState?.value}',
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registrando usuario... (Simulado)')),
+      final values = _formKey.currentState!.value;
+      final email = values['email'] as String;
+      context.read<OtpVerificationBloc>().add(
+        OtpRequestSubmitted(email: email),
       );
     } else {
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Por favor completa el formulario correctamente'),
@@ -35,12 +44,101 @@ class _RegisterFormState extends State<RegisterForm> {
     }
   }
 
+  void _onGoogleRegisterAttempt() {
+    context.read<GoogleIdTokenBloc>().add(FetchGoogleIdToken());
+  }
+
+  void _handleOtpRequestState(
+    BuildContext context,
+    OtpVerificationState otpState,
+  ) {
+    if (otpState is OtpRequestSuccess) {
+      final values = _formKey.currentState!.value;
+      context.goNamed(
+        AppRoutes.registerOtp,
+        extra: RegisterOtpViewArguments(
+          email: otpState.email,
+          name: values['firstName'] as String,
+          fatherLastname: values['paternalLastName'] as String,
+          motherLastname: values['maternalLastName'] as String,
+          password: values['password'] as String,
+        ),
+      );
+    } else if (otpState is OtpRequestFailure) {
+      String dialogMessage = otpState.message;
+
+      if (otpState.statusCode == 401 &&
+          otpState.message.toLowerCase().contains("correo no existe")) {
+        debugPrint(
+          "OTP Request: Correo no existe en BD (401), procediendo a verificación OTP.",
+        );
+        final values = _formKey.currentState!.value;
+        final emailFromForm = values['email'] as String;
+
+        context.goNamed(
+          AppRoutes.registerOtp,
+          extra: RegisterOtpViewArguments(
+            email: emailFromForm,
+            name: values['firstName'] as String,
+            fatherLastname: values['paternalLastName'] as String,
+            motherLastname: values['maternalLastName'] as String,
+            password: values['password'] as String,
+          ),
+        );
+        return;
+      }
+      showDialog(
+        context: context,
+        builder: (_) => RegistrationFailedDialog(message: dialogMessage),
+      );
+    }
+  }
+
+  void _handleGoogleIdTokenState(
+    BuildContext context,
+    GoogleIdTokenState googleState,
+  ) {
+    if (googleState is GoogleIdTokenSuccess) {
+      context.read<RegisterBloc>().add(
+        RegisterWithGoogleSubmitted(
+          email: googleState.email,
+          idToken: googleState.idToken,
+        ),
+      );
+    } else if (googleState is GoogleIdTokenFailure) {
+      debugPrint('Error obteniendo token de Google: ${googleState.message}');
+      showDialog(
+        context: context,
+        builder: (_) => RegistrationFailedDialog(message: googleState.message),
+      );
+    } else if (googleState is GoogleIdTokenCancelled) {
+      debugPrint('Registro con Google cancelado');
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+      //TODO: poner un dialog
+    }
+  }
+
+  void _handleRegisterState(BuildContext context, RegisterState registerState) {
+    if (registerState is RegisterSuccess) {
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Registro con Google completado! Iniciando sesión...'),
+        ),
+      );
+    } else if (registerState is RegisterFailure) {
+      showDialog(
+        context: context,
+        builder:
+            (_) => RegistrationFailedDialog(message: registerState.message),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isMobile =
-        MediaQuery.of(context).size.width <=
-        800; // Si necesitas ajustar padding interno
-
+    final l10n = AppLocalizations.of(context)!;
+    final isMobile = MediaQuery.of(context).size.width <= 800;
     final InputDecoration baseDecoration = InputDecoration(
       prefixIconConstraints: const BoxConstraints(minWidth: 48),
       suffixIconConstraints: const BoxConstraints(minWidth: 48),
@@ -50,180 +148,214 @@ class _RegisterFormState extends State<RegisterForm> {
       ),
     );
 
-    return FormBuilder(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          FormBuilderTextField(
-            name: 'firstName',
-            decoration: baseDecoration.copyWith(
-              labelText: 'Nombres',
-              hintText: 'Ingresa tus nombres',
-              prefixIcon: const Icon(LucideIcons.user),
-            ),
-            validator: FormBuilderValidators.compose([
-              FormBuilderValidators.required(
-                errorText: 'Los nombres son requeridos',
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<OtpVerificationBloc, OtpVerificationState>(
+          listener: _handleOtpRequestState,
+        ),
+        BlocListener<GoogleIdTokenBloc, GoogleIdTokenState>(
+          listener: _handleGoogleIdTokenState,
+        ),
+        BlocListener<RegisterBloc, RegisterState>(
+          listener: _handleRegisterState,
+        ),
+      ],
+      child: FormBuilder(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FormBuilderTextField(
+              name: 'firstName',
+              decoration: baseDecoration.copyWith(
+                labelText: l10n.registerFormFirstNameLabel,
+                hintText: l10n.registerFormFirstNameHint,
+                prefixIcon: const Icon(LucideIcons.user),
               ),
-            ]),
-            textInputAction: TextInputAction.next,
-          ),
-          SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
-          FormBuilderTextField(
-            name: 'paternalLastName',
-            decoration: baseDecoration.copyWith(
-              labelText: 'Apellido Paterno',
-              hintText: 'Ingresa tu apellido paterno',
-              prefixIcon: const Icon(LucideIcons.userCheck),
-            ),
-            validator: FormBuilderValidators.compose([
-              FormBuilderValidators.required(
-                errorText: 'El apellido paterno es requerido',
-              ),
-            ]),
-            textInputAction: TextInputAction.next,
-          ),
-          SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
-          FormBuilderTextField(
-            name: 'maternalLastName',
-            decoration: baseDecoration.copyWith(
-              labelText: 'Apellido Materno',
-              hintText: 'Ingresa tu apellido materno',
-              prefixIcon: const Icon(LucideIcons.userCheck),
-            ),
-            validator: FormBuilderValidators.compose([
-              FormBuilderValidators.required(
-                errorText: 'El apellido materno es requerido',
-              ),
-            ]),
-            textInputAction: TextInputAction.next,
-          ),
-          SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
-          FormBuilderTextField(
-            name: 'email',
-            decoration: baseDecoration.copyWith(
-              labelText: 'Correo electrónico',
-              hintText: 'Ingresa tu correo',
-              prefixIcon: const Icon(LucideIcons.mail),
-            ),
-            validator: FormBuilderValidators.compose([
-              FormBuilderValidators.required(
-                errorText: 'El correo es requerido',
-              ),
-              FormBuilderValidators.email(
-                errorText: 'Ingresa un correo válido',
-              ),
-            ]),
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.next,
-          ),
-          SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
-          FormBuilderTextField(
-            name: 'password',
-            obscureText: !_isPasswordVisible,
-            decoration: baseDecoration.copyWith(
-              labelText: 'Contraseña',
-              hintText: 'Ingresa tu contraseña',
-              prefixIcon: const Icon(LucideIcons.lock),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _isPasswordVisible ? LucideIcons.eyeOff : LucideIcons.eye,
-                  color: AppColors.greyTextColor,
+              validator: FormBuilderValidators.compose([
+                FormBuilderValidators.required(
+                  errorText: l10n.registerFormFirstNameErrorRequired,
                 ),
-                onPressed: () {
-                  setState(() {
-                    _isPasswordVisible = !_isPasswordVisible;
-                  });
-                },
-              ),
+              ]),
+              textInputAction: TextInputAction.next,
             ),
-            validator: FormBuilderValidators.compose([
-              FormBuilderValidators.required(
-                errorText: 'La contraseña es requerida',
+            SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
+            FormBuilderTextField(
+              name: 'paternalLastName',
+              decoration: baseDecoration.copyWith(
+                labelText: l10n.registerFormPaternalLastNameLabel,
+                hintText: l10n.registerFormPaternalLastNameHint,
+                prefixIcon: const Icon(LucideIcons.userCheck),
               ),
-              FormBuilderValidators.minLength(
-                8,
-                errorText: 'Mínimo 8 caracteres',
-              ),
-              FormBuilderValidators.match(
-                RegExp(r'^(?=.*[A-Z])'),
-                errorText: 'Debe contener al menos una mayúscula',
-              ),
-              FormBuilderValidators.match(
-                RegExp(r'^(?=.*\d)'),
-                errorText: 'Debe contener al menos un número',
-              ),
-              FormBuilderValidators.match(
-                RegExp(r'^(?=.*[!@#\$%^&*()_+={}\[\]:;<>,.?~\\-])'),
-                errorText: 'Debe contener al menos un carácter especial',
-              ),
-            ]),
-            textInputAction: TextInputAction.next,
-          ),
-          SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
-          FormBuilderTextField(
-            name: 'confirmPassword',
-            obscureText: !_isConfirmPasswordVisible,
-            decoration: baseDecoration.copyWith(
-              labelText: 'Confirmar contraseña',
-              hintText: 'Vuelve a ingresar tu contraseña',
-              prefixIcon: const Icon(LucideIcons.lockKeyhole),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _isConfirmPasswordVisible
-                      ? LucideIcons.eyeOff
-                      : LucideIcons.eye,
-                  color: AppColors.greyTextColor,
+              validator: FormBuilderValidators.compose([
+                FormBuilderValidators.required(
+                  errorText: l10n.registerFormPaternalLastNameErrorRequired,
                 ),
-                onPressed: () {
-                  setState(() {
-                    _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-                  });
-                },
-              ),
+              ]),
+              textInputAction: TextInputAction.next,
             ),
-            validator: FormBuilderValidators.compose([
-              FormBuilderValidators.required(
-                errorText: 'Confirma tu contraseña',
+            SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
+            FormBuilderTextField(
+              name: 'maternalLastName',
+              decoration: baseDecoration.copyWith(
+                labelText: l10n.registerFormMaternalLastNameLabel,
+                hintText: l10n.registerFormMaternalLastNameHint,
+                prefixIcon: const Icon(LucideIcons.userCheck),
               ),
-              (val) {
-                if (_formKey.currentState?.fields['password']?.value != val) {
-                  return 'Las contraseñas no coinciden';
-                }
-                return null;
-              },
-            ]),
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _onRegisterAttempt(),
-          ),
-          SizedBox(height: isMobile ? 18 : AppDimensions.largeSpacing),
-          ElevatedButton(
-            onPressed: _onRegisterAttempt,
-            child: const Text('Crear Cuenta'),
-          ),
-          SizedBox(height: isMobile ? 3 : AppDimensions.itemSpacing / 2),
-          Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '¿Ya tienes una cuenta? ',
-                  style: Theme.of(context).textTheme.bodyMedium,
+              validator: FormBuilderValidators.compose([
+                FormBuilderValidators.required(
+                  errorText: l10n.registerFormMaternalLastNameErrorRequired,
                 ),
-                TextButton(
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    overlayColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
+              ]),
+              textInputAction: TextInputAction.next,
+            ),
+            SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
+            FormBuilderTextField(
+              name: 'email',
+              decoration: baseDecoration.copyWith(
+                labelText: l10n.registerFormEmailLabel,
+                hintText: l10n.registerFormEmailHint,
+                prefixIcon: const Icon(LucideIcons.mail),
+              ),
+              validator: FormBuilderValidators.compose([
+                FormBuilderValidators.required(
+                  errorText: l10n.registerFormEmailErrorRequired,
+                ),
+                FormBuilderValidators.email(
+                  errorText: l10n.registerFormEmailErrorInvalid,
+                ),
+              ]),
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+            ),
+            SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
+            FormBuilderTextField(
+              name: 'password',
+              obscureText: !_isPasswordVisible,
+              decoration: baseDecoration.copyWith(
+                labelText: l10n.registerFormPasswordLabel,
+                hintText: l10n.registerFormPasswordHint,
+                prefixIcon: const Icon(LucideIcons.lock),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPasswordVisible ? LucideIcons.eyeOff : LucideIcons.eye,
+                    color: AppColors.greyTextColor,
                   ),
-                  onPressed: widget.onGoToLogin,
-                  child: const Text('Iniciar Sesión'),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
                 ),
-              ],
+              ),
+              validator: FormBuilderValidators.compose([
+                FormBuilderValidators.required(
+                  errorText: l10n.registerFormPasswordErrorRequired,
+                ),
+                FormBuilderValidators.minLength(
+                  8,
+                  errorText: l10n.registerFormPasswordErrorMinLength,
+                ),
+                FormBuilderValidators.match(
+                  RegExp(r'^(?=.*[A-Z])'),
+                  errorText: l10n.registerFormPasswordErrorUppercase,
+                ),
+                FormBuilderValidators.match(
+                  RegExp(r'^(?=.*\d)'),
+                  errorText: l10n.registerFormPasswordErrorDigit,
+                ),
+                FormBuilderValidators.match(
+                  RegExp(r'^(?=.*[!@#\$%^&*()_+={}\[\]:;<>,.?~\\-])'),
+                  errorText: l10n.registerFormPasswordErrorSpecialChar,
+                ),
+              ]),
+              textInputAction: TextInputAction.next,
             ),
-          ),
-        ],
+            SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
+            FormBuilderTextField(
+              name: 'confirmPassword',
+              obscureText: !_isConfirmPasswordVisible,
+              decoration: baseDecoration.copyWith(
+                labelText: l10n.registerFormConfirmPasswordLabel,
+                hintText: l10n.registerFormConfirmPasswordHint,
+                prefixIcon: const Icon(LucideIcons.lockKeyhole),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isConfirmPasswordVisible
+                        ? LucideIcons.eyeOff
+                        : LucideIcons.eye,
+                    color: AppColors.greyTextColor,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                    });
+                  },
+                ),
+              ),
+              validator: FormBuilderValidators.compose([
+                FormBuilderValidators.required(
+                  errorText: l10n.registerFormConfirmPasswordErrorRequired,
+                ),
+                (val) {
+                  if (_formKey.currentState?.fields['password']?.value != val) {
+                    return l10n.registerFormConfirmPasswordErrorMismatch;
+                  }
+                  return null;
+                },
+              ]),
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _onRequestOtpAttempt(),
+            ),
+            SizedBox(height: isMobile ? 18 : AppDimensions.largeSpacing),
+            ElevatedButton(
+              onPressed: _onRequestOtpAttempt,
+              child: Text(l10n.registerFormContinueButton),
+            ),
+            SizedBox(height: isMobile ? 8 : AppDimensions.itemSpacing),
+            OutlinedButton.icon(
+              icon: Image.asset(
+                'assets/icons/google.png',
+                width: 15,
+                errorBuilder:
+                    (context, error, stackTrace) =>
+                        const Icon(LucideIcons.chrome, size: 15),
+              ),
+              label: Text(
+                l10n.registerFormCreateAccountWithGoogleButton,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              onPressed: _onGoogleRegisterAttempt,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.darkTextColor,
+                side: BorderSide(color: AppColors.borderColor),
+              ),
+            ),
+            SizedBox(height: isMobile ? 3 : AppDimensions.itemSpacing / 2),
+            Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.registerFormAlreadyHaveAccountPrompt,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      overlayColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                    ),
+                    onPressed: widget.onGoToLogin,
+                    child: Text(l10n.registerFormLoginButton),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
