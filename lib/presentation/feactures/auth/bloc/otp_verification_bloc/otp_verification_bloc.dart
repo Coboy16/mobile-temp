@@ -27,16 +27,29 @@ class OtpVerificationBloc
     OtpRequestSubmitted event,
     Emitter<OtpVerificationState> emit,
   ) async {
-    emit(OtpRequestInProgress());
-    final result = await _requestOtpUseCase(email: event.email);
-    result.fold((failure) {
-      emit(
-        OtpRequestFailure(
-          message: failure.message,
-          statusCode: (failure is ServerFailure) ? failure.statusCode : null,
+    emit(OtpRequestInProgress(email: event.email));
+    final result = await _requestOtpUseCase(
+      email: event.email,
+      onlyRequest: event.onlyRequest,
+    );
+    result.fold(
+      (failure) {
+        emit(
+          OtpRequestFailure(
+            email: event.email,
+            message: failure.message,
+            statusCode: (failure is ServerFailure) ? failure.statusCode : null,
+            wasOnlyRequest: event.onlyRequest,
+          ),
+        );
+      },
+      (_) => emit(
+        OtpRequestSuccess(
+          email: event.email,
+          wasOnlyRequest: event.onlyRequest,
         ),
-      );
-    }, (_) => emit(OtpRequestSuccess(email: event.email)));
+      ),
+    );
   }
 
   Future<void> _onOtpCodeSubmitted(
@@ -47,16 +60,23 @@ class OtpVerificationBloc
     final result = await _verifyOtpUseCase(
       email: event.email,
       code: event.code,
+      onlyVerify: event.onlyVerify,
     );
-    result.fold((failure) {
-      emit(
-        OtpVerifyFailure(
-          email: event.email,
-          message: failure.message,
-          statusCode: (failure is ServerFailure) ? failure.statusCode : null,
-        ),
-      );
-    }, (_) => emit(OtpVerifySuccess(email: event.email)));
+    result.fold(
+      (failure) {
+        emit(
+          OtpVerifyFailure(
+            email: event.email,
+            message: failure.message,
+            statusCode: (failure is ServerFailure) ? failure.statusCode : null,
+            wasOnlyVerify: event.onlyVerify,
+          ),
+        );
+      },
+      (_) => emit(
+        OtpVerifySuccess(email: event.email, wasOnlyVerify: event.onlyVerify),
+      ),
+    );
   }
 
   void _onOtpVerificationReset(

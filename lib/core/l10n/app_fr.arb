@@ -128,5 +128,22 @@
   "registerFormContinueButton": "Continuer",
   "registerFormCreateAccountWithGoogleButton": "Créer un compte avec Google",
   "registerFormAlreadyHaveAccountPrompt": "Vous avez déjà un compte ? ",
-  "registerFormLoginButton": "Se connecter"
+  "registerFormLoginButton": "Se connecter",
+  "formValidationCompleteCorrectly": "Veuillez remplir correctement le formulaire.",
+  "googleSignInCancelled": "Connexion avec Google annulée par l'utilisateur.",
+  "registerWithGoogleSuccessMessage": "Inscription avec Google réussie ! Connexion en cours...",
+  "otpVerificationSuccessMessageRegister": "OTP vérifié avec succès. Procédure d'inscription en cours...",
+  "otpResendSuccessMessage": "Un nouveau code OTP a été envoyé à {email}.",
+  "registrationCompleteMessage": "Inscription terminée ! Connexion en cours...",
+  "autoLoginFailedMessage": "Échec de la connexion automatique",
+  "autoLoginFailedAfterRegisterMessage": "Échec de la connexion après l'inscription",
+  "autoLoginFailedAfterGoogleRegisterMessage": "Échec de la connexion avec Google après l'inscription",
+  "otpVerificationDescriptionForRegistration": "Nous avons envoyé un code de vérification à votre adresse e-mail {email}. Veuillez le saisir ci-dessous pour finaliser votre inscription.",
+  "otpVerificationButtonForRegistration": "Vérifier et S'inscrire",
+  "otpVerificationResendButtonForRegistration": "Renvoyer le Code",
+  "emailAlreadyRegisteredError": "Cet e-mail est déjà enregistré. Veuillez essayer de vous connecter ou utiliser une autre adresse e-mail.",
+  "otpRequestLoadingMessage": "Demande de l'OTP en cours...",
+  "otpVerificationLoadingMessage": "Vérification de l'OTP en cours...",
+  "registerLoadingMessage": "Enregistrement de l'utilisateur en cours...",
+  "loginLoadingMessage": "Connexion en cours..."
 }

@@ -7,7 +7,10 @@ class RequestOtpUseCase {
 
   RequestOtpUseCase(this.repository);
 
-  Future<Either<Failure, void>> call({required String email}) async {
-    return await repository.requestOtp(email: email);
+  Future<Either<Failure, void>> call({
+    required String email,
+    bool? onlyRequest,
+  }) async {
+    return await repository.requestOtp(email: email, onlyRequest: onlyRequest);
   }
 }

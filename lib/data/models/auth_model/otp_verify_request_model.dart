@@ -6,8 +6,14 @@ part 'otp_verify_request_model.g.dart';
 class OtpVerifyRequestModel {
   final String email;
   final String code;
+  @JsonKey(name: 'onlyVerify', includeIfNull: false)
+  final bool? onlyVerify;
 
-  OtpVerifyRequestModel({required this.email, required this.code});
+  OtpVerifyRequestModel({
+    required this.email,
+    required this.code,
+    this.onlyVerify,
+  });
 
   factory OtpVerifyRequestModel.fromJson(Map<String, dynamic> json) =>
       _$OtpVerifyRequestModelFromJson(json);

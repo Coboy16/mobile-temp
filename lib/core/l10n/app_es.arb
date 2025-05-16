@@ -130,7 +130,21 @@
   "registerFormAlreadyHaveAccountPrompt": "¿Ya tienes una cuenta? ",
   "registerFormLoginButton": "Iniciar Sesión",
   "loadingMessageDefault": "Cargando...",
-  "otpVerificationDescriptionForRegistration": "Hemos enviado un código de verificación a tu correo electrónico para completar tu registro.",
+  "formValidationCompleteCorrectly": "Por favor completa el formulario correctamente.",
+  "googleSignInCancelled": "Inicio de sesión con Google cancelado por el usuario.",
+  "registerWithGoogleSuccessMessage": "¡Registro con Google completado! Iniciando sesión...",
+  "otpVerificationSuccessMessageRegister": "OTP verificado correctamente. Procediendo con el registro...",
+  "otpResendSuccessMessage": "Se ha reenviado un nuevo código OTP a {email}.",
+  "registrationCompleteMessage": "¡Registro completado! Iniciando sesión...",
+  "autoLoginFailedMessage": "Falló el inicio de sesión automático",
+  "autoLoginFailedAfterRegisterMessage": "Error al iniciar sesión después del registro",
+  "autoLoginFailedAfterGoogleRegisterMessage": "Error al iniciar sesión con Google después del registro",
+  "otpVerificationDescriptionForRegistration": "Hemos enviado un código de verificación a tu correo electrónico {email}. Por favor, ingrésalo a continuación para completar tu registro.",
   "otpVerificationButtonForRegistration": "Verificar y Registrar",
-  "otpVerificationResendButtonForRegistration": "Reenviar código de registro"
+  "otpVerificationResendButtonForRegistration": "Reenviar Código",
+  "emailAlreadyRegisteredError": "Este correo electrónico ya está registrado. Por favor, intenta iniciar sesión o usa un correo diferente.",
+  "otpRequestLoadingMessage": "Solicitando OTP...",
+  "otpVerificationLoadingMessage": "Verificando OTP...",
+  "registerLoadingMessage": "Registrando usuario...",
+  "loginLoadingMessage": "Iniciando sesión..."
 }

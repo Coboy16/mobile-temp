@@ -3,10 +3,14 @@ import '/core/errors/exceptions.dart';
 import '/data/data.dart';
 
 abstract class OtpRemoteDataSource {
-  Future<OtpGeneralResponseModel> requestOtp({required String email});
+  Future<OtpGeneralResponseModel> requestOtp({
+    required String email,
+    bool? onlyRequest,
+  });
   Future<OtpGeneralResponseModel> verifyOtp({
     required String email,
     required String code,
+    bool? onlyVerify,
   });
 }
 
@@ -27,7 +31,22 @@ class OtpRemoteDataSourceImpl implements OtpRemoteDataSource {
         String errorMessage = "Respuesta inesperada del servidor OTP";
         int? statusCode = response.statusCode;
         if (response.error != null) {
-          errorMessage = response.error.toString();
+          if (response.error is Map<String, dynamic>) {
+            final errorMap = response.error as Map<String, dynamic>;
+            if (errorMap.containsKey('data') &&
+                errorMap['data'] is Map<String, dynamic>) {
+              final dataMap = errorMap['data'] as Map<String, dynamic>;
+              if (dataMap.containsKey('message')) {
+                errorMessage = dataMap['message'].toString();
+              } else if (dataMap.containsKey('mesage')) {
+                errorMessage = dataMap['mesage'].toString();
+              }
+            } else if (errorMap.containsKey('message')) {
+              errorMessage = errorMap['message'].toString();
+            }
+          } else {
+            errorMessage = response.error.toString();
+          }
         } else if (response.base.reasonPhrase != null &&
             response.base.reasonPhrase!.isNotEmpty) {
           errorMessage = response.base.reasonPhrase!;
@@ -43,8 +62,14 @@ class OtpRemoteDataSourceImpl implements OtpRemoteDataSource {
   }
 
   @override
-  Future<OtpGeneralResponseModel> requestOtp({required String email}) async {
-    final requestModel = OtpRequestModel(email: email);
+  Future<OtpGeneralResponseModel> requestOtp({
+    required String email,
+    bool? onlyRequest,
+  }) async {
+    final requestModel = OtpRequestModel(
+      email: email,
+      onlyRequest: onlyRequest,
+    );
     return _handleOtpChopperResponse(
       chopperService.requestOtp(body: requestModel),
     );
@@ -54,8 +79,13 @@ class OtpRemoteDataSourceImpl implements OtpRemoteDataSource {
   Future<OtpGeneralResponseModel> verifyOtp({
     required String email,
     required String code,
+    bool? onlyVerify,
   }) async {
-    final requestModel = OtpVerifyRequestModel(email: email, code: code);
+    final requestModel = OtpVerifyRequestModel(
+      email: email,
+      code: code,
+      onlyVerify: onlyVerify,
+    );
     return _handleOtpChopperResponse(
       chopperService.verifyOtp(body: requestModel),
     );

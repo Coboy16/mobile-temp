@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -12,6 +11,8 @@ import '/presentation/bloc/blocs.dart';
 import '/presentation/routes/app_router.dart';
 import '/presentation/feactures/auth/views/register_otp_view.dart';
 import '/presentation/widgets/widgets.dart';
+
+enum RegistrationStep { initial, preVerifyingEmail, requestingOtpForNewEmail }
 
 class RegisterForm extends StatefulWidget {
   final VoidCallback onGoToLogin;
@@ -26,25 +27,41 @@ class _RegisterFormState extends State<RegisterForm> {
   final _formKey = GlobalKey<FormBuilderState>();
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  RegistrationStep _currentStep = RegistrationStep.initial;
 
-  void _onRequestOtpAttempt() {
+  void _initiateRegistrationProcess() {
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       final values = _formKey.currentState!.value;
-      final email = values['email'] as String;
+      final email = (values['email'] as String).trim();
+
+      setState(() {
+        _currentStep = RegistrationStep.preVerifyingEmail;
+      });
+      // Paso 1: Verificar si el correo ya existe (usando onlyRequest: false)
       context.read<OtpVerificationBloc>().add(
-        OtpRequestSubmitted(email: email),
+        OtpRequestSubmitted(email: email, onlyRequest: false),
       );
     } else {
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor completa el formulario correctamente'),
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.formValidationCompleteCorrectly,
+          ),
         ),
       );
     }
   }
 
   void _onGoogleRegisterAttempt() {
+    // Asegurarse de que no estamos en medio de otro proceso
+    if (_currentStep != RegistrationStep.initial &&
+        _currentStep != RegistrationStep.preVerifyingEmail &&
+        _currentStep != RegistrationStep.requestingOtpForNewEmail)
+      return;
+    setState(() {
+      _currentStep = RegistrationStep.initial; // Reset step if needed
+    });
     context.read<GoogleIdTokenBloc>().add(FetchGoogleIdToken());
   }
 
@@ -52,45 +69,98 @@ class _RegisterFormState extends State<RegisterForm> {
     BuildContext context,
     OtpVerificationState otpState,
   ) {
-    if (otpState is OtpRequestSuccess) {
-      final values = _formKey.currentState!.value;
-      context.goNamed(
-        AppRoutes.registerOtp,
-        extra: RegisterOtpViewArguments(
-          email: otpState.email,
-          name: values['firstName'] as String,
-          fatherLastname: values['paternalLastName'] as String,
-          motherLastname: values['maternalLastName'] as String,
-          password: values['password'] as String,
-        ),
-      );
-    } else if (otpState is OtpRequestFailure) {
-      String dialogMessage = otpState.message;
+    final l10n = AppLocalizations.of(context)!;
+    final values =
+        _formKey
+            .currentState
+            ?.value; // Puede ser null si el form no está montado
+    final emailFromForm =
+        values != null ? (values['email'] as String).trim() : '';
 
-      if (otpState.statusCode == 401 &&
-          otpState.message.toLowerCase().contains("correo no existe")) {
-        debugPrint(
-          "OTP Request: Correo no existe en BD (401), procediendo a verificación OTP.",
+    if (_currentStep == RegistrationStep.preVerifyingEmail) {
+      if (otpState is OtpRequestSuccess &&
+          otpState.email == emailFromForm &&
+          otpState.wasOnlyRequest == false) {
+        // Correo YA EXISTE porque el backend envió OTP para recuperación (status 200)
+        showDialog(
+          context: context,
+          builder:
+              (_) => RegistrationFailedDialog(
+                message: l10n.emailAlreadyRegisteredError,
+              ),
         );
-        final values = _formKey.currentState!.value;
-        final emailFromForm = values['email'] as String;
-
-        context.goNamed(
-          AppRoutes.registerOtp,
-          extra: RegisterOtpViewArguments(
-            email: emailFromForm,
-            name: values['firstName'] as String,
-            fatherLastname: values['paternalLastName'] as String,
-            motherLastname: values['maternalLastName'] as String,
-            password: values['password'] as String,
-          ),
+        setState(() {
+          _currentStep = RegistrationStep.initial;
+        });
+      } else if (otpState is OtpRequestFailure &&
+          otpState.email == emailFromForm &&
+          otpState.wasOnlyRequest == false) {
+        // Si el error es "Correo no existe" (ej. 401/400), entonces podemos proceder.
+        if (otpState.statusCode == 401 ||
+            otpState.statusCode == 400 ||
+            otpState.statusCode == 404) {
+          // Ajusta los códigos de error según tu backend
+          if (otpState.message.toLowerCase().contains("correo no existe") ||
+              otpState.message.toLowerCase().contains("user not found") ||
+              otpState.message.toLowerCase().contains(
+                "usuario no encontrado",
+              )) {
+            // Correo NO EXISTE, ¡perfecto! Proceder a solicitar OTP para nuevo correo.
+            debugPrint(
+              "Pre-verificación: Correo no existe. Solicitando OTP para registro.",
+            );
+            setState(() {
+              _currentStep = RegistrationStep.requestingOtpForNewEmail;
+            });
+            context.read<OtpVerificationBloc>().add(
+              OtpRequestSubmitted(email: emailFromForm, onlyRequest: true),
+            );
+            return; // Importante para no procesar más este estado
+          }
+        }
+        // Otro error durante la pre-verificación
+        showDialog(
+          context: context,
+          builder: (_) => RegistrationFailedDialog(message: otpState.message),
         );
-        return;
+        setState(() {
+          _currentStep = RegistrationStep.initial;
+        });
       }
-      showDialog(
-        context: context,
-        builder: (_) => RegistrationFailedDialog(message: dialogMessage),
-      );
+      // Si es OtpRequestInProgress, el loading global se encarga.
+    } else if (_currentStep == RegistrationStep.requestingOtpForNewEmail) {
+      if (otpState is OtpRequestSuccess &&
+          otpState.email == emailFromForm &&
+          otpState.wasOnlyRequest == true) {
+        // OTP solicitado con éxito para el nuevo correo
+        if (values != null) {
+          context.read<OtpVerificationBloc>().add(OtpVerificationReset());
+          context.goNamed(
+            AppRoutes.registerOtp,
+            extra: RegisterOtpViewArguments(
+              email: otpState.email,
+              name: values['firstName'] as String,
+              fatherLastname: values['paternalLastName'] as String,
+              motherLastname: values['maternalLastName'] as String,
+              password: values['password'] as String,
+            ),
+          );
+        }
+        setState(() {
+          _currentStep = RegistrationStep.initial;
+        });
+      } else if (otpState is OtpRequestFailure &&
+          otpState.email == emailFromForm &&
+          otpState.wasOnlyRequest == true) {
+        // Falló la solicitud de OTP para el nuevo correo
+        showDialog(
+          context: context,
+          builder: (_) => RegistrationFailedDialog(message: otpState.message),
+        );
+        setState(() {
+          _currentStep = RegistrationStep.initial;
+        });
+      }
     }
   }
 
@@ -98,6 +168,7 @@ class _RegisterFormState extends State<RegisterForm> {
     BuildContext context,
     GoogleIdTokenState googleState,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     if (googleState is GoogleIdTokenSuccess) {
       context.read<RegisterBloc>().add(
         RegisterWithGoogleSubmitted(
@@ -112,19 +183,23 @@ class _RegisterFormState extends State<RegisterForm> {
         builder: (_) => RegistrationFailedDialog(message: googleState.message),
       );
     } else if (googleState is GoogleIdTokenCancelled) {
-      debugPrint('Registro con Google cancelado');
+      debugPrint('Registro con Google cancelado por el usuario.');
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
-      //TODO: poner un dialog
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.googleSignInCancelled)));
     }
+    setState(() {
+      _currentStep = RegistrationStep.initial;
+    });
   }
 
   void _handleRegisterState(BuildContext context, RegisterState registerState) {
+    final l10n = AppLocalizations.of(context)!;
     if (registerState is RegisterSuccess) {
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('¡Registro con Google completado! Iniciando sesión...'),
-        ),
+        SnackBar(content: Text(l10n.registerWithGoogleSuccessMessage)),
       );
     } else if (registerState is RegisterFailure) {
       showDialog(
@@ -133,6 +208,9 @@ class _RegisterFormState extends State<RegisterForm> {
             (_) => RegistrationFailedDialog(message: registerState.message),
       );
     }
+    setState(() {
+      _currentStep = RegistrationStep.initial;
+    });
   }
 
   @override
@@ -305,11 +383,11 @@ class _RegisterFormState extends State<RegisterForm> {
                 },
               ]),
               textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _onRequestOtpAttempt(),
+              onSubmitted: (_) => _initiateRegistrationProcess(),
             ),
             SizedBox(height: isMobile ? 18 : AppDimensions.largeSpacing),
             ElevatedButton(
-              onPressed: _onRequestOtpAttempt,
+              onPressed: _initiateRegistrationProcess,
               child: Text(l10n.registerFormContinueButton),
             ),
             SizedBox(height: isMobile ? 8 : AppDimensions.itemSpacing),

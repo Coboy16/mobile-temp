@@ -13,13 +13,19 @@ class OtpRepositoryImpl implements OtpRepository {
   });
 
   @override
-  Future<Either<Failure, void>> requestOtp({required String email}) async {
+  Future<Either<Failure, void>> requestOtp({
+    required String email,
+    bool? onlyRequest,
+  }) async {
     if (await networkInfo.isConnected) {
       try {
-        final responseModel = await remoteDataSource.requestOtp(email: email);
+        final responseModel = await remoteDataSource.requestOtp(
+          email: email,
+          onlyRequest: onlyRequest,
+        );
 
         if (responseModel.status && responseModel.statusCode == 200) {
-          return const Right(null); // OTP solicitado/reenviado con éxito
+          return const Right(null);
         } else {
           String errorMessage =
               responseModel.data?.message ?? "Error al solicitar OTP.";
@@ -47,16 +53,18 @@ class OtpRepositoryImpl implements OtpRepository {
   Future<Either<Failure, void>> verifyOtp({
     required String email,
     required String code,
+    bool? onlyVerify,
   }) async {
     if (await networkInfo.isConnected) {
       try {
         final responseModel = await remoteDataSource.verifyOtp(
           email: email,
           code: code,
+          onlyVerify: onlyVerify,
         );
 
         if (responseModel.status && responseModel.statusCode == 200) {
-          return const Right(null); // OTP verificado con éxito
+          return const Right(null);
         } else {
           String errorMessage =
               responseModel.data?.message ?? "Error al verificar OTP.";

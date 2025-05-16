@@ -8,7 +8,7 @@ import '/presentation/feactures/auth/views/auth_layout.dart';
 import '/presentation/feactures/auth/widgets/widgets.dart';
 import '/presentation/widgets/widgets.dart';
 import '/presentation/routes/app_router.dart';
-import '/presentation/bloc/blocs.dart';
+import '/presentation/bloc/blocs.dart'; // Asegúrate que AuthBloc esté exportado aquí
 
 class RegisterOtpViewArguments {
   final String email;
@@ -31,20 +31,27 @@ class RegisterOtpView extends StatelessWidget {
 
   const RegisterOtpView({super.key, required this.registrationArgs});
 
-  void _showSnackBar(BuildContext context, String message) {
+  void _showSnackBar(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
     ScaffoldMessenger.of(context).removeCurrentSnackBar();
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Theme.of(context).colorScheme.error : null,
+      ),
+    );
   }
 
   void _handleOtpVerificationState(
     BuildContext context,
     OtpVerificationState otpState,
   ) {
-    if (otpState is OtpVerifySuccess) {
-      // OTP verificado, ahora proceder con el registro final
-      _showSnackBar(context, 'OTP verificado correctamente. Registrando...');
+    final l10n = AppLocalizations.of(context)!;
+    if (otpState is OtpVerifySuccess && otpState.wasOnlyVerify == true) {
+      _showSnackBar(context, l10n.otpVerificationSuccessMessageRegister);
       context.read<RegisterBloc>().add(
         RegisterUserSubmitted(
           name: registrationArgs.name,
@@ -54,19 +61,18 @@ class RegisterOtpView extends StatelessWidget {
           password: registrationArgs.password,
         ),
       );
-    } else if (otpState is OtpVerifyFailure) {
+    } else if (otpState is OtpVerifyFailure && otpState.wasOnlyVerify == true) {
       showDialog(
         context: context,
         builder: (_) => RegistrationFailedDialog(message: otpState.message),
       );
     } else if (otpState is OtpRequestSuccess &&
-        otpState.email == registrationArgs.email) {
-      // Esto podría ser después de un reenvío exitoso
-      _showSnackBar(
-        context,
-        'Se ha reenviado un nuevo código OTP a ${otpState.email}',
-      );
-    } else if (otpState is OtpRequestFailure) {
+        otpState.email == registrationArgs.email &&
+        otpState.wasOnlyRequest == true) {
+      _showSnackBar(context, l10n.otpResendSuccessMessage(otpState.email));
+    } else if (otpState is OtpRequestFailure &&
+        otpState.wasOnlyRequest == true) {
+      // Si el reenvío falla durante el proceso de registro OTP
       showDialog(
         context: context,
         builder: (_) => RegistrationFailedDialog(message: otpState.message),
@@ -75,15 +81,16 @@ class RegisterOtpView extends StatelessWidget {
   }
 
   void _handleRegisterState(BuildContext context, RegisterState registerState) {
-    // Este listener es para el resultado del registro *final*
+    final l10n = AppLocalizations.of(context)!;
     if (registerState is RegisterSuccess) {
-      // El flujo de login post-registro y navegación a home se maneja en RegisterView
-      // o en un nivel superior si AuthBloc/AuthGoogleBloc lo hacen globalmente.
-      // Aquí solo confirmamos que el registro (la llamada al endpoint /auth/user) fue exitosa.
-      // La navegación a login o home ya está configurada en RegisterView.
-      // Podríamos mostrar un mensaje y luego dejar que RegisterView maneje la navegación.
-      _showSnackBar(context, '¡Registro completado! Iniciando sesión...');
-      // No necesitamos navegar desde aquí si RegisterView ya lo hace al escuchar AuthBloc/AuthGoogleBloc
+      _showSnackBar(context, l10n.registrationCompleteMessage);
+      // Intentar login automático
+      context.read<AuthBloc>().add(
+        AuthLoginRequested(
+          email: registrationArgs.email,
+          cedulaOrPassword: registrationArgs.password,
+        ),
+      );
     } else if (registerState is RegisterFailure) {
       showDialog(
         context: context,
@@ -93,40 +100,70 @@ class RegisterOtpView extends StatelessWidget {
     }
   }
 
+  void _handleAuthState(BuildContext context, AuthState authState) {
+    // Este listener es para el resultado del login automático post-registro
+    if (authState is AuthAuthenticated) {
+      context.goNamed(AppRoutes.home);
+    } else if (authState is AuthFailure) {
+      // Si el login automático falla, mostrar error y quizás llevar a la pantalla de login manual.
+      _showSnackBar(
+        context,
+        '${AppLocalizations.of(context)!.autoLoginFailedMessage}: ${authState.message}',
+        isError: true,
+      );
+      context.goNamed(AppRoutes.login);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    // Asegurarse que el OtpVerificationBloc se resetea al entrar si es necesario,
+    // o que el estado de OtpRequestSuccess de RegisterForm no interfiera.
+    // El reset ya se hace en RegisterForm antes de navegar aquí.
+
     return MultiBlocListener(
       listeners: [
         BlocListener<OtpVerificationBloc, OtpVerificationState>(
-          listener:
-              (context, state) => _handleOtpVerificationState(context, state),
+          listener: _handleOtpVerificationState,
         ),
         BlocListener<RegisterBloc, RegisterState>(
-          // Para el resultado del registro final
-          listener: (context, state) => _handleRegisterState(context, state),
+          listener: _handleRegisterState,
+        ),
+        BlocListener<AuthBloc, AuthState>(
+          // Para el login automático
+          listener: _handleAuthState,
         ),
       ],
       child: AuthLayout(
-        authView: AuthView.forgotPasswordOtp,
+        authView: AuthView.forgotPasswordOtp, // Reutiliza el layout visual
         emailForOtp: registrationArgs.email,
         rightPanelContent: OtpFormWidget(
           email: registrationArgs.email,
           onOtpVerified: (otp) {
             context.read<OtpVerificationBloc>().add(
-              OtpCodeSubmitted(email: registrationArgs.email, code: otp),
+              OtpCodeSubmitted(
+                email: registrationArgs.email,
+                code: otp,
+                onlyVerify: true, // Crucial para el flujo de registro
+              ),
             );
           },
           onResendOtp: () {
             context.read<OtpVerificationBloc>().add(
-              OtpRequestSubmitted(email: registrationArgs.email),
+              OtpRequestSubmitted(
+                email: registrationArgs.email,
+                onlyRequest: true, // Crucial para el flujo de registro
+              ),
             );
           },
           onGoBack: () {
             context.read<OtpVerificationBloc>().add(OtpVerificationReset());
             context.goNamed(AppRoutes.register);
           },
-          descriptionText: l10n.otpVerificationDescriptionForRegistration,
+          descriptionText: l10n.otpVerificationDescriptionForRegistration(
+            registrationArgs.email,
+          ),
           buttonText: l10n.otpVerificationButtonForRegistration,
           resendOtpButtonText: l10n.otpVerificationResendButtonForRegistration,
         ),

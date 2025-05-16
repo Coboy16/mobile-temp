@@ -10,7 +10,12 @@ class VerifyOtpUseCase {
   Future<Either<Failure, void>> call({
     required String email,
     required String code,
+    bool? onlyVerify,
   }) async {
-    return await repository.verifyOtp(email: email, code: code);
+    return await repository.verifyOtp(
+      email: email,
+      code: code,
+      onlyVerify: onlyVerify,
+    );
   }
 }

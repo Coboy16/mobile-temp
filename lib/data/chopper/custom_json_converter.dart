@@ -95,6 +95,9 @@ class CustomJsonConverter extends JsonConverter {
       } else if (BodyType == RegisterResponseModel) {
         final model = RegisterResponseModel.fromJson(body);
         return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
+      } else if (BodyType == OtpGeneralResponseModel) {
+        final model = OtpGeneralResponseModel.fromJson(body);
+        return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
       }
 
       debugPrint(

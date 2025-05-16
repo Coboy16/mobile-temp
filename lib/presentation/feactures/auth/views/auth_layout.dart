@@ -5,6 +5,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '/presentation/bloc/blocs.dart';
 import '/presentation/feactures/auth/widgets/widgets.dart';
 import '/presentation/resources/resources.dart';
+import '/presentation/routes/app_router.dart';
 import '/presentation/widgets/widgets.dart';
 
 class AuthLayout extends StatelessWidget {
@@ -142,6 +143,9 @@ class AuthLayout extends StatelessWidget {
               BlocListener<GoogleIdTokenBloc, GoogleIdTokenState>(
                 listener: (context, state) {},
               ),
+              BlocListener<OtpVerificationBloc, OtpVerificationState>(
+                listener: (context, state) {},
+              ),
             ],
             child: Stack(
               children: [
@@ -178,6 +182,8 @@ class AuthLayout extends StatelessWidget {
                         context.watch<RegisterBloc>().state;
                     final googleIdTokenBlocState =
                         context.watch<GoogleIdTokenBloc>().state;
+                    final otpVerificationState =
+                        context.watch<OtpVerificationBloc>().state;
 
                     final bool isLoading =
                         currentAuthBlocState is AuthLoading ||
@@ -185,12 +191,26 @@ class AuthLayout extends StatelessWidget {
                         googleState is AuthGoogleLoading ||
                         checkLockStatusState is CheckLockStatusLoading ||
                         registerBlocState is RegisterLoading ||
-                        googleIdTokenBlocState is GoogleIdTokenLoading;
+                        googleIdTokenBlocState is GoogleIdTokenLoading ||
+                        otpVerificationState is OtpRequestInProgress ||
+                        otpVerificationState is OtpVerifyInProgress;
 
                     if (isLoading) {
-                      String loadingMessage =
-                          AppLocalizations.of(context)?.loadingMessage ??
-                          l10n.loadingMessageDefault;
+                      String loadingMessage = l10n.loadingMessageDefault;
+                      if (otpVerificationState is OtpRequestInProgress) {
+                        loadingMessage = l10n.otpRequestLoadingMessage;
+                      } else if (otpVerificationState is OtpVerifyInProgress) {
+                        loadingMessage = l10n.otpVerificationLoadingMessage;
+                      } else if (registerBlocState is RegisterLoading) {
+                        loadingMessage = l10n.registerLoadingMessage;
+                      } else if (currentAuthBlocState is AuthLoading &&
+                          (ModalRoute.of(context)?.settings.name ==
+                                  AppRoutes.login ||
+                              ModalRoute.of(context)?.settings.name ==
+                                  AppRoutes.registerOtp)) {
+                        loadingMessage = l10n.loginLoadingMessage;
+                      }
+
                       return CustomLoadingHotech(
                         overlay: true,
                         message: loadingMessage,
