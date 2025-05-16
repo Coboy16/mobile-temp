@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 import '/presentation/bloc/blocs.dart';
 import '/presentation/feactures/auth/widgets/widgets.dart';
@@ -19,60 +20,6 @@ class AuthLayout extends StatelessWidget {
     required this.rightPanelContent,
     this.emailForOtp,
   });
-
-  _LayoutDimensions _getLayoutDimensions(
-    BoxConstraints constraints,
-    AuthView view,
-  ) {
-    bool showLeftPanel = constraints.maxWidth > 800;
-    int leftPanelFlex = 3;
-    int rightPanelFlex = 2;
-    double cardMaxHeight = 650;
-    double rightPanelMobileHeightFactor = 0.6;
-
-    if (showLeftPanel) {
-      if (view == AuthView.register) {
-        leftPanelFlex = 2;
-        rightPanelFlex = 3;
-      }
-    }
-
-    switch (view) {
-      case AuthView.login:
-        cardMaxHeight = 650;
-        rightPanelMobileHeightFactor = 0.6;
-        break;
-      case AuthView.register:
-        cardMaxHeight = 780;
-        rightPanelMobileHeightFactor = 0.68;
-        break;
-      case AuthView.forgotPasswordEmail:
-        cardMaxHeight = 600;
-        rightPanelMobileHeightFactor = 0.55;
-        break;
-      case AuthView.forgotPasswordOtp:
-        cardMaxHeight = 620;
-        rightPanelMobileHeightFactor = 0.6;
-        break;
-    }
-
-    double rightPanelMobileMaxHeight =
-        constraints.maxHeight * rightPanelMobileHeightFactor;
-
-    if (view == AuthView.register && !showLeftPanel) {
-      rightPanelMobileMaxHeight = 620;
-    } else if (_isAuthRelatedView(view) && !showLeftPanel) {
-      rightPanelMobileMaxHeight = 550;
-    }
-
-    return _LayoutDimensions(
-      showLeftPanel: showLeftPanel,
-      leftPanelFlex: leftPanelFlex,
-      rightPanelFlex: rightPanelFlex,
-      cardMaxHeight: cardMaxHeight,
-      rightPanelMobileMaxHeight: rightPanelMobileMaxHeight,
-    );
-  }
 
   bool _isAuthRelatedView(AuthView view) {
     return view == AuthView.login ||
@@ -116,114 +63,139 @@ class AuthLayout extends StatelessWidget {
     }
   }
 
+  double _getDesktopCardMaxHeight(AuthView view) {
+    switch (view) {
+      case AuthView.login:
+        return 650;
+      case AuthView.register:
+        return 780;
+      case AuthView.forgotPasswordEmail:
+        return 600;
+      case AuthView.forgotPasswordOtp:
+        return 620;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return LayoutBuilder(
+    final responsive = ResponsiveBreakpoints.of(context);
+
+    final title = _getTitle(context, authView);
+    final subtitle = _getSubtitle(context, authView, emailForOtp);
+    final bool isDesktop = responsive.isDesktop;
+
+    Widget mainVisualContent = LayoutBuilder(
       builder: (context, constraints) {
-        final dimensions = _getLayoutDimensions(constraints, authView);
-        final isMobile = !dimensions.showLeftPanel;
-        final title = _getTitle(context, authView);
-        final subtitle = _getSubtitle(context, authView, emailForOtp);
-
-        return Scaffold(
-          backgroundColor:
-              dimensions.showLeftPanel
-                  ? Theme.of(context).colorScheme.onPrimaryContainer
-                  : AppColors.primaryBlue,
-          body: MultiBlocListener(
-            listeners: [
-              BlocListener<AuthBloc, AuthState>(listener: (context, state) {}),
-              BlocListener<AuthGoogleBloc, AuthGoogleState>(
-                listener: (context, state) {},
+        Widget cardSection = Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ResponsiveVisibility(
+                visible: !isDesktop,
+                child: _buildMobileHeaderIcon(context, authView),
               ),
-              BlocListener<RegisterBloc, RegisterState>(
-                listener: (context, state) {},
-              ),
-              BlocListener<GoogleIdTokenBloc, GoogleIdTokenState>(
-                listener: (context, state) {},
-              ),
-              BlocListener<OtpVerificationBloc, OtpVerificationState>(
-                listener: (context, state) {},
-              ),
+              _buildMainCard(context, title, subtitle, responsive),
             ],
-            child: Stack(
-              children: [
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (isMobile) _buildMobileHeaderIcon(context, authView),
-                      _buildMainCard(
-                        context,
-                        dimensions,
-                        isMobile,
-                        title,
-                        subtitle,
-                      ),
-                    ],
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 16.0, right: 16.0),
-                    child: SafeArea(child: LanguageSelectorOverlay()),
-                  ),
-                ),
-                BlocBuilder<AuthBloc, AuthState>(
-                  builder: (context, authState) {
-                    final currentAuthBlocState =
-                        context.watch<AuthBloc>().state;
-                    final googleState = context.watch<AuthGoogleBloc>().state;
-                    final checkLockStatusState =
-                        context.watch<CheckLockStatusBloc>().state;
-                    final registerBlocState =
-                        context.watch<RegisterBloc>().state;
-                    final googleIdTokenBlocState =
-                        context.watch<GoogleIdTokenBloc>().state;
-                    final otpVerificationState =
-                        context.watch<OtpVerificationBloc>().state;
-
-                    final bool isLoading =
-                        currentAuthBlocState is AuthLoading ||
-                        currentAuthBlocState is AuthValidationInProgress ||
-                        googleState is AuthGoogleLoading ||
-                        checkLockStatusState is CheckLockStatusLoading ||
-                        registerBlocState is RegisterLoading ||
-                        googleIdTokenBlocState is GoogleIdTokenLoading ||
-                        otpVerificationState is OtpRequestInProgress ||
-                        otpVerificationState is OtpVerifyInProgress;
-
-                    if (isLoading) {
-                      String loadingMessage = l10n.loadingMessageDefault;
-                      if (otpVerificationState is OtpRequestInProgress) {
-                        loadingMessage = l10n.otpRequestLoadingMessage;
-                      } else if (otpVerificationState is OtpVerifyInProgress) {
-                        loadingMessage = l10n.otpVerificationLoadingMessage;
-                      } else if (registerBlocState is RegisterLoading) {
-                        loadingMessage = l10n.registerLoadingMessage;
-                      } else if (currentAuthBlocState is AuthLoading &&
-                          (ModalRoute.of(context)?.settings.name ==
-                                  AppRoutes.login ||
-                              ModalRoute.of(context)?.settings.name ==
-                                  AppRoutes.registerOtp)) {
-                        loadingMessage = l10n.loginLoadingMessage;
-                      }
-
-                      return CustomLoadingHotech(
-                        overlay: true,
-                        message: loadingMessage,
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
-            ),
           ),
         );
+
+        if (!isDesktop) {
+          return SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight,
+                minWidth: constraints.maxWidth,
+              ),
+              child: cardSection,
+            ),
+          );
+        }
+        return cardSection;
       },
+    );
+
+    return Scaffold(
+      backgroundColor:
+          isDesktop
+              ? Theme.of(context).colorScheme.onPrimaryContainer
+              : AppColors.primaryBlue,
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<AuthBloc, AuthState>(listener: (context, state) {}),
+          BlocListener<AuthGoogleBloc, AuthGoogleState>(
+            listener: (context, state) {},
+          ),
+          BlocListener<RegisterBloc, RegisterState>(
+            listener: (context, state) {},
+          ),
+          BlocListener<GoogleIdTokenBloc, GoogleIdTokenState>(
+            listener: (context, state) {},
+          ),
+          BlocListener<OtpVerificationBloc, OtpVerificationState>(
+            listener: (context, state) {},
+          ),
+        ],
+        child: Stack(
+          children: [
+            mainVisualContent,
+            Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 16.0, right: 16.0),
+                child: SafeArea(child: LanguageSelectorOverlay()),
+              ),
+            ),
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, authState) {
+                final currentAuthBlocState = context.watch<AuthBloc>().state;
+                final googleState = context.watch<AuthGoogleBloc>().state;
+                final checkLockStatusState =
+                    context.watch<CheckLockStatusBloc>().state;
+                final registerBlocState = context.watch<RegisterBloc>().state;
+                final googleIdTokenBlocState =
+                    context.watch<GoogleIdTokenBloc>().state;
+                final otpVerificationState =
+                    context.watch<OtpVerificationBloc>().state;
+
+                final bool isLoading =
+                    currentAuthBlocState is AuthLoading ||
+                    currentAuthBlocState is AuthValidationInProgress ||
+                    googleState is AuthGoogleLoading ||
+                    checkLockStatusState is CheckLockStatusLoading ||
+                    registerBlocState is RegisterLoading ||
+                    googleIdTokenBlocState is GoogleIdTokenLoading ||
+                    otpVerificationState is OtpRequestInProgress ||
+                    otpVerificationState is OtpVerifyInProgress;
+
+                if (isLoading) {
+                  String loadingMessage = l10n.loadingMessageDefault;
+                  if (otpVerificationState is OtpRequestInProgress) {
+                    loadingMessage = l10n.otpRequestLoadingMessage;
+                  } else if (otpVerificationState is OtpVerifyInProgress) {
+                    loadingMessage = l10n.otpVerificationLoadingMessage;
+                  } else if (registerBlocState is RegisterLoading) {
+                    loadingMessage = l10n.registerLoadingMessage;
+                  } else if (currentAuthBlocState is AuthLoading &&
+                      (ModalRoute.of(context)?.settings.name ==
+                              AppRoutes.login ||
+                          ModalRoute.of(context)?.settings.name ==
+                              AppRoutes.registerOtp)) {
+                    loadingMessage = l10n.loginLoadingMessage;
+                  }
+
+                  return CustomLoadingHotech(
+                    overlay: true,
+                    message: loadingMessage,
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -242,15 +214,26 @@ class AuthLayout extends StatelessWidget {
 
   Widget _buildMainCard(
     BuildContext context,
-    _LayoutDimensions dimensions,
-    bool isMobile,
     String title,
     String subtitle,
+    ResponsiveBreakpointsData responsive,
   ) {
+    final double desktopCardMaxHeight = _getDesktopCardMaxHeight(authView);
+    final bool isDesktop = responsive.isDesktop;
+
+    int leftPanelFlex = 3;
+    int rightPanelFlex = 2;
+    if (isDesktop) {
+      if (authView == AuthView.register) {
+        leftPanelFlex = 2;
+        rightPanelFlex = 3;
+      }
+    }
+
     return ConstrainedBox(
       constraints: BoxConstraints(
         maxWidth: 1200,
-        maxHeight: dimensions.cardMaxHeight,
+        maxHeight: isDesktop ? desktopCardMaxHeight : double.infinity,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -264,12 +247,21 @@ class AuthLayout extends StatelessWidget {
           clipBehavior: Clip.antiAlias,
           child: Row(
             children: [
-              if (dimensions.showLeftPanel)
-                Expanded(
-                  flex: dimensions.leftPanelFlex,
+              ResponsiveVisibility(
+                visible: isDesktop,
+                child: Expanded(
+                  flex: leftPanelFlex,
                   child: LeftPanel(authView: authView),
                 ),
-              _buildRightPanel(context, dimensions, isMobile, title, subtitle),
+              ),
+              _buildRightPanel(
+                context,
+                title,
+                subtitle,
+                responsive,
+                rightPanelFlex,
+                desktopCardMaxHeight,
+              ),
             ],
           ),
         ),
@@ -279,21 +271,21 @@ class AuthLayout extends StatelessWidget {
 
   Widget _buildRightPanel(
     BuildContext context,
-    _LayoutDimensions dimensions,
-    bool isMobile,
     String title,
     String subtitle,
+    ResponsiveBreakpointsData responsive,
+    int flex,
+    double desktopCardMaxHeight,
   ) {
     final l10n = AppLocalizations.of(context)!;
+    final bool isDesktop = responsive.isDesktop;
+
     return Expanded(
-      flex: dimensions.showLeftPanel ? dimensions.rightPanelFlex : 1,
+      flex: isDesktop ? flex : 1,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: 1200,
-          maxHeight:
-              dimensions.showLeftPanel
-                  ? dimensions.cardMaxHeight
-                  : dimensions.rightPanelMobileMaxHeight,
+          maxHeight: isDesktop ? desktopCardMaxHeight : double.infinity,
         ),
         child: Container(
           decoration: BoxDecoration(
@@ -307,21 +299,45 @@ class AuthLayout extends StatelessWidget {
             ],
           ),
           padding: EdgeInsets.symmetric(
-            horizontal: !isMobile ? AppDimensions.panelPadding * 1.5 : 20,
+            horizontal:
+                ResponsiveValue<double>(
+                  context,
+                  defaultValue: AppDimensions.panelPadding * 1.5,
+                  conditionalValues: [
+                    Condition.equals(name: MOBILE, value: 20.0),
+                  ],
+                ).value,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: isMobile ? MainAxisSize.min : MainAxisSize.max,
+            mainAxisAlignment:
+                ResponsiveValue<MainAxisAlignment>(
+                  context,
+                  defaultValue: MainAxisAlignment.center, // For Desktop
+                  conditionalValues: [
+                    Condition.equals(
+                      name: MOBILE,
+                      value: MainAxisAlignment.center,
+                    ),
+                  ],
+                ).value,
+            mainAxisSize:
+                ResponsiveValue<MainAxisSize>(
+                  context,
+                  defaultValue: MainAxisSize.max, // For Desktop
+                  conditionalValues: [
+                    Condition.equals(name: MOBILE, value: MainAxisSize.min),
+                  ],
+                ).value,
             children: [
-              if (isMobile &&
+              if (!isDesktop &&
                   (authView == AuthView.register ||
                       authView == AuthView.forgotPasswordOtp ||
                       authView == AuthView.forgotPasswordEmail))
                 const SizedBox(height: AppDimensions.itemSpacing),
-              isMobile && authView == AuthView.login
-                  ? const SizedBox(height: 20)
-                  : const SizedBox(height: 0),
+              if (!isDesktop && authView == AuthView.login)
+                const SizedBox(height: 20),
+
               Text(
                 title,
                 style: TextStyle(
@@ -330,7 +346,16 @@ class AuthLayout extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: !isMobile ? AppDimensions.itemSpacing / 2 : 4),
+              SizedBox(
+                height:
+                    ResponsiveValue<double>(
+                      context,
+                      defaultValue: AppDimensions.itemSpacing * 0.2, // Desktop
+                      conditionalValues: [
+                        Condition.equals(name: MOBILE, value: 4.0),
+                      ],
+                    ).value,
+              ),
               Text(
                 subtitle,
                 style: const TextStyle(
@@ -340,24 +365,66 @@ class AuthLayout extends StatelessWidget {
               ),
               SizedBox(
                 height:
-                    !isMobile
-                        ? AppDimensions.largeSpacing * 1.2
-                        : (isMobile &&
-                                (authView == AuthView.login ||
-                                    authView == AuthView.forgotPasswordEmail)
-                            ? AppDimensions.itemSpacing * 1
-                            : AppDimensions.largeSpacing - 15),
+                    ResponsiveValue<double>(
+                      context,
+                      defaultValue: AppDimensions.largeSpacing * 0.7, // Desktop
+                      conditionalValues: [
+                        Condition.equals(
+                          name: MOBILE,
+                          value:
+                              (authView == AuthView.login ||
+                                      authView == AuthView.forgotPasswordEmail)
+                                  ? AppDimensions.itemSpacing * 1.0
+                                  : AppDimensions.largeSpacing - 15,
+                        ),
+                      ],
+                    ).value,
               ),
               rightPanelContent,
-              SizedBox(height: isMobile ? 0 : AppDimensions.largeSpacing * 1.2),
-              if (!(isMobile && authView == AuthView.register))
-                Align(
-                  alignment: Alignment.center,
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      bottom:
-                          (isMobile && authView != AuthView.register) ? 25 : 0,
-                    ),
+              SizedBox(
+                height:
+                    ResponsiveValue<double>(
+                      context,
+                      defaultValue: AppDimensions.largeSpacing * 1.2, // Desktop
+                      conditionalValues: [
+                        Condition.equals(
+                          name: MOBILE,
+                          value: 0,
+                        ), // No extra space at bottom for mobile here
+                      ],
+                    ).value,
+              ),
+              if (!(!isDesktop && authView == AuthView.register))
+                Padding(
+                  padding: EdgeInsets.only(
+                    top:
+                        ResponsiveValue<double>(
+                          context,
+                          defaultValue: 0,
+                          conditionalValues: [
+                            Condition.equals(
+                              name: MOBILE,
+                              value:
+                                  (authView != AuthView.register)
+                                      ? AppDimensions.itemSpacing
+                                      : 0,
+                            ),
+                          ],
+                        ).value,
+                    bottom:
+                        ResponsiveValue<double>(
+                          context,
+                          defaultValue: 0,
+                          conditionalValues: [
+                            Condition.equals(
+                              name: MOBILE,
+                              value: (authView != AuthView.register) ? 25 : 0,
+                            ),
+                          ],
+                        ).value,
+                  ),
+                  child: Align(
+                    alignment: Alignment.center,
                     child: Text(
                       l10n.copyrightNotice(DateTime.now().year),
                       style: const TextStyle(
@@ -367,7 +434,7 @@ class AuthLayout extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (isMobile && authView == AuthView.register)
+              if (!isDesktop && authView == AuthView.register)
                 const SizedBox(height: 10),
             ],
           ),
@@ -375,20 +442,4 @@ class AuthLayout extends StatelessWidget {
       ),
     );
   }
-}
-
-class _LayoutDimensions {
-  final bool showLeftPanel;
-  final int leftPanelFlex;
-  final int rightPanelFlex;
-  final double cardMaxHeight;
-  final double rightPanelMobileMaxHeight;
-
-  _LayoutDimensions({
-    required this.showLeftPanel,
-    required this.leftPanelFlex,
-    required this.rightPanelFlex,
-    required this.cardMaxHeight,
-    required this.rightPanelMobileMaxHeight,
-  });
 }

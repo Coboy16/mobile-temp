@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 import '/presentation/routes/app_router.dart';
 import '/presentation/theme/app_theme.dart';
@@ -35,6 +36,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentLocale = context.watch<LocaleBloc>().state.locale;
     return MaterialApp.router(
+      builder:
+          (context, child) => ResponsiveBreakpoints.builder(
+            child: child!,
+            breakpoints: const [
+              Breakpoint(start: 0, end: 800, name: MOBILE),
+              Breakpoint(start: 801, end: 1920, name: DESKTOP),
+              Breakpoint(start: 1921, end: double.infinity, name: '4K'),
+            ],
+          ),
       title: 'Fe Core Vips',
       routerConfig: AppRouter.router,
       localizationsDelegates: const [

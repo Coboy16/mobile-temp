@@ -83,7 +83,7 @@ class RegisterOtpView extends StatelessWidget {
   void _handleRegisterState(BuildContext context, RegisterState registerState) {
     final l10n = AppLocalizations.of(context)!;
     if (registerState is RegisterSuccess) {
-      _showSnackBar(context, l10n.registrationCompleteMessage);
+      debugPrint(l10n.registrationCompleteMessage);
       // Intentar login automático
       context.read<AuthBloc>().add(
         AuthLoginRequested(
@@ -101,11 +101,9 @@ class RegisterOtpView extends StatelessWidget {
   }
 
   void _handleAuthState(BuildContext context, AuthState authState) {
-    // Este listener es para el resultado del login automático post-registro
     if (authState is AuthAuthenticated) {
       context.goNamed(AppRoutes.home);
     } else if (authState is AuthFailure) {
-      // Si el login automático falla, mostrar error y quizás llevar a la pantalla de login manual.
       _showSnackBar(
         context,
         '${AppLocalizations.of(context)!.autoLoginFailedMessage}: ${authState.message}',

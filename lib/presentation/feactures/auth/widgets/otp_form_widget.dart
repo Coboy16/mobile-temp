@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:pinput/pinput.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 import '/presentation/resources/resources.dart';
 
@@ -51,13 +51,27 @@ class _OtpFormWidgetState extends State<OtpFormWidget> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isMobile = MediaQuery.of(context).size.width <= 800;
 
     final defaultPinTheme = PinTheme(
-      width: isMobile ? 45 : 50,
-      height: isMobile ? 50 : 55,
+      width:
+          ResponsiveValue<double>(
+            context,
+            defaultValue: 50, // Desktop
+            conditionalValues: [Condition.equals(name: MOBILE, value: 45.0)],
+          ).value,
+      height:
+          ResponsiveValue<double>(
+            context,
+            defaultValue: 55, // Desktop
+            conditionalValues: [Condition.equals(name: MOBILE, value: 50.0)],
+          ).value,
       textStyle: TextStyle(
-        fontSize: isMobile ? 20 : 22,
+        fontSize:
+            ResponsiveValue<double>(
+              context,
+              defaultValue: 22, // Desktop
+              conditionalValues: [Condition.equals(name: MOBILE, value: 20.0)],
+            ).value,
         color: Theme.of(context).colorScheme.onSurface,
         fontWeight: FontWeight.w600,
       ),
@@ -114,12 +128,30 @@ class _OtpFormWidgetState extends State<OtpFormWidget> {
               onSubmitted: (pin) => _submitOtp(),
             ),
           ),
-          SizedBox(height: isMobile ? 20 : AppDimensions.largeSpacing * 1.2),
+          SizedBox(
+            height:
+                ResponsiveValue<double>(
+                  context,
+                  defaultValue: AppDimensions.largeSpacing * 1.2, // Desktop
+                  conditionalValues: [
+                    Condition.equals(name: MOBILE, value: 20.0),
+                  ],
+                ).value,
+          ),
           ElevatedButton(
             onPressed: _submitOtp,
             child: Text(widget.buttonText ?? l10n.otpFormDefaultSubmitButton),
           ),
-          SizedBox(height: isMobile ? 12 : AppDimensions.itemSpacing),
+          SizedBox(
+            height:
+                ResponsiveValue<double>(
+                  context,
+                  defaultValue: AppDimensions.itemSpacing, // Desktop
+                  conditionalValues: [
+                    Condition.equals(name: MOBILE, value: 12.0),
+                  ],
+                ).value,
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

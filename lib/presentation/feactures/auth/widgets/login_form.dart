@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 import '/presentation/widgets/widgets.dart';
 import '/presentation/resources/resources.dart';
@@ -32,13 +32,10 @@ class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormBuilderState>();
   bool _isPasswordVisible = false;
 
-  // Modificado para primero verificar el estado de bloqueo
   void _onLoginAttempt() {
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       final username =
           _formKey.currentState?.fields['username']?.value as String;
-
-      // Disparar evento para verificar estado de bloqueo
       context.read<CheckLockStatusBloc>().add(
         CheckUserLockStatusRequested(email: username.trim()),
       );
@@ -48,25 +45,21 @@ class _LoginFormState extends State<LoginForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isMobile = MediaQuery.of(context).size.width <= 800;
+    final responsive = ResponsiveBreakpoints.of(context);
 
-    // Envolver el FormBuilder con BlocListener para CheckLockStatusBloc
     return BlocListener<CheckLockStatusBloc, CheckLockStatusState>(
       listener: (context, state) {
         if (state is CheckLockStatusSuccess) {
           if (state.validationInfo.isBlocked) {
             showDialog(
               context: context,
-              barrierDismissible:
-                  false, // Para que el usuario deba presionar OK
+              barrierDismissible: false,
               builder:
                   (_) => UserBlockedDialog(
                     minutesBlocked: state.validationInfo.minutesBlocked,
                   ),
             );
           } else {
-            // No está bloqueado, proceder con el login
-            // Obtener los valores del formulario de nuevo aquí para asegurar que son los actuales
             final username =
                 _formKey.currentState?.fields['username']?.value as String;
             final password =
@@ -80,7 +73,6 @@ class _LoginFormState extends State<LoginForm> {
             builder: (_) => UserBlockedDialog(errorMessage: state.message),
           );
         }
-        // El estado CheckLockStatusLoading es manejado globalmente por AuthLayout
       },
       child: FormBuilder(
         key: _formKey,
@@ -102,7 +94,16 @@ class _LoginFormState extends State<LoginForm> {
               ]),
               textInputAction: TextInputAction.next,
             ),
-            SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
+            SizedBox(
+              height:
+                  ResponsiveValue<double>(
+                    context,
+                    defaultValue: AppDimensions.itemSpacing, // Desktop
+                    conditionalValues: [
+                      Condition.equals(name: MOBILE, value: 14.0),
+                    ],
+                  ).value,
+            ),
             FormBuilderTextField(
               name: 'password',
               obscureText: !_isPasswordVisible,
@@ -134,13 +135,22 @@ class _LoginFormState extends State<LoginForm> {
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => _onLoginAttempt(),
             ),
-            SizedBox(height: isMobile ? 0 : AppDimensions.itemSpacing / 2),
+            SizedBox(
+              height:
+                  ResponsiveValue<double>(
+                    context,
+                    defaultValue: AppDimensions.itemSpacing / 2, // Desktop
+                    conditionalValues: [
+                      Condition.equals(name: MOBILE, value: 0),
+                    ],
+                  ).value,
+            ),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
                 style: TextButton.styleFrom(
                   padding:
-                      isMobile
+                      responsive.isMobile
                           ? const EdgeInsets.symmetric(vertical: 8.0)
                           : null,
                   overlayColor: Colors.transparent,
@@ -150,12 +160,30 @@ class _LoginFormState extends State<LoginForm> {
                 child: Text(l10n.loginFormForgotPasswordButton),
               ),
             ),
-            SizedBox(height: isMobile ? 4 : AppDimensions.largeSpacing),
+            SizedBox(
+              height:
+                  ResponsiveValue<double>(
+                    context,
+                    defaultValue: AppDimensions.largeSpacing, // Desktop
+                    conditionalValues: [
+                      Condition.equals(name: MOBILE, value: 4.0),
+                    ],
+                  ).value,
+            ),
             ElevatedButton(
               onPressed: _onLoginAttempt,
               child: Text(l10n.loginFormLoginButton),
             ),
-            SizedBox(height: isMobile ? 8 : AppDimensions.itemSpacing),
+            SizedBox(
+              height:
+                  ResponsiveValue<double>(
+                    context,
+                    defaultValue: AppDimensions.itemSpacing, // Desktop
+                    conditionalValues: [
+                      Condition.equals(name: MOBILE, value: 8.0),
+                    ],
+                  ).value,
+            ),
             if (widget.onGoogleLogin != null)
               OutlinedButton.icon(
                 icon: Image.asset(
@@ -177,9 +205,21 @@ class _LoginFormState extends State<LoginForm> {
                   side: BorderSide(color: AppColors.borderColor),
                 ),
               ),
-            SizedBox(height: isMobile ? 10 : AppDimensions.itemSpacing / 2),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            SizedBox(
+              height:
+                  ResponsiveValue<double>(
+                    context,
+                    defaultValue: AppDimensions.itemSpacing / 2, // Desktop
+                    conditionalValues: [
+                      Condition.equals(name: MOBILE, value: 10.0),
+                    ],
+                  ).value,
+            ),
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 4.0,
+              runSpacing: 0,
               children: [
                 Text(
                   l10n.loginFormNoAccountPrompt,
@@ -187,7 +227,12 @@ class _LoginFormState extends State<LoginForm> {
                 ),
                 TextButton(
                   style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 0,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     overlayColor: Colors.transparent,
                     shadowColor: Colors.transparent,
                   ),

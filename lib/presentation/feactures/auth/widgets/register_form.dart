@@ -5,6 +5,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 import '/presentation/resources/resources.dart';
 import '/presentation/bloc/blocs.dart';
@@ -29,15 +30,51 @@ class _RegisterFormState extends State<RegisterForm> {
   bool _isConfirmPasswordVisible = false;
   RegistrationStep _currentStep = RegistrationStep.initial;
 
+  // Método para extraer apellidos paterno y materno del campo unificado
+  Map<String, String> _extractLastNames(String fullLastNames) {
+    final List<String> parts = fullLastNames.trim().split(' ');
+    String paternalLastName = '';
+    String maternalLastName = '';
+
+    if (parts.isNotEmpty) {
+      paternalLastName = parts[0];
+
+      if (parts.length > 1) {
+        // Combina el resto de palabras como apellido materno
+        maternalLastName = parts.sublist(1).join(' ');
+      }
+    }
+
+    return {
+      'paternalLastName': paternalLastName,
+      'maternalLastName': maternalLastName,
+    };
+  }
+
   void _initiateRegistrationProcess() {
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       final values = _formKey.currentState!.value;
       final email = (values['email'] as String).trim();
 
+      // Extraer apellidos del campo unificado
+      final String fullLastNames = (values['lastNames'] as String).trim();
+      final extractedLastNames = _extractLastNames(fullLastNames);
+
+      // NO modificamos el mapa de valores directamente, solo actualizamos los campos del formulario
+      _formKey.currentState!.fields['paternalLastName']?.didChange(
+        extractedLastNames['paternalLastName'],
+      );
+      _formKey.currentState!.fields['maternalLastName']?.didChange(
+        extractedLastNames['maternalLastName'],
+      );
+      _formKey.currentState!.save();
+
+      debugPrint("Apellido paterno: ${extractedLastNames['paternalLastName']}");
+      debugPrint("Apellido materno: ${extractedLastNames['maternalLastName']}");
+
       setState(() {
         _currentStep = RegistrationStep.preVerifyingEmail;
       });
-      // Paso 1: Verificar si el correo ya existe (usando onlyRequest: false)
       context.read<OtpVerificationBloc>().add(
         OtpRequestSubmitted(email: email, onlyRequest: false),
       );
@@ -54,13 +91,13 @@ class _RegisterFormState extends State<RegisterForm> {
   }
 
   void _onGoogleRegisterAttempt() {
-    // Asegurarse de que no estamos en medio de otro proceso
     if (_currentStep != RegistrationStep.initial &&
         _currentStep != RegistrationStep.preVerifyingEmail &&
-        _currentStep != RegistrationStep.requestingOtpForNewEmail)
+        _currentStep != RegistrationStep.requestingOtpForNewEmail) {
       return;
+    }
     setState(() {
-      _currentStep = RegistrationStep.initial; // Reset step if needed
+      _currentStep = RegistrationStep.initial;
     });
     context.read<GoogleIdTokenBloc>().add(FetchGoogleIdToken());
   }
@@ -70,10 +107,7 @@ class _RegisterFormState extends State<RegisterForm> {
     OtpVerificationState otpState,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final values =
-        _formKey
-            .currentState
-            ?.value; // Puede ser null si el form no está montado
+    final values = _formKey.currentState?.value;
     final emailFromForm =
         values != null ? (values['email'] as String).trim() : '';
 
@@ -81,7 +115,6 @@ class _RegisterFormState extends State<RegisterForm> {
       if (otpState is OtpRequestSuccess &&
           otpState.email == emailFromForm &&
           otpState.wasOnlyRequest == false) {
-        // Correo YA EXISTE porque el backend envió OTP para recuperación (status 200)
         showDialog(
           context: context,
           builder:
@@ -95,17 +128,14 @@ class _RegisterFormState extends State<RegisterForm> {
       } else if (otpState is OtpRequestFailure &&
           otpState.email == emailFromForm &&
           otpState.wasOnlyRequest == false) {
-        // Si el error es "Correo no existe" (ej. 401/400), entonces podemos proceder.
         if (otpState.statusCode == 401 ||
             otpState.statusCode == 400 ||
             otpState.statusCode == 404) {
-          // Ajusta los códigos de error según tu backend
           if (otpState.message.toLowerCase().contains("correo no existe") ||
               otpState.message.toLowerCase().contains("user not found") ||
               otpState.message.toLowerCase().contains(
                 "usuario no encontrado",
               )) {
-            // Correo NO EXISTE, ¡perfecto! Proceder a solicitar OTP para nuevo correo.
             debugPrint(
               "Pre-verificación: Correo no existe. Solicitando OTP para registro.",
             );
@@ -115,10 +145,9 @@ class _RegisterFormState extends State<RegisterForm> {
             context.read<OtpVerificationBloc>().add(
               OtpRequestSubmitted(email: emailFromForm, onlyRequest: true),
             );
-            return; // Importante para no procesar más este estado
+            return;
           }
         }
-        // Otro error durante la pre-verificación
         showDialog(
           context: context,
           builder: (_) => RegistrationFailedDialog(message: otpState.message),
@@ -127,21 +156,44 @@ class _RegisterFormState extends State<RegisterForm> {
           _currentStep = RegistrationStep.initial;
         });
       }
-      // Si es OtpRequestInProgress, el loading global se encarga.
     } else if (_currentStep == RegistrationStep.requestingOtpForNewEmail) {
       if (otpState is OtpRequestSuccess &&
           otpState.email == emailFromForm &&
           otpState.wasOnlyRequest == true) {
-        // OTP solicitado con éxito para el nuevo correo
         if (values != null) {
+          // Obtenemos los valores actualizados del formulario después de haber hecho didChange y save
+          final paternalLastName =
+              _formKey.currentState?.fields['paternalLastName']?.value
+                  as String? ??
+              '';
+          final maternalLastName =
+              _formKey.currentState?.fields['maternalLastName']?.value
+                  as String? ??
+              '';
+
+          // Verificación de seguridad: si los campos están vacíos, volvemos a extraer de lastNames
+          String finalPaternal = paternalLastName;
+          String finalMaternal = maternalLastName;
+
+          if (finalPaternal.isEmpty || finalMaternal.isEmpty) {
+            final String fullLastNames = (values['lastNames'] as String).trim();
+            final extractedLastNames = _extractLastNames(fullLastNames);
+            finalPaternal = extractedLastNames['paternalLastName'] ?? '';
+            finalMaternal = extractedLastNames['maternalLastName'] ?? '';
+          }
+
+          debugPrint(
+            "Enviando al OTP - Paterno: $finalPaternal, Materno: $finalMaternal",
+          );
+
           context.read<OtpVerificationBloc>().add(OtpVerificationReset());
           context.goNamed(
             AppRoutes.registerOtp,
             extra: RegisterOtpViewArguments(
               email: otpState.email,
               name: values['firstName'] as String,
-              fatherLastname: values['paternalLastName'] as String,
-              motherLastname: values['maternalLastName'] as String,
+              fatherLastname: finalPaternal,
+              motherLastname: finalMaternal,
               password: values['password'] as String,
             ),
           );
@@ -152,7 +204,6 @@ class _RegisterFormState extends State<RegisterForm> {
       } else if (otpState is OtpRequestFailure &&
           otpState.email == emailFromForm &&
           otpState.wasOnlyRequest == true) {
-        // Falló la solicitud de OTP para el nuevo correo
         showDialog(
           context: context,
           builder: (_) => RegistrationFailedDialog(message: otpState.message),
@@ -198,9 +249,8 @@ class _RegisterFormState extends State<RegisterForm> {
     final l10n = AppLocalizations.of(context)!;
     if (registerState is RegisterSuccess) {
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.registerWithGoogleSuccessMessage)),
-      );
+      debugPrint(l10n.registerWithGoogleSuccessMessage);
+      //mover al home
     } else if (registerState is RegisterFailure) {
       showDialog(
         context: context,
@@ -216,15 +266,23 @@ class _RegisterFormState extends State<RegisterForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isMobile = MediaQuery.of(context).size.width <= 800;
+    final responsive = ResponsiveBreakpoints.of(context);
+
     final InputDecoration baseDecoration = InputDecoration(
       prefixIconConstraints: const BoxConstraints(minWidth: 48),
       suffixIconConstraints: const BoxConstraints(minWidth: 48),
       contentPadding: EdgeInsets.symmetric(
         horizontal: 16,
-        vertical: isMobile ? 12 : 16,
+        vertical: responsive.isMobile ? 12 : 16,
       ),
     );
+
+    final double formFieldSpacing =
+        ResponsiveValue<double>(
+          context,
+          defaultValue: 15, // Desktop
+          conditionalValues: [Condition.equals(name: MOBILE, value: 14.0)],
+        ).value;
 
     return MultiBlocListener(
       listeners: [
@@ -257,37 +315,42 @@ class _RegisterFormState extends State<RegisterForm> {
               ]),
               textInputAction: TextInputAction.next,
             ),
-            SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
+            SizedBox(height: formFieldSpacing),
+            // Campo unificado de apellidos
             FormBuilderTextField(
-              name: 'paternalLastName',
+              name: 'lastNames',
               decoration: baseDecoration.copyWith(
-                labelText: l10n.registerFormPaternalLastNameLabel,
-                hintText: l10n.registerFormPaternalLastNameHint,
+                labelText: 'Apellidos',
+                hintText: 'Ingrese sus apellidos',
                 prefixIcon: const Icon(LucideIcons.userCheck),
               ),
               validator: FormBuilderValidators.compose([
                 FormBuilderValidators.required(
-                  errorText: l10n.registerFormPaternalLastNameErrorRequired,
+                  errorText: 'Los apellidos son requeridos',
                 ),
               ]),
               textInputAction: TextInputAction.next,
             ),
-            SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
-            FormBuilderTextField(
-              name: 'maternalLastName',
-              decoration: baseDecoration.copyWith(
-                labelText: l10n.registerFormMaternalLastNameLabel,
-                hintText: l10n.registerFormMaternalLastNameHint,
-                prefixIcon: const Icon(LucideIcons.userCheck),
+
+            // Campos ocultos para mantener la compatibilidad
+            SizedBox(
+              height: 0,
+              child: FormBuilderTextField(
+                name: 'paternalLastName',
+                initialValue: '',
+                enabled: true,
               ),
-              validator: FormBuilderValidators.compose([
-                FormBuilderValidators.required(
-                  errorText: l10n.registerFormMaternalLastNameErrorRequired,
-                ),
-              ]),
-              textInputAction: TextInputAction.next,
             ),
-            SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
+            SizedBox(
+              height: 0,
+              child: FormBuilderTextField(
+                name: 'maternalLastName',
+                initialValue: '',
+                enabled: true,
+              ),
+            ),
+
+            SizedBox(height: formFieldSpacing),
             FormBuilderTextField(
               name: 'email',
               decoration: baseDecoration.copyWith(
@@ -306,7 +369,7 @@ class _RegisterFormState extends State<RegisterForm> {
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
             ),
-            SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
+            SizedBox(height: formFieldSpacing),
             FormBuilderTextField(
               name: 'password',
               obscureText: !_isPasswordVisible,
@@ -349,7 +412,7 @@ class _RegisterFormState extends State<RegisterForm> {
               ]),
               textInputAction: TextInputAction.next,
             ),
-            SizedBox(height: isMobile ? 14 : AppDimensions.itemSpacing),
+            SizedBox(height: formFieldSpacing),
             FormBuilderTextField(
               name: 'confirmPassword',
               obscureText: !_isConfirmPasswordVisible,
@@ -385,12 +448,30 @@ class _RegisterFormState extends State<RegisterForm> {
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => _initiateRegistrationProcess(),
             ),
-            SizedBox(height: isMobile ? 18 : AppDimensions.largeSpacing),
+            SizedBox(
+              height:
+                  ResponsiveValue<double>(
+                    context,
+                    defaultValue: AppDimensions.largeSpacing, // Desktop
+                    conditionalValues: [
+                      Condition.equals(name: MOBILE, value: 18.0),
+                    ],
+                  ).value,
+            ),
             ElevatedButton(
               onPressed: _initiateRegistrationProcess,
               child: Text(l10n.registerFormContinueButton),
             ),
-            SizedBox(height: isMobile ? 8 : AppDimensions.itemSpacing),
+            SizedBox(
+              height:
+                  ResponsiveValue<double>(
+                    context,
+                    defaultValue: AppDimensions.itemSpacing, // Desktop
+                    conditionalValues: [
+                      Condition.equals(name: MOBILE, value: 8.0),
+                    ],
+                  ).value,
+            ),
             OutlinedButton.icon(
               icon: Image.asset(
                 'assets/icons/google.png',
@@ -411,7 +492,16 @@ class _RegisterFormState extends State<RegisterForm> {
                 side: BorderSide(color: AppColors.borderColor),
               ),
             ),
-            SizedBox(height: isMobile ? 3 : AppDimensions.itemSpacing / 2),
+            SizedBox(
+              height:
+                  ResponsiveValue<double>(
+                    context,
+                    defaultValue: AppDimensions.itemSpacing / 2, // Desktop
+                    conditionalValues: [
+                      Condition.equals(name: MOBILE, value: 3.0),
+                    ],
+                  ).value,
+            ),
             Center(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
