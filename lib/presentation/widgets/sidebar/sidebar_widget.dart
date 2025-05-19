@@ -1,17 +1,25 @@
-import 'package:fe_core_vips/presentation/feactures/auth/bloc/blocs.dart';
-import 'package:fe_core_vips/presentation/routes/app_router.dart';
 import 'package:flutter/material.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
-import '/presentation/feactures/home/bloc/blocs.dart';
 import '/presentation/resources/resources.dart';
 import '/presentation/widgets/widgets.dart';
+import '/presentation/routes/app_router.dart';
+import '/presentation/bloc/blocs.dart';
 
-// WIDGET PRINCIPAL QUE MANEJA EL ESTADO Y LA ANIMACIÓN
+class SidebarWrapper extends StatelessWidget {
+  const SidebarWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SidebarWidget();
+  }
+}
+
 class SidebarWidget extends StatefulWidget {
   const SidebarWidget({super.key});
 
@@ -21,22 +29,20 @@ class SidebarWidget extends StatefulWidget {
 
 class _SidebarWidgetState extends State<SidebarWidget>
     with SingleTickerProviderStateMixin {
-  bool isExpanded = true;
   late AnimationController _animationController;
   late Animation<double> _widthAnimation;
-  late NavegationBarBloc _navigationBarBloc;
-  int currentIndex = 0;
 
-  static const Duration _animationDuration = Duration(milliseconds: 80);
+  static const Duration _animationDuration = Duration(milliseconds: 150);
 
   @override
   void initState() {
     super.initState();
-    _navigationBarBloc = BlocProvider.of<NavegationBarBloc>(context);
+    final sidebarBloc = BlocProvider.of<SidebarBloc>(context);
+
     _animationController = AnimationController(
       vsync: this,
       duration: _animationDuration,
-      value: isExpanded ? 0.0 : 1.0,
+      value: sidebarBloc.state.isSidebarExpanded ? 0.0 : 1.0,
     );
 
     _widthAnimation = Tween<double>(
@@ -51,27 +57,42 @@ class _SidebarWidgetState extends State<SidebarWidget>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Initial check and listen for future changes via LayoutBuilder or BlocListener
+    _checkLayout(context);
+  }
+
+  @override
   void dispose() {
     _animationController.dispose();
     super.dispose();
   }
 
-  void toggleSidebar() {
-    setState(() {
-      isExpanded = !isExpanded;
-      if (isExpanded) {
-        _animationController.reverse();
-      } else {
-        _animationController.forward();
-      }
-    });
+  void _handleToggleSidebarAnimation(bool isExpanded) {
+    if (isExpanded) {
+      _animationController.reverse();
+    } else {
+      _animationController.forward();
+    }
+  }
+
+  void _checkLayout(BuildContext context) {
+    final responsive = ResponsiveBreakpoints.of(context);
+    // Adjust this condition based on your `responsive_framework` breakpoints
+    // For example, if you consider TABLET also a "small screen" for the sidebar behavior.
+    bool isCurrentlySmallScreen = responsive.isMobile || responsive.isTablet;
+    // Or: bool isCurrentlySmallScreen = responsive.smallerOrEqualTo(TABLET);
+
+    // Send event to BLoC only if the layout type has actually changed
+    // The BLoC itself will also check if state.isSmallScreenLayout needs update
+    context.read<SidebarBloc>().add(
+      SidebarLayoutChanged(isCurrentlySmallScreen),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Datos comunes para ambos widgets
-    const String currentRoute = 'Solicitudes'; // Example
-
     final List<String> portalEmpleadoRoutes = [
       'Solicitudes',
       'Comprobantes de Pago',
@@ -91,195 +112,264 @@ class _SidebarWidgetState extends State<SidebarWidget>
       'Mi Perfil',
     ];
 
-    final bool isPortalEmpleadoSelected = portalEmpleadoRoutes.contains(
-      currentRoute,
-    );
-    final bool isReclutamientoSelected = reclutamientoRoutes.contains(
-      currentRoute,
-    );
-    final bool isPortalCandidatoSelected = portalCandidatoRoutes.contains(
-      currentRoute,
-    );
-
     return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthUnauthenticated || state is AuthFailure) {
+      listener: (context, authState) {
+        if (authState is AuthUnauthenticated || authState is AuthFailure) {
           if (Navigator.of(context, rootNavigator: true).canPop()) {
             Navigator.of(context, rootNavigator: true).pop();
           }
         }
-
-        if (state is AuthUnauthenticated) {
-          if (state.message != null) {
-            debugPrint(state.message!);
+        if (authState is AuthUnauthenticated) {
+          if (authState.message != null) {
             context.pushReplacementNamed(AppRoutes.login);
           }
-        } else if (state is AuthFailure) {
+        } else if (authState is AuthFailure) {
           ScaffoldMessenger.of(context)
             ..removeCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(state.message)));
+            ..showSnackBar(SnackBar(content: Text(authState.message)));
         }
       },
-      child: AnimatedBuilder(
-        animation: _widthAnimation,
-        builder: (context, child) {
+      child: BlocConsumer<SidebarBloc, SidebarState>(
+        listener: (context, state) {
+          _handleToggleSidebarAnimation(state.isSidebarExpanded);
+        },
+        listenWhen:
+            (previous, current) =>
+                previous.isSidebarExpanded != current.isSidebarExpanded,
+        buildWhen: (previous, current) => true,
+        builder: (context, sidebarState) {
+          // Re-check layout on each build. LayoutBuilder is more robust for this.
+          // However, for simplicity with BlocConsumer, we can call it here.
+          // For more complex scenarios, wrap parts of the tree with LayoutBuilder.
+          // _checkLayout(context); // Can be called here, but LayoutBuilder is better.
+
           final double expandedOpacity = 1.0 - _animationController.value;
           final double collapsedOpacity = _animationController.value;
 
-          return Container(
-            width: _widthAnimation.value,
-            color: AppColors.sidebarBackground,
-            child: Column(
-              children: [
-                SidebarHeaderWithToggle(
-                  isExpanded: isExpanded,
-                  onToggle: toggleSidebar,
-                  widthAnimation: _widthAnimation,
-                ),
+          return LayoutBuilder(
+            // Use LayoutBuilder to react to constraint changes
+            builder: (context, constraints) {
+              // This is a more reliable place to check for layout changes
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _checkLayout(context);
+              });
 
-                // UserInfo con ClipRect para prevenir overflow
-                ClipRect(
-                  child: AnimatedOpacity(
-                    duration: _animationDuration,
-                    opacity: (expandedOpacity * 1.2).clamp(0.0, 1.0),
-                    child:
-                        isExpanded || _animationController.value < 0.5
-                            ? const UserInfo()
-                            : const SizedBox.shrink(),
-                  ),
-                ),
-
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: ClipRect(
-                      child: Stack(
-                        clipBehavior: Clip.hardEdge,
-                        children: [
-                          // Contenido expandido
-                          AnimatedOpacity(
-                            duration: _animationDuration,
-                            opacity: (expandedOpacity * 1.2).clamp(0.0, 1.0),
-                            child: IgnorePointer(
-                              ignoring: !isExpanded,
-                              child: ExpandedSidebarContent(
-                                currentRoute: currentRoute,
-                                portalEmpleadoRoutes: portalEmpleadoRoutes,
-                                reclutamientoRoutes: reclutamientoRoutes,
-                                portalCandidatoRoutes: portalCandidatoRoutes,
-                                isPortalEmpleadoSelected:
-                                    isPortalEmpleadoSelected,
-                                isReclutamientoSelected:
-                                    isReclutamientoSelected,
-                                isPortalCandidatoSelected:
-                                    isPortalCandidatoSelected,
-                                onNavigate: (index) {
-                                  setState(() => currentIndex = index);
-                                  _navigationBarBloc.add(
-                                    UpdateIndexNavegationEvent(index),
-                                  );
-                                },
+              return AnimatedBuilder(
+                animation: _widthAnimation,
+                builder: (context, child) {
+                  return Container(
+                    width: _widthAnimation.value,
+                    color: AppColors.sidebarBackground,
+                    child: Column(
+                      children: [
+                        SidebarHeaderWithToggle(
+                          isExpanded: sidebarState.isSidebarExpanded,
+                          onToggle:
+                              () => context.read<SidebarBloc>().add(
+                                const SidebarVisibilityToggled(),
+                              ),
+                          widthAnimation: _widthAnimation,
+                        ),
+                        if (sidebarState.isSidebarExpanded ||
+                            _animationController.value < 0.5)
+                          ClipRect(
+                            child: AnimatedOpacity(
+                              duration: _animationDuration,
+                              opacity: (expandedOpacity * 1.2).clamp(0.0, 1.0),
+                              child: const UserInfo(),
+                            ),
+                          ),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            child: ClipRect(
+                              child: Stack(
+                                children: [
+                                  AnimatedOpacity(
+                                    duration: _animationDuration,
+                                    opacity: (expandedOpacity * 1.2).clamp(
+                                      0.0,
+                                      1.0,
+                                    ),
+                                    child: IgnorePointer(
+                                      ignoring: !sidebarState.isSidebarExpanded,
+                                      child: ExpandedSidebarContent(
+                                        currentRoute:
+                                            sidebarState.currentSelectedRoute,
+                                        expandedParentRoutes:
+                                            sidebarState.expandedParentRoutes,
+                                        portalEmpleadoRoutes:
+                                            portalEmpleadoRoutes,
+                                        reclutamientoRoutes:
+                                            reclutamientoRoutes,
+                                        portalCandidatoRoutes:
+                                            portalCandidatoRoutes,
+                                        onNavigateToRoute: (
+                                          routeName, {
+                                          parentRouteName,
+                                          isParentItem = false,
+                                        }) {
+                                          context.read<SidebarBloc>().add(
+                                            SidebarRouteSelected(
+                                              routeName,
+                                              parentRouteName: parentRouteName,
+                                              isParentItem: isParentItem,
+                                            ),
+                                          );
+                                        },
+                                        onToggleExpansion: (parentRouteName) {
+                                          context.read<SidebarBloc>().add(
+                                            SidebarExpansionToggled(
+                                              parentRouteName,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  AnimatedOpacity(
+                                    duration: _animationDuration,
+                                    opacity: (collapsedOpacity * 1.2).clamp(
+                                      0.0,
+                                      1.0,
+                                    ),
+                                    child: IgnorePointer(
+                                      ignoring: sidebarState.isSidebarExpanded,
+                                      child: CollapsedSidebarContent(
+                                        currentRoute:
+                                            sidebarState.currentSelectedRoute,
+                                        portalEmpleadoRoutes:
+                                            portalEmpleadoRoutes,
+                                        reclutamientoRoutes:
+                                            reclutamientoRoutes,
+                                        portalCandidatoRoutes:
+                                            portalCandidatoRoutes,
+                                        onNavigateToRoute: (
+                                          routeName, {
+                                          parentRouteName,
+                                        }) {
+                                          context.read<SidebarBloc>().add(
+                                            SidebarRouteSelected(
+                                              routeName,
+                                              parentRouteName: parentRouteName,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-
-                          // Contenido colapsado
-                          AnimatedOpacity(
-                            duration: _animationDuration,
-                            opacity: (collapsedOpacity * 1.2).clamp(0.0, 1.0),
-                            child: IgnorePointer(
-                              ignoring: isExpanded,
-                              child: CollapsedSidebarContent(
-                                currentRoute: currentRoute,
-                                portalEmpleadoRoutes: portalEmpleadoRoutes,
-                                reclutamientoRoutes: reclutamientoRoutes,
-                                portalCandidatoRoutes: portalCandidatoRoutes,
+                        ),
+                        Divider(
+                          color: AppColors.dividerColor.withOpacity(0.1),
+                          height: 1,
+                          thickness: 1,
+                        ),
+                        ClipRect(
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              AnimatedOpacity(
+                                duration: _animationDuration,
+                                opacity: (expandedOpacity * 1.2).clamp(
+                                  0.0,
+                                  1.0,
+                                ),
+                                child: IgnorePointer(
+                                  ignoring: !sidebarState.isSidebarExpanded,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SidebarItem(
+                                        title: 'Ayuda y Soporte',
+                                        icon: LucideIcons.circleHelp,
+                                        isSelected:
+                                            sidebarState.currentSelectedRoute ==
+                                            'Ayuda y Soporte',
+                                        onTap: () {
+                                          context.read<SidebarBloc>().add(
+                                            const SidebarRouteSelected(
+                                              'Ayuda y Soporte',
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      SidebarItem(
+                                        title: 'Configuración',
+                                        icon: LucideIcons.settings,
+                                        isSelected:
+                                            sidebarState.currentSelectedRoute ==
+                                            'Configuración',
+                                        onTap: () {
+                                          context.read<SidebarBloc>().add(
+                                            const SidebarRouteSelected(
+                                              'Configuración',
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      SidebarItem(
+                                        title: 'Cerrar Sesión',
+                                        icon: LucideIcons.logOut,
+                                        onTap: () => _handleLogout(context),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
+                              AnimatedOpacity(
+                                duration: _animationDuration,
+                                opacity: (collapsedOpacity * 1.2).clamp(
+                                  0.0,
+                                  1.0,
+                                ),
+                                child: IgnorePointer(
+                                  ignoring: sidebarState.isSidebarExpanded,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _buildCollapsedItem(
+                                        LucideIcons.circleHelp,
+                                        sidebarState.currentSelectedRoute ==
+                                            'Ayuda y Soporte',
+                                        () => context.read<SidebarBloc>().add(
+                                          const SidebarRouteSelected(
+                                            'Ayuda y Soporte',
+                                          ),
+                                        ),
+                                      ),
+                                      _buildCollapsedItem(
+                                        LucideIcons.settings,
+                                        sidebarState.currentSelectedRoute ==
+                                            'Configuración',
+                                        () => context.read<SidebarBloc>().add(
+                                          const SidebarRouteSelected(
+                                            'Configuración',
+                                          ),
+                                        ),
+                                      ),
+                                      _buildCollapsedItem(
+                                        LucideIcons.logOut,
+                                        false,
+                                        () => _handleLogout(context),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
                     ),
-                  ),
-                ),
-
-                Divider(
-                  color: AppColors.dividerColor.withOpacity(0.1),
-                  height: 1,
-                  thickness: 1,
-                ),
-
-                // Área de botones inferiores
-                ClipRect(
-                  child: Stack(
-                    alignment: Alignment.center,
-                    clipBehavior: Clip.hardEdge,
-                    children: [
-                      // Botones expandidos
-                      AnimatedOpacity(
-                        duration: _animationDuration,
-                        opacity: (expandedOpacity * 1.2).clamp(0.0, 1.0),
-                        child: IgnorePointer(
-                          ignoring: !isExpanded,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SidebarItem(
-                                title: 'Ayuda y Soporte',
-                                icon: LucideIcons.circleHelp,
-                                isSelected: currentRoute == 'Ayuda',
-                                onTap: () => print('Navegar a Ayuda'),
-                              ),
-                              SidebarItem(
-                                title: 'Configuración',
-                                icon: LucideIcons.settings,
-                                isSelected: currentRoute == 'Configuracion',
-                                onTap: () => print('Navegar a Configuración'),
-                              ),
-                              SidebarItem(
-                                title: 'Cerrar Sesión',
-                                icon: LucideIcons.logOut,
-                                onTap: () => _handleLogout(context),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      // Botones colapsados
-                      AnimatedOpacity(
-                        duration: _animationDuration,
-                        opacity: (collapsedOpacity * 1.2).clamp(0.0, 1.0),
-                        child: IgnorePointer(
-                          ignoring: isExpanded,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _buildCollapsedItem(
-                                LucideIcons.circleHelp,
-                                currentRoute == 'Ayuda',
-                                () => print('Navegar a Ayuda'),
-                              ),
-                              _buildCollapsedItem(
-                                LucideIcons.settings,
-                                currentRoute == 'Configuracion',
-                                () => print('Navegar a Configuración'),
-                              ),
-                              _buildCollapsedItem(
-                                LucideIcons.logOut,
-                                false,
-                                () => _handleLogout(context),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-              ],
-            ),
+                  );
+                },
+              );
+            },
           );
         },
       ),
@@ -350,7 +440,6 @@ class _SidebarWidgetState extends State<SidebarWidget>
           );
         },
       );
-
       context.read<AuthBloc>().add(const AuthLogoutRequested());
     }
   }

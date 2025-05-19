@@ -25,4 +25,9 @@ abstract class AuthRepository {
     required String idToken,
     required String email,
   });
+
+  Future<Either<Failure, void>> changePassword({
+    required String email,
+    required String newPassword,
+  });
 }

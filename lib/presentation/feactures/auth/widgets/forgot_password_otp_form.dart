@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:pinput/pinput.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 
 import '/presentation/resources/resources.dart';
 
@@ -45,27 +44,13 @@ class _ForgotPasswordOtpFormState extends State<ForgotPasswordOtpForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isMobile = MediaQuery.of(context).size.width <= 800;
 
     final defaultPinTheme = PinTheme(
-      width:
-          ResponsiveValue<double>(
-            context,
-            defaultValue: 50, // Desktop
-            conditionalValues: [Condition.equals(name: MOBILE, value: 45.0)],
-          ).value,
-      height:
-          ResponsiveValue<double>(
-            context,
-            defaultValue: 55, // Desktop
-            conditionalValues: [Condition.equals(name: MOBILE, value: 50.0)],
-          ).value,
+      width: isMobile ? 45 : 50,
+      height: isMobile ? 50 : 55,
       textStyle: TextStyle(
-        fontSize:
-            ResponsiveValue<double>(
-              context,
-              defaultValue: 22, // Desktop
-              conditionalValues: [Condition.equals(name: MOBILE, value: 20.0)],
-            ).value,
+        fontSize: isMobile ? 20 : 22,
         color: Theme.of(context).colorScheme.onSurface,
         fontWeight: FontWeight.w600,
       ),
@@ -113,30 +98,12 @@ class _ForgotPasswordOtpFormState extends State<ForgotPasswordOtpForm> {
               onSubmitted: (pin) => _submitOtp(),
             ),
           ),
-          SizedBox(
-            height:
-                ResponsiveValue<double>(
-                  context,
-                  defaultValue: AppDimensions.largeSpacing * 1.2, // Desktop
-                  conditionalValues: [
-                    Condition.equals(name: MOBILE, value: 20.0),
-                  ],
-                ).value,
-          ),
+          SizedBox(height: isMobile ? 20 : AppDimensions.largeSpacing * 1.2),
           ElevatedButton(
             onPressed: _submitOtp,
             child: Text(l10n.forgotPasswordOtpFormSubmitButton),
           ),
-          SizedBox(
-            height:
-                ResponsiveValue<double>(
-                  context,
-                  defaultValue: AppDimensions.itemSpacing, // Desktop
-                  conditionalValues: [
-                    Condition.equals(name: MOBILE, value: 12.0),
-                  ],
-                ).value,
-          ),
+          SizedBox(height: isMobile ? 12 : AppDimensions.itemSpacing),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -146,11 +113,13 @@ class _ForgotPasswordOtpFormState extends State<ForgotPasswordOtpForm> {
                   color: AppColors.greyTextColor,
                 ),
               ),
-              TextButton(
-                onPressed: widget.onResendOtp,
-                child: Text(l10n.forgotPasswordOtpFormResendCodeButton),
-              ),
             ],
+          ),
+          Center(
+            child: TextButton(
+              onPressed: widget.onResendOtp,
+              child: Text(l10n.forgotPasswordOtpFormResendCodeButton),
+            ),
           ),
           Center(
             child: TextButton(

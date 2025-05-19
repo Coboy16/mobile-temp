@@ -145,5 +145,17 @@
   "otpRequestLoadingMessage": "Demande de l'OTP en cours...",
   "otpVerificationLoadingMessage": "Vérification de l'OTP en cours...",
   "registerLoadingMessage": "Enregistrement de l'utilisateur en cours...",
-  "loginLoadingMessage": "Connexion en cours..."
+  "loginLoadingMessage": "Connexion en cours...",
+  "otpSentSuccessMessage": "OTP envoyé avec succès à {email}.",
+  "errorEmailNotProvidedMessage": "Erreur : Aucune adresse e-mail fournie pour la vérification OTP.",
+  "otpVerificationSuccessMessage": "OTP vérifié avec succès !",
+  "passwordChangeSuccessMessage": "Mot de passe changé avec succès ! Veuillez vous connecter.",
+  "newPasswordFormTitleFor": "Définir un nouveau mot de passe pour {email}",
+  "newPasswordFormNewLabel": "Nouveau mot de passe",
+  "newPasswordFormNewHint": "Entrez votre nouveau mot de passe",
+  "newPasswordFormNewErrorRequired": "Le nouveau mot de passe est requis",
+  "newPasswordFormConfirmLabel": "Confirmer le nouveau mot de passe",
+  "newPasswordFormConfirmHint": "Confirmez votre nouveau mot de passe",
+  "newPasswordFormConfirmErrorRequired": "Veuillez confirmer votre nouveau mot de passe",
+  "newPasswordFormSubmitButton": "Changer le mot de passe"
 }

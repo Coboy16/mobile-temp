@@ -7,7 +7,7 @@ export './sidebar/sidebar_widget.dart';
 export './sidebar/sidebar_item.dart';
 export './sidebar/user_info.dart';
 export './sidebar/collapsed_sidebar_content.dart';
-export './sidebar/expanded_sidebar_content.dart';
+export './sidebar/expanded_sidebar_content.dart' hide NavigateToRouteCallback;
 
 //notification
 export './notifications/notification_dropdown_widget.dart';

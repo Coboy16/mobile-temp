@@ -29,6 +29,7 @@ class AuthGoogleBloc extends Bloc<AuthGoogleEvent, AuthGoogleState> {
     on<GoogleSignInRequested>(_onGoogleSignInRequested);
     on<SignOutRequested>(_onSignOutRequested);
     on<CheckGoogleAuthStatus>(_onCheckGoogleAuthStatus);
+    on<FinalizeGoogleLoginWithToken>(_onFinalizeGoogleLoginWithToken);
   }
 
   Future<void> _onGoogleSignInRequested(
@@ -43,7 +44,6 @@ class AuthGoogleBloc extends Bloc<AuthGoogleEvent, AuthGoogleState> {
       String? email;
 
       if (kIsWeb) {
-        // Web: usar popup
         final GoogleAuthProvider googleProvider = GoogleAuthProvider();
         googleProvider.addScope('email');
         googleProvider.addScope('profile');
@@ -52,13 +52,11 @@ class AuthGoogleBloc extends Bloc<AuthGoogleEvent, AuthGoogleState> {
         final UserCredential userCredential = await auth.signInWithPopup(
           googleProvider,
         );
-
         idToken = await userCredential.user?.getIdToken();
         email = userCredential.user?.email;
         debugPrint('idToken: $idToken');
         debugPrint('email: $email');
       } else {
-        // Android/iOS: usar google_sign_in + firebase_auth
         final GoogleSignIn googleSignIn = GoogleSignIn();
         final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
@@ -70,30 +68,24 @@ class AuthGoogleBloc extends Bloc<AuthGoogleEvent, AuthGoogleState> {
           );
           return;
         }
-
         final GoogleSignInAuthentication googleAuth =
             await googleUser.authentication;
-
         final AuthCredential credential = GoogleAuthProvider.credential(
           accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
-
         final UserCredential userCredential = await auth.signInWithCredential(
           credential,
         );
-
         idToken = await userCredential.user?.getIdToken();
         email = userCredential.user?.email;
       }
 
       if (idToken != null && email != null) {
-        // Usar el caso de uso para registrar en el backend
         final failureOrUser = await _loginWithGoogleUseCase(
           idToken: idToken,
-          email: 'oayoso@gmail.com',
+          email: email, // Usar el email obtenido de Google
         );
-
         failureOrUser.fold(
           (failure) => emit(
             AuthGoogleError(
@@ -122,24 +114,54 @@ class AuthGoogleBloc extends Bloc<AuthGoogleEvent, AuthGoogleState> {
   ) async {
     emit(AuthGoogleLoading());
     try {
-      await FirebaseAuth.instance.signOut();
+      String? userEmail;
+      final currentState = state;
 
+      if (currentState is AuthGoogleAuthenticated) {
+        userEmail = currentState.googleUser.email;
+      } else if (currentState is AuthGoogleSuccess) {
+        userEmail = currentState.user.email;
+      }
+
+      if (userEmail == null || userEmail.isEmpty) {
+        final User? firebaseUser = FirebaseAuth.instance.currentUser;
+        userEmail = firebaseUser?.email;
+      }
+
+      if (userEmail == null || userEmail.isEmpty) {
+        final failureOrUser = await _getCurrentUserUseCase();
+        final potentialUser = failureOrUser.getOrElse(() => null);
+        if (potentialUser != null) {
+          userEmail = potentialUser.email;
+        }
+      }
+
+      if (userEmail == null || userEmail.isEmpty) {
+        emit(
+          AuthGoogleError(
+            message:
+                'No se pudo determinar el email del usuario para cerrar sesión.',
+          ),
+        );
+        return;
+      }
+
+      await FirebaseAuth.instance.signOut();
       if (!kIsWeb) {
         await GoogleSignIn().signOut();
       }
 
-      // Usar el caso de uso para logout del backend
-      final failureOrSuccess = await _logoutFromGoogleUseCase(
-        'oayoso@gmail.com',
-      );
+      final failureOrSuccess = await _logoutFromGoogleUseCase(userEmail);
 
       failureOrSuccess.fold(
         (failure) =>
             emit(AuthGoogleError(message: _mapFailureToMessage(failure))),
-        (_) => emit(AuthGoogleUnauthenticated()),
+        (_) => emit(
+          AuthGoogleUnauthenticated(message: "Sesión cerrada correctamente"),
+        ),
       );
     } catch (e) {
-      emit(AuthGoogleError(message: 'Error al cerrar sesión: $e'));
+      emit(AuthGoogleError(message: 'Error al cerrar sesión: ${e.toString()}'));
     }
   }
 
@@ -150,25 +172,55 @@ class AuthGoogleBloc extends Bloc<AuthGoogleEvent, AuthGoogleState> {
     emit(AuthGoogleLoading());
 
     final failureOrUser = await _getCurrentUserUseCase();
-
     failureOrUser.fold(
       (failure) => emit(
         AuthGoogleUnauthenticated(message: _mapFailureToMessage(failure)),
       ),
       (user) {
         if (user != null) {
-          // Necesitamos obtener el idToken actual si está disponible
           final currentUser = FirebaseAuth.instance.currentUser;
-          currentUser?.getIdToken().then((token) {
-            if (token != null) {
-              emit(AuthGoogleSuccess(user: user, idToken: token));
-            } else {
-              emit(const AuthGoogleUnauthenticated());
-            }
-          });
+          currentUser
+              ?.getIdToken()
+              .then((token) {
+                if (token != null) {
+                  emit(AuthGoogleSuccess(user: user, idToken: token));
+                } else {
+                  emit(const AuthGoogleUnauthenticated());
+                }
+              })
+              .catchError((_) {
+                emit(const AuthGoogleUnauthenticated());
+              });
         } else {
           emit(const AuthGoogleUnauthenticated());
         }
+      },
+    );
+  }
+
+  Future<void> _onFinalizeGoogleLoginWithToken(
+    FinalizeGoogleLoginWithToken event,
+    Emitter<AuthGoogleState> emit,
+  ) async {
+    emit(AuthGoogleLoading());
+    final failureOrUser = await _loginWithGoogleUseCase(
+      idToken: event.idToken,
+      email: event.email,
+    );
+    failureOrUser.fold(
+      (failure) => emit(
+        AuthGoogleError(
+          message: _mapFailureToMessage(failure),
+          statusCode: (failure is ServerFailure) ? failure.statusCode : null,
+        ),
+      ),
+      (googleUser) {
+        emit(
+          AuthGoogleAuthenticated(
+            idToken: event.idToken,
+            googleUser: googleUser,
+          ),
+        );
       },
     );
   }

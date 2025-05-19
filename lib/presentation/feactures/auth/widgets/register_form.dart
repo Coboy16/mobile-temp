@@ -13,7 +13,12 @@ import '/presentation/routes/app_router.dart';
 import '/presentation/feactures/auth/views/register_otp_view.dart';
 import '/presentation/widgets/widgets.dart';
 
-enum RegistrationStep { initial, preVerifyingEmail, requestingOtpForNewEmail }
+enum RegistrationStep {
+  initial,
+  preVerifyingEmail,
+  requestingOtpForNewEmail,
+  processingGoogleRegistration, // Añadido para Google
+}
 
 class RegisterForm extends StatefulWidget {
   final VoidCallback onGoToLogin;
@@ -29,6 +34,10 @@ class _RegisterFormState extends State<RegisterForm> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   RegistrationStep _currentStep = RegistrationStep.initial;
+
+  // Variables para Google
+  String? _pendingGoogleIdToken;
+  String? _pendingGoogleEmail;
 
   // Método para extraer apellidos paterno y materno del campo unificado
   Map<String, String> _extractLastNames(String fullLastNames) {
@@ -98,6 +107,9 @@ class _RegisterFormState extends State<RegisterForm> {
     }
     setState(() {
       _currentStep = RegistrationStep.initial;
+      // Limpiamos las variables de Google
+      _pendingGoogleIdToken = null;
+      _pendingGoogleEmail = null;
     });
     context.read<GoogleIdTokenBloc>().add(FetchGoogleIdToken());
   }
@@ -221,6 +233,13 @@ class _RegisterFormState extends State<RegisterForm> {
   ) {
     final l10n = AppLocalizations.of(context)!;
     if (googleState is GoogleIdTokenSuccess) {
+      // Guardamos los tokens y cambiamos el estado
+      setState(() {
+        _pendingGoogleIdToken = googleState.idToken;
+        _pendingGoogleEmail = googleState.email;
+        _currentStep = RegistrationStep.processingGoogleRegistration;
+      });
+
       context.read<RegisterBloc>().add(
         RegisterWithGoogleSubmitted(
           email: googleState.email,
@@ -233,16 +252,23 @@ class _RegisterFormState extends State<RegisterForm> {
         context: context,
         builder: (_) => RegistrationFailedDialog(message: googleState.message),
       );
+      setState(() {
+        _currentStep = RegistrationStep.initial;
+        _pendingGoogleIdToken = null;
+        _pendingGoogleEmail = null;
+      });
     } else if (googleState is GoogleIdTokenCancelled) {
       debugPrint('Registro con Google cancelado por el usuario.');
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(l10n.googleSignInCancelled)));
+      setState(() {
+        _currentStep = RegistrationStep.initial;
+        _pendingGoogleIdToken = null;
+        _pendingGoogleEmail = null;
+      });
     }
-    setState(() {
-      _currentStep = RegistrationStep.initial;
-    });
   }
 
   void _handleRegisterState(BuildContext context, RegisterState registerState) {
@@ -250,17 +276,43 @@ class _RegisterFormState extends State<RegisterForm> {
     if (registerState is RegisterSuccess) {
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
       debugPrint(l10n.registerWithGoogleSuccessMessage);
-      //mover al home
+
+      // Si estamos en el flujo de Google y tenemos los tokens, finalizamos el login
+      if (_currentStep == RegistrationStep.processingGoogleRegistration &&
+          _pendingGoogleIdToken != null &&
+          _pendingGoogleEmail != null) {
+        debugPrint(
+          "Registro en backend con Google OK. Iniciando login final con AuthGoogleBloc.",
+        );
+        context.read<AuthGoogleBloc>().add(
+          FinalizeGoogleLoginWithToken(
+            idToken: _pendingGoogleIdToken!,
+            email: _pendingGoogleEmail!,
+          ),
+        );
+        setState(() {
+          _pendingGoogleIdToken = null;
+          _pendingGoogleEmail = null;
+          _currentStep = RegistrationStep.initial;
+        });
+      } else {
+        // Para el flujo tradicional
+        setState(() {
+          _currentStep = RegistrationStep.initial;
+        });
+      }
     } else if (registerState is RegisterFailure) {
       showDialog(
         context: context,
         builder:
             (_) => RegistrationFailedDialog(message: registerState.message),
       );
+      setState(() {
+        _currentStep = RegistrationStep.initial;
+        _pendingGoogleIdToken = null;
+        _pendingGoogleEmail = null;
+      });
     }
-    setState(() {
-      _currentStep = RegistrationStep.initial;
-    });
   }
 
   @override

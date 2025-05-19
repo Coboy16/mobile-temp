@@ -59,6 +59,7 @@ Future<void> initServiceLocator() async {
 
   // validate user
   sl.registerLazySingleton(() => CheckUserLockStatusUseCase(sl()));
+  sl.registerLazySingleton(() => ChangePasswordUseCase(sl()));
 
   // BLoC
   sl.registerFactory(
@@ -124,6 +125,14 @@ Future<void> initServiceLocator() async {
     () => OtpVerificationBloc(
       requestOtpUseCase: sl<RequestOtpUseCase>(),
       verifyOtpUseCase: sl<VerifyOtpUseCase>(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => ForgotPasswordBloc(
+      requestOtpUseCase: sl(),
+      verifyOtpUseCase: sl(),
+      changePasswordUseCase: sl(),
     ),
   );
 

@@ -18,12 +18,14 @@ class AppRoutes {
   static const String authForgotPassword = 'forgot-password';
   static const String authOtp = 'otp';
   static const String home = '/home';
+  static const String authNewPassword = 'new-password';
 
   static const String login = auth;
   static const String register = '$auth/$authRegister';
   static const String registerOtp = '$auth/$authRegisterOtp';
   static const String forgotPassword = '$auth/$authForgotPassword';
   static const String otp = '$auth/$authOtp';
+  static const String newPasswordForm = '$auth/$authNewPassword';
 }
 
 class AppRouter {
@@ -47,6 +49,7 @@ class AppRouter {
         AppRoutes.registerOtp,
         AppRoutes.forgotPassword,
         AppRoutes.otp,
+        AppRoutes.newPasswordForm,
       ];
 
       authRoutes.any((authRoute) {
@@ -131,6 +134,33 @@ class AppRouter {
             builder: (BuildContext context, GoRouterState state) {
               final email = state.extra as String?;
               return ForgotPasswordOtpView(emailForOtp: email);
+            },
+          ),
+          GoRoute(
+            // NUEVA RUTA AÑADIDA AQUÍ
+            path: AppRoutes.authNewPassword, // new-password (relativo a /auth)
+            name: AppRoutes.newPasswordForm, // Nombre para /auth/new-password
+            builder: (BuildContext context, GoRouterState state) {
+              final extra = state.extra as Map<String, String>?;
+              if (extra != null &&
+                  extra.containsKey('email') &&
+                  extra.containsKey('otp')) {
+                return NewPasswordFormView(
+                  args: NewPasswordFormViewArguments(
+                    email: extra['email']!,
+                    otp: extra['otp']!,
+                  ),
+                );
+              }
+              // Redirigir si los argumentos no son válidos
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                context.goNamed(
+                  AppRoutes.forgotPassword,
+                ); // Usar nombre de ruta
+              });
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
             },
           ),
         ],

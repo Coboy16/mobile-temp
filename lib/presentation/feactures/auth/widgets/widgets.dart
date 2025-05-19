@@ -7,3 +7,4 @@ export 'auth_view.dart';
 export 'forgot_password_email_form.dart';
 export 'forgot_password_otp_form.dart';
 export 'otp_form_widget.dart';
+export 'new_password_form_widget.dart';

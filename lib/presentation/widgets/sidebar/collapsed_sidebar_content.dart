@@ -1,15 +1,17 @@
 import 'package:fe_core_vips/presentation/resources/resources.dart';
 import 'package:flutter/material.dart';
-
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-
 import '/presentation/widgets/widgets.dart';
+
+typedef NavigateToRouteCallback =
+    void Function(String routeName, {String? parentRouteName});
 
 class CollapsedSidebarContent extends StatelessWidget {
   final String currentRoute;
   final List<String> portalEmpleadoRoutes;
   final List<String> reclutamientoRoutes;
   final List<String> portalCandidatoRoutes;
+  final NavigateToRouteCallback onNavigateToRoute;
 
   const CollapsedSidebarContent({
     super.key,
@@ -17,6 +19,7 @@ class CollapsedSidebarContent extends StatelessWidget {
     required this.portalEmpleadoRoutes,
     required this.reclutamientoRoutes,
     required this.portalCandidatoRoutes,
+    required this.onNavigateToRoute,
   });
 
   @override
@@ -27,33 +30,51 @@ class CollapsedSidebarContent extends StatelessWidget {
       children: [
         _buildCollapsedItem(
           LucideIcons.fileText,
-          portalEmpleadoRoutes.contains(currentRoute),
-          () => print('Navegar a Portal del Empleado'),
+          portalEmpleadoRoutes.contains(currentRoute) ||
+              currentRoute == 'Portal del Empleado',
+          () => onNavigateToRoute(
+            portalEmpleadoRoutes.first,
+            parentRouteName: 'Portal del Empleado',
+          ),
+          'Portal del Empleado',
         ),
         _buildCollapsedItem(
           LucideIcons.users,
-          reclutamientoRoutes.contains(currentRoute),
-          () => print('Navegar a Reclutamiento'),
+          reclutamientoRoutes.contains(currentRoute) ||
+              currentRoute == 'Reclutamiento',
+          () => onNavigateToRoute(
+            reclutamientoRoutes.first,
+            parentRouteName: 'Reclutamiento',
+          ),
+          'Reclutamiento',
         ),
         _buildCollapsedItem(
           LucideIcons.contact,
-          portalCandidatoRoutes.contains(currentRoute),
-          () => print('Navegar a Portal del Candidato'),
+          portalCandidatoRoutes.contains(currentRoute) ||
+              currentRoute == 'Portal del Candidato',
+          () => onNavigateToRoute(
+            portalCandidatoRoutes.first,
+            parentRouteName: 'Portal del Candidato',
+          ),
+          'Portal del Candidato',
         ),
         _buildCollapsedItem(
           LucideIcons.chartLine,
           currentRoute == 'Evaluación de desempeño',
-          () => print('Navegar a Evaluación'),
+          () => onNavigateToRoute('Evaluación de desempeño'),
+          'Evaluación de desempeño',
         ),
         _buildCollapsedItem(
           LucideIcons.layers,
           currentRoute == 'Consolidación',
-          () => print('Navegar a Consolidación'),
+          () => onNavigateToRoute('Consolidación'),
+          'Consolidación',
         ),
         _buildCollapsedItem(
           LucideIcons.calculator,
           currentRoute == 'Cálculos Impositivos',
-          () => print('Navegar a Cálculos'),
+          () => onNavigateToRoute('Cálculos Impositivos'),
+          'Cálculos Impositivos',
         ),
       ],
     );
@@ -63,10 +84,11 @@ class CollapsedSidebarContent extends StatelessWidget {
     IconData icon,
     bool isSelected,
     VoidCallback onTap,
+    String tooltipMessage,
   ) {
     return ClipRect(
       child: Tooltip(
-        message: _getTooltipMessage(icon),
+        message: tooltipMessage,
         waitDuration: const Duration(milliseconds: 500),
         child: InkWell(
           onTap: onTap,
@@ -92,15 +114,5 @@ class CollapsedSidebarContent extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _getTooltipMessage(IconData icon) {
-    if (icon == LucideIcons.fileText) return 'Portal del Empleado';
-    if (icon == LucideIcons.users) return 'Reclutamiento';
-    if (icon == LucideIcons.contact) return 'Portal del Candidato';
-    if (icon == LucideIcons.chartLine) return 'Evaluación de desempeño';
-    if (icon == LucideIcons.layers) return 'Consolidación';
-    if (icon == LucideIcons.calculator) return 'Cálculos Impositivos';
-    return '';
   }
 }

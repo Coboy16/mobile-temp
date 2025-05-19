@@ -51,7 +51,7 @@ class RegisterOtpView extends StatelessWidget {
   ) {
     final l10n = AppLocalizations.of(context)!;
     if (otpState is OtpVerifySuccess && otpState.wasOnlyVerify == true) {
-      _showSnackBar(context, l10n.otpVerificationSuccessMessageRegister);
+      debugPrint(l10n.otpVerificationSuccessMessageRegister);
       context.read<RegisterBloc>().add(
         RegisterUserSubmitted(
           name: registrationArgs.name,

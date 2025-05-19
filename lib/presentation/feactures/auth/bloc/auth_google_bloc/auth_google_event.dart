@@ -12,3 +12,16 @@ class GoogleSignInRequested extends AuthGoogleEvent {}
 class SignOutRequested extends AuthGoogleEvent {}
 
 class CheckGoogleAuthStatus extends AuthGoogleEvent {}
+
+class FinalizeGoogleLoginWithToken extends AuthGoogleEvent {
+  final String idToken;
+  final String email;
+
+  const FinalizeGoogleLoginWithToken({
+    required this.idToken,
+    required this.email,
+  });
+
+  @override
+  List<Object> get props => [idToken, email];
+}

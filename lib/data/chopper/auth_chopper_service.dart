@@ -64,4 +64,9 @@ abstract class AuthChopperService extends ChopperService {
   Future<Response<OtpGeneralResponseModel>> verifyOtp({
     @Body() required OtpVerifyRequestModel body,
   });
+
+  @POST(path: ApiEndpoints.changePassword)
+  Future<Response<ChangePasswordResponseModel>> changePassword({
+    @Body() required ChangePasswordRequestModel body,
+  });
 }

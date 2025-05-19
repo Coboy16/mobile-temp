@@ -3,7 +3,6 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 
 import '/presentation/resources/resources.dart';
 
@@ -35,6 +34,7 @@ class _ForgotPasswordEmailFormState extends State<ForgotPasswordEmailForm> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isMobile = MediaQuery.of(context).size.width <= 800;
 
     return FormBuilder(
       key: _formKey,
@@ -61,36 +61,18 @@ class _ForgotPasswordEmailFormState extends State<ForgotPasswordEmailForm> {
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => _submitForm(),
           ),
-          SizedBox(
-            height:
-                ResponsiveValue<double>(
-                  context,
-                  defaultValue: AppDimensions.largeSpacing * 1.2, // Desktop
-                  conditionalValues: [
-                    Condition.equals(name: MOBILE, value: 20.0),
-                  ],
-                ).value,
-          ),
+          SizedBox(height: isMobile ? 20 : AppDimensions.largeSpacing * 1.2),
           ElevatedButton(
             onPressed: _submitForm,
             child: Text(l10n.forgotPasswordEmailFormSubmitButton),
           ),
-          SizedBox(
-            height:
-                ResponsiveValue<double>(
-                  context,
-                  defaultValue: AppDimensions.itemSpacing, // Desktop
-                  conditionalValues: [
-                    Condition.equals(name: MOBILE, value: 12.0),
-                  ],
-                ).value,
-          ),
-          Center(
-            child: TextButton(
-              onPressed: widget.onGoToLogin,
-              child: Text(l10n.forgotPasswordEmailFormBackToLoginButton),
-            ),
-          ),
+          SizedBox(height: isMobile ? 12 : AppDimensions.itemSpacing),
+          // Center(
+          //   child: TextButton(
+          //     onPressed: widget.onGoToLogin,
+          //     child: Text(l10n.forgotPasswordEmailFormBackToLoginButton),
+          //   ),
+          // ),
         ],
       ),
     );

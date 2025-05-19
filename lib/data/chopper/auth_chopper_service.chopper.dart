@@ -115,4 +115,17 @@ final class _$AuthChopperService extends AuthChopperService {
       $request,
     );
   }
+
+  @override
+  Future<Response<ChangePasswordResponseModel>> changePassword({
+    required ChangePasswordRequestModel body,
+  }) {
+    final Uri $url = Uri.parse('/auth/self/forgot');
+    final $body = body;
+    final Request $request = Request('POST', $url, client.baseUrl, body: $body);
+    return client
+        .send<ChangePasswordResponseModel, ChangePasswordResponseModel>(
+          $request,
+        );
+  }
 }

@@ -213,4 +213,39 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(NetworkFailure(message: "No hay conexión a internet"));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> changePassword({
+    required String email,
+    required String newPassword,
+  }) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final response = await remoteDataSource.changePassword(
+          email: email,
+          newPassword: newPassword,
+        );
+        if (response.status && response.statusCode == 200) {
+          return const Right(null);
+        } else {
+          return Left(
+            ServerFailure(
+              message: response.message ?? "Error al cambiar la contraseña.",
+              statusCode: response.statusCode,
+            ),
+          );
+        }
+      } on ServerException catch (e) {
+        return Left(
+          ServerFailure(
+            message:
+                e.message ?? "Error del servidor al cambiar la contraseña.",
+            statusCode: e.statusCode,
+          ),
+        );
+      }
+    } else {
+      return Left(NetworkFailure(message: "No hay conexión a internet"));
+    }
+  }
 }

@@ -36,7 +36,9 @@ List<SingleChildWidget> getListBloc() {
     BlocProvider(create: (context) => sl<RegisterBloc>()),
     BlocProvider(create: (context) => sl<GoogleIdTokenBloc>()),
     BlocProvider(create: (context) => sl<OtpVerificationBloc>()),
+    BlocProvider(create: (context) => sl<ForgotPasswordBloc>()),
     BlocProvider(create: (context) => FcmBloc()),
+    BlocProvider(create: (context) => SidebarBloc()),
     BlocProvider(create: (context) => NavegationBarBloc()),
   ];
 }

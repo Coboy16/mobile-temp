@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-
 import '/presentation/resources/resources.dart';
 import '/presentation/widgets/widgets.dart';
 
@@ -11,8 +9,9 @@ class SidebarExpansionItem extends StatefulWidget {
   final List<SidebarItem> children;
   final List<String> childrenRoutes;
   final bool isParentSelected;
-  final bool initiallyExpanded;
-  final bool? forceExpanded;
+  final bool isExpanded;
+  final VoidCallback onToggle;
+  final VoidCallback? onHeaderTap;
 
   const SidebarExpansionItem({
     super.key,
@@ -21,8 +20,9 @@ class SidebarExpansionItem extends StatefulWidget {
     required this.children,
     required this.childrenRoutes,
     required this.isParentSelected,
-    this.initiallyExpanded = false,
-    this.forceExpanded,
+    required this.isExpanded,
+    required this.onToggle,
+    this.onHeaderTap,
   });
 
   @override
@@ -31,16 +31,14 @@ class SidebarExpansionItem extends StatefulWidget {
 
 class _SidebarExpansionItemState extends State<SidebarExpansionItem>
     with SingleTickerProviderStateMixin {
-  late bool _isExpanded;
   late AnimationController _controller;
   late Animation<double> _expandAnimation;
 
   @override
   void initState() {
     super.initState();
-    _isExpanded = widget.forceExpanded ?? widget.initiallyExpanded;
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 80), // Más rápida
+      duration: const Duration(milliseconds: 120),
       vsync: this,
     );
     _expandAnimation = CurvedAnimation(
@@ -49,7 +47,7 @@ class _SidebarExpansionItemState extends State<SidebarExpansionItem>
       reverseCurve: Curves.easeInCubic,
     );
 
-    if (_isExpanded) {
+    if (widget.isExpanded) {
       _controller.value = 1.0;
     }
   }
@@ -57,18 +55,12 @@ class _SidebarExpansionItemState extends State<SidebarExpansionItem>
   @override
   void didUpdateWidget(covariant SidebarExpansionItem oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.forceExpanded != null && widget.forceExpanded != _isExpanded) {
-      setState(() {
-        _isExpanded = widget.forceExpanded!;
-        if (_isExpanded) {
-          _controller.forward();
-        } else {
-          _controller.reverse();
-        }
-      });
-    }
-    if (widget.isParentSelected != oldWidget.isParentSelected) {
-      setState(() {});
+    if (widget.isExpanded != oldWidget.isExpanded) {
+      if (widget.isExpanded) {
+        _controller.forward();
+      } else {
+        _controller.reverse();
+      }
     }
   }
 
@@ -78,25 +70,17 @@ class _SidebarExpansionItemState extends State<SidebarExpansionItem>
     super.dispose();
   }
 
-  void _toggleExpansion() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-      if (_isExpanded) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final Color textColor = Colors.white;
     final Color iconColor = Colors.white;
     final TextStyle textStyle = AppTextStyles.subtitle;
     final Color chevronColor = iconColor.withOpacity(0.7);
-
     final double indicatorLeftPos = -parentHorizontalPadding;
+
+    bool effectivelySelected =
+        widget.isParentSelected ||
+        (widget.isExpanded && widget.children.any((child) => child.isSelected));
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -109,7 +93,7 @@ class _SidebarExpansionItemState extends State<SidebarExpansionItem>
           ),
           decoration: BoxDecoration(
             color:
-                widget.isParentSelected
+                effectivelySelected
                     ? selectedItemColor.withOpacity(
                       selectedItemBackgroundOpacity,
                     )
@@ -120,7 +104,7 @@ class _SidebarExpansionItemState extends State<SidebarExpansionItem>
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(borderRadius),
             child: InkWell(
-              onTap: _toggleExpansion,
+              onTap: widget.onHeaderTap ?? widget.onToggle,
               borderRadius: BorderRadius.circular(borderRadius),
               splashColor: selectedItemColor.withOpacity(0.1),
               highlightColor: selectedItemColor.withOpacity(0.05),
@@ -146,17 +130,19 @@ class _SidebarExpansionItemState extends State<SidebarExpansionItem>
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Icon(
-                          _isExpanded
-                              ? LucideIcons.chevronUp
-                              : LucideIcons.chevronDown,
-                          size: 18,
-                          color: chevronColor,
+                        GestureDetector(
+                          onTap: widget.onToggle,
+                          child: Icon(
+                            widget.isExpanded
+                                ? LucideIcons.chevronUp
+                                : LucideIcons.chevronDown,
+                            size: 18,
+                            color: chevronColor,
+                          ),
                         ),
                       ],
                     ),
-
-                    if (widget.isParentSelected)
+                    if (effectivelySelected)
                       Positioned(
                         left: indicatorLeftPos,
                         top: -itemVerticalPadding,
@@ -178,7 +164,6 @@ class _SidebarExpansionItemState extends State<SidebarExpansionItem>
             ),
           ),
         ),
-        // Usamos SizeTransition para una animación más eficiente
         ClipRect(
           child: SizeTransition(
             axisAlignment: -1,

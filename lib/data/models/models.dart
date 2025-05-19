@@ -17,3 +17,5 @@ export 'auth_model/otp_request_model.dart';
 export 'auth_model/otp_verify_request_model.dart';
 export 'auth_model/otp_response_data_model.dart';
 export 'auth_model/otp_general_response_model.dart';
+export 'auth_model/change_password_request_model.dart';
+export 'auth_model/change_password_response_model.dart';

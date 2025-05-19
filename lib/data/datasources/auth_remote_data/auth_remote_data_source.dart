@@ -15,6 +15,12 @@ abstract class AuthRemoteDataSource {
     required String email,
   });
   Future<LogoutResponseModel> logout({required String email});
+
+  Future<ChangePasswordResponseModel> changePassword({
+    // Nuevo método
+    required String email,
+    required String newPassword,
+  });
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -254,5 +260,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
             'Error al verificar estado de bloqueo del usuario: ${e.toString()}',
       );
     }
+  }
+
+  @override
+  Future<ChangePasswordResponseModel> changePassword({
+    required String email,
+    required String newPassword,
+  }) async {
+    final requestModel = ChangePasswordRequestModel(
+      email: email,
+      password: newPassword,
+    );
+    return _handleChopperResponse(
+      chopperService.changePassword(body: requestModel),
+    );
   }
 }

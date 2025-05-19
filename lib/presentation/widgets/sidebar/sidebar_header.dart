@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '/presentation/resources/resources.dart';
-
 import '/presentation/widgets/widgets.dart';
 
 class SidebarHeaderWithToggle extends StatelessWidget {
@@ -35,23 +33,17 @@ class SidebarHeaderWithToggle extends StatelessWidget {
                     2 *
                     (widthAnimation.value - collapsedSidebarWidth) /
                     (sidebarWidth - collapsedSidebarWidth))
-                .clamp(
-                  0.0,
-                  parentHorizontalPadding / 2,
-                ), // Mantenemos el cálculo original para preservar la UI
+                .clamp(0.0, parentHorizontalPadding / 2),
       ),
-      // Mantenemos ClipRect para evitar overflow
       child: ClipRect(
         child: AnimatedSwitcher(
-          duration: const Duration(
-            milliseconds: 120,
-          ), // Más rápido que el original
+          duration: const Duration(milliseconds: 120),
           transitionBuilder: (Widget child, Animation<double> animation) {
             return FadeTransition(opacity: animation, child: child);
           },
           layoutBuilder: (currentChild, previousChildren) {
             return Stack(
-              clipBehavior: Clip.hardEdge, // Prevenir overflow
+              clipBehavior: Clip.hardEdge,
               alignment: Alignment.centerLeft,
               children: <Widget>[
                 ...previousChildren.map((child) => Positioned(child: child)),
@@ -91,8 +83,7 @@ class SidebarHeaderWithToggle extends StatelessWidget {
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
-                          overflow:
-                              TextOverflow.ellipsis, // Mejor manejo de espacio
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const Spacer(),
@@ -112,7 +103,6 @@ class SidebarHeaderWithToggle extends StatelessWidget {
                   : Container(
                     key: const ValueKey('collapsed_header'),
                     alignment: Alignment.center,
-                    // Ancho fijo para evitar cálculos costosos
                     width: collapsedSidebarWidth - (parentHorizontalPadding),
                     child: IconButton(
                       icon: Icon(

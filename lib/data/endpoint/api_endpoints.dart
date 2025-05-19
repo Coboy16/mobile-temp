@@ -8,4 +8,5 @@ class ApiEndpoints {
   static const String registerWithGoogle = '/auth/user/gmail';
   static const String otpRequest = '/auth/otp/request';
   static const String otpVerify = '/auth/otp/verify';
+  static const String changePassword = '/auth/self/forgot';
 }

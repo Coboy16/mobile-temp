@@ -146,5 +146,17 @@
   "otpRequestLoadingMessage": "Solicitando OTP...",
   "otpVerificationLoadingMessage": "Verificando OTP...",
   "registerLoadingMessage": "Registrando usuario...",
-  "loginLoadingMessage": "Iniciando sesión..."
+  "loginLoadingMessage": "Iniciando sesión...",
+  "otpSentSuccessMessage": "OTP enviado con éxito a {email}.",
+  "errorEmailNotProvidedMessage": "Error: No se proporcionó el correo para la verificación OTP.",
+  "otpVerificationSuccessMessage": "¡OTP verificado con éxito!",
+  "passwordChangeSuccessMessage": "¡Contraseña cambiada con éxito! Por favor, inicia sesión.",
+  "newPasswordFormTitleFor": "Establecer Nueva Contraseña para {email}",
+  "newPasswordFormNewLabel": "Nueva Contraseña",
+  "newPasswordFormNewHint": "Ingresa tu nueva contraseña",
+  "newPasswordFormNewErrorRequired": "La nueva contraseña es requerida",
+  "newPasswordFormConfirmLabel": "Confirmar Nueva Contraseña",
+  "newPasswordFormConfirmHint": "Confirma tu nueva contraseña",
+  "newPasswordFormConfirmErrorRequired": "Por favor, confirma tu nueva contraseña",
+  "newPasswordFormSubmitButton": "Cambiar Contraseña"
 }

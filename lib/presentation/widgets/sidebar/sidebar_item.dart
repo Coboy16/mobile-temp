@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '/presentation/resources/resources.dart';
 import '/presentation/widgets/widgets.dart';
 
@@ -22,10 +21,10 @@ class SidebarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color iconColor = Colors.white;
-
-    isChild
-        ? (parentHorizontalPadding + itemHorizontalPadding)
-        : parentHorizontalPadding;
+    final Color textColor = Colors.white;
+    final TextStyle textStyle = AppTextStyles.subtitle.copyWith(
+      color: textColor,
+    );
 
     return Padding(
       padding: EdgeInsets.only(left: isChild ? childIndent : 0),
@@ -39,12 +38,9 @@ class SidebarItem extends StatelessWidget {
           decoration: BoxDecoration(
             color:
                 isSelected
-                    ? const Color.fromARGB(
-                      46,
-                      255,
-                      255,
-                      255,
-                    ).withOpacity(selectedItemBackgroundOpacity)
+                    ? selectedItemColor.withOpacity(
+                      selectedItemBackgroundOpacity,
+                    )
                     : Colors.transparent,
             borderRadius: BorderRadius.circular(borderRadius),
           ),
@@ -52,7 +48,7 @@ class SidebarItem extends StatelessWidget {
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(borderRadius),
             child: InkWell(
-              onTap: onTap ?? () => print('Tapped on $title'),
+              onTap: onTap,
               borderRadius: BorderRadius.circular(borderRadius),
               splashColor: selectedItemColor.withOpacity(0.1),
               highlightColor: selectedItemColor.withOpacity(0.05),
@@ -73,17 +69,18 @@ class SidebarItem extends StatelessWidget {
                         Expanded(
                           child: Text(
                             title,
-                            style: AppTextStyles.subtitle,
+                            style: textStyle,
                             overflow: TextOverflow.ellipsis,
                             maxLines: 2,
                           ),
                         ),
                       ],
                     ),
-
                     if (isSelected)
                       Positioned(
-                        left: -19,
+                        left:
+                            -itemHorizontalPadding -
+                            7, // Adjusted to align with parent indicator
                         top: -itemVerticalPadding,
                         bottom: -itemVerticalPadding,
                         child: Container(
