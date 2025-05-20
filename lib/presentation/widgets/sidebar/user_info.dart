@@ -23,7 +23,7 @@ class UserInfo extends StatelessWidget {
           children: [
             const CircleAvatar(
               radius: 24,
-              backgroundColor: Colors.indigo,
+              backgroundColor: Colors.indigo, // Considerar usar AppColors
               child: Text(
                 'JP',
                 style: TextStyle(
@@ -40,7 +40,7 @@ class UserInfo extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Juan Pérez',
+                    'Juan Pérez', // Considerar hacerlo dinámico
                     style: TextStyle(
                       color: textColor,
                       fontWeight: FontWeight.w600,
@@ -49,7 +49,7 @@ class UserInfo extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    'Administrador',
+                    'Administrador', // Considerar hacerlo dinámico
                     style: TextStyle(color: subTextColor, fontSize: 12),
                     overflow: TextOverflow.ellipsis,
                   ),

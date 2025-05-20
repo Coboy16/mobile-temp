@@ -24,7 +24,8 @@ class AuthLayout extends StatelessWidget {
   bool _isAuthRelatedView(AuthView view) {
     return view == AuthView.login ||
         view == AuthView.forgotPasswordEmail ||
-        view == AuthView.forgotPasswordOtp;
+        view == AuthView.forgotPasswordOtp ||
+        view == AuthView.setNewPassword;
   }
 
   double _getIconSize(AuthView view) {
@@ -46,6 +47,8 @@ class AuthLayout extends StatelessWidget {
         return l10n.forgotPasswordEmailTitle;
       case AuthView.forgotPasswordOtp:
         return l10n.forgotPasswordOtpTitle;
+      case AuthView.setNewPassword:
+        return l10n.setNewPasswordTitle;
     }
   }
 
@@ -60,6 +63,8 @@ class AuthLayout extends StatelessWidget {
         return l10n.forgotPasswordEmailSubtitle;
       case AuthView.forgotPasswordOtp:
         return l10n.forgotPasswordOtpSubtitle(email ?? l10n.yourEmailFallback);
+      case AuthView.setNewPassword:
+        return l10n.setNewPasswordSubtitle(email ?? l10n.yourEmailFallback);
     }
   }
 
@@ -73,6 +78,8 @@ class AuthLayout extends StatelessWidget {
         return 600;
       case AuthView.forgotPasswordOtp:
         return 620;
+      case AuthView.setNewPassword:
+        return 650;
     }
   }
 
@@ -136,6 +143,9 @@ class AuthLayout extends StatelessWidget {
           BlocListener<OtpVerificationBloc, OtpVerificationState>(
             listener: (context, state) {},
           ),
+          BlocListener<ForgotPasswordBloc, ForgotPasswordState>(
+            listener: (context, state) {},
+          ),
         ],
         child: Stack(
           children: [
@@ -158,6 +168,8 @@ class AuthLayout extends StatelessWidget {
                     context.watch<GoogleIdTokenBloc>().state;
                 final otpVerificationState =
                     context.watch<OtpVerificationBloc>().state;
+                final forgotPasswordState =
+                    context.watch<ForgotPasswordBloc>().state;
 
                 final bool isLoading =
                     currentAuthBlocState is AuthLoading ||
@@ -167,10 +179,16 @@ class AuthLayout extends StatelessWidget {
                     registerBlocState is RegisterLoading ||
                     googleIdTokenBlocState is GoogleIdTokenLoading ||
                     otpVerificationState is OtpRequestInProgress ||
-                    otpVerificationState is OtpVerifyInProgress;
+                    otpVerificationState is OtpVerifyInProgress ||
+                    forgotPasswordState
+                        is ForgotPasswordEmailVerificationInProgress ||
+                    forgotPasswordState
+                        is ForgotPasswordOtpVerificationInProgress ||
+                    forgotPasswordState is ForgotPasswordChangeInProgress;
 
                 if (isLoading) {
                   String loadingMessage = l10n.loadingMessageDefault;
+                  // Determinar el mensaje de carga específico
                   if (otpVerificationState is OtpRequestInProgress) {
                     loadingMessage = l10n.otpRequestLoadingMessage;
                   } else if (otpVerificationState is OtpVerifyInProgress) {
@@ -183,6 +201,20 @@ class AuthLayout extends StatelessWidget {
                           ModalRoute.of(context)?.settings.name ==
                               AppRoutes.registerOtp)) {
                     loadingMessage = l10n.loginLoadingMessage;
+                  } else if (forgotPasswordState
+                      is ForgotPasswordEmailVerificationInProgress) {
+                    // CORREGIDO
+                    loadingMessage =
+                        l10n.forgotPasswordEmailVerificationLoadingMessage;
+                  } else if (forgotPasswordState
+                      is ForgotPasswordOtpVerificationInProgress) {
+                    // CORREGIDO
+                    loadingMessage =
+                        l10n.forgotPasswordOtpVerificationLoadingMessage;
+                  } else if (forgotPasswordState
+                      is ForgotPasswordChangeInProgress) {
+                    // CORREGIDO
+                    loadingMessage = l10n.forgotPasswordChangeLoadingMessage;
                   }
 
                   return CustomLoadingHotech(
@@ -313,7 +345,7 @@ class AuthLayout extends StatelessWidget {
             mainAxisAlignment:
                 ResponsiveValue<MainAxisAlignment>(
                   context,
-                  defaultValue: MainAxisAlignment.center, // For Desktop
+                  defaultValue: MainAxisAlignment.center,
                   conditionalValues: [
                     Condition.equals(
                       name: MOBILE,
@@ -324,7 +356,7 @@ class AuthLayout extends StatelessWidget {
             mainAxisSize:
                 ResponsiveValue<MainAxisSize>(
                   context,
-                  defaultValue: MainAxisSize.max, // For Desktop
+                  defaultValue: MainAxisSize.max,
                   conditionalValues: [
                     Condition.equals(name: MOBILE, value: MainAxisSize.min),
                   ],
@@ -333,6 +365,7 @@ class AuthLayout extends StatelessWidget {
               if (!isDesktop &&
                   (authView == AuthView.register ||
                       authView == AuthView.forgotPasswordOtp ||
+                      authView == AuthView.setNewPassword ||
                       authView == AuthView.forgotPasswordEmail))
                 const SizedBox(height: AppDimensions.itemSpacing),
               if (!isDesktop && authView == AuthView.login)
@@ -350,7 +383,7 @@ class AuthLayout extends StatelessWidget {
                 height:
                     ResponsiveValue<double>(
                       context,
-                      defaultValue: AppDimensions.itemSpacing * 0.2, // Desktop
+                      defaultValue: AppDimensions.itemSpacing * 0.2,
                       conditionalValues: [
                         Condition.equals(name: MOBILE, value: 4.0),
                       ],
@@ -367,7 +400,7 @@ class AuthLayout extends StatelessWidget {
                 height:
                     ResponsiveValue<double>(
                       context,
-                      defaultValue: AppDimensions.largeSpacing * 0.7, // Desktop
+                      defaultValue: AppDimensions.largeSpacing * 0.7,
                       conditionalValues: [
                         Condition.equals(
                           name: MOBILE,
@@ -387,10 +420,7 @@ class AuthLayout extends StatelessWidget {
                       context,
                       defaultValue: AppDimensions.largeSpacing * 1.2, // Desktop
                       conditionalValues: [
-                        Condition.equals(
-                          name: MOBILE,
-                          value: 0,
-                        ), // No extra space at bottom for mobile here
+                        Condition.equals(name: MOBILE, value: 0),
                       ],
                     ).value,
               ),
@@ -405,7 +435,10 @@ class AuthLayout extends StatelessWidget {
                             Condition.equals(
                               name: MOBILE,
                               value:
-                                  (authView != AuthView.register)
+                                  (authView != AuthView.register &&
+                                          authView !=
+                                              AuthView
+                                                  .setNewPassword) // CORREGIDO
                                       ? AppDimensions.itemSpacing
                                       : 0,
                             ),
@@ -418,7 +451,11 @@ class AuthLayout extends StatelessWidget {
                           conditionalValues: [
                             Condition.equals(
                               name: MOBILE,
-                              value: (authView != AuthView.register) ? 25 : 0,
+                              value:
+                                  (authView != AuthView.register &&
+                                          authView != AuthView.setNewPassword)
+                                      ? 25
+                                      : 0, // CORREGIDO
                             ),
                           ],
                         ).value,

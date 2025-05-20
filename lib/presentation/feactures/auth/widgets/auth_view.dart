@@ -1,1 +1,7 @@
-enum AuthView { login, register, forgotPasswordEmail, forgotPasswordOtp }
+enum AuthView {
+  login,
+  register,
+  forgotPasswordEmail,
+  forgotPasswordOtp,
+  setNewPassword,
+}

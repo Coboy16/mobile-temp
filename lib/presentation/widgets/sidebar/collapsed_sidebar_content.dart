@@ -2,6 +2,7 @@ import 'package:fe_core_vips/presentation/resources/resources.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '/presentation/widgets/widgets.dart';
+import 'sidebar_menu_constants.dart';
 
 typedef NavigateToRouteCallback =
     void Function(String routeName, {String? parentRouteName});
@@ -31,50 +32,56 @@ class CollapsedSidebarContent extends StatelessWidget {
         _buildCollapsedItem(
           LucideIcons.fileText,
           portalEmpleadoRoutes.contains(currentRoute) ||
-              currentRoute == 'Portal del Empleado',
+              currentRoute == AppSidebarMenuRoutes.portalEmpleado,
           () => onNavigateToRoute(
             portalEmpleadoRoutes.first,
-            parentRouteName: 'Portal del Empleado',
+            parentRouteName: AppSidebarMenuRoutes.portalEmpleado,
           ),
-          'Portal del Empleado',
+          AppSidebarMenuRoutes.portalEmpleado,
         ),
         _buildCollapsedItem(
           LucideIcons.users,
           reclutamientoRoutes.contains(currentRoute) ||
-              currentRoute == 'Reclutamiento',
+              currentRoute == AppSidebarMenuRoutes.reclutamiento,
           () => onNavigateToRoute(
             reclutamientoRoutes.first,
-            parentRouteName: 'Reclutamiento',
+            parentRouteName: AppSidebarMenuRoutes.reclutamiento,
           ),
-          'Reclutamiento',
+          AppSidebarMenuRoutes.reclutamiento,
         ),
         _buildCollapsedItem(
           LucideIcons.contact,
           portalCandidatoRoutes.contains(currentRoute) ||
-              currentRoute == 'Portal del Candidato',
+              currentRoute == AppSidebarMenuRoutes.portalCandidato,
           () => onNavigateToRoute(
             portalCandidatoRoutes.first,
-            parentRouteName: 'Portal del Candidato',
+            parentRouteName: AppSidebarMenuRoutes.portalCandidato,
           ),
-          'Portal del Candidato',
+          AppSidebarMenuRoutes.portalCandidato,
+        ),
+        _buildCollapsedItem(
+          LucideIcons.userCog,
+          currentRoute == AppSidebarMenuRoutes.perfilUsuarioSistema,
+          () => onNavigateToRoute(AppSidebarMenuRoutes.perfilUsuarioSistema),
+          AppSidebarMenuRoutes.perfilUsuarioSistema,
         ),
         _buildCollapsedItem(
           LucideIcons.chartLine,
-          currentRoute == 'Evaluación de desempeño',
-          () => onNavigateToRoute('Evaluación de desempeño'),
-          'Evaluación de desempeño',
+          currentRoute == AppSidebarMenuRoutes.evaluacionDesempeno,
+          () => onNavigateToRoute(AppSidebarMenuRoutes.evaluacionDesempeno),
+          AppSidebarMenuRoutes.evaluacionDesempeno,
         ),
         _buildCollapsedItem(
           LucideIcons.layers,
-          currentRoute == 'Consolidación',
-          () => onNavigateToRoute('Consolidación'),
-          'Consolidación',
+          currentRoute == AppSidebarMenuRoutes.consolidacion,
+          () => onNavigateToRoute(AppSidebarMenuRoutes.consolidacion),
+          AppSidebarMenuRoutes.consolidacion,
         ),
         _buildCollapsedItem(
           LucideIcons.calculator,
-          currentRoute == 'Cálculos Impositivos',
-          () => onNavigateToRoute('Cálculos Impositivos'),
-          'Cálculos Impositivos',
+          currentRoute == AppSidebarMenuRoutes.calculosImpositivos,
+          () => onNavigateToRoute(AppSidebarMenuRoutes.calculosImpositivos),
+          AppSidebarMenuRoutes.calculosImpositivos,
         ),
       ],
     );

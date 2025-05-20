@@ -157,5 +157,18 @@
   "newPasswordFormConfirmLabel": "Confirmer le nouveau mot de passe",
   "newPasswordFormConfirmHint": "Confirmez votre nouveau mot de passe",
   "newPasswordFormConfirmErrorRequired": "Veuillez confirmer votre nouveau mot de passe",
-  "newPasswordFormSubmitButton": "Changer le mot de passe"
+  "newPasswordFormSubmitButton": "Changer le mot de passe",
+  "leftPanelSetNewPasswordTitle": "Sécurisez Votre Compte",
+  "leftPanelSetNewPasswordSubtitle": "Choisissez un mot de passe fort et unique pour protéger les données de gestion de votre hôtel.",
+  "leftPanelSetNewPasswordHighlight1Title": "Mot de Passe Fort",
+  "leftPanelSetNewPasswordHighlight1Description": "Utilisez un mélange de lettres, de chiffres et de symboles pour une meilleure sécurité.",
+  "leftPanelSetNewPasswordHighlight2Title": "Évitez la Réutilisation",
+  "leftPanelSetNewPasswordHighlight2Description": "N'utilisez pas de mots de passe que vous avez utilisés sur d'autres sites.",
+  "leftPanelSetNewPasswordHighlight3Title": "Confirmation",
+  "leftPanelSetNewPasswordHighlight3Description": "Assurez-vous que votre nouveau mot de passe est confirmé et enregistré en toute sécurité.",
+  "setNewPasswordTitle": "Définir un Nouveau Mot de Passe",
+  "setNewPasswordSubtitle": "Créez un nouveau mot de passe sécurisé pour votre compte associé à {email}.",
+  "forgotPasswordEmailVerificationLoadingMessage": "Vérification de l'e-mail en cours...",
+  "forgotPasswordOtpVerificationLoadingMessage": "Vérification de l'OTP en cours...",
+  "forgotPasswordChangeLoadingMessage": "Mise à jour du mot de passe en cours..."
 }

@@ -13,9 +13,14 @@ final class GoogleIdTokenLoading extends GoogleIdTokenState {}
 
 final class GoogleIdTokenSuccess extends GoogleIdTokenState {
   final String idToken;
+  final String name;
   final String email;
 
-  const GoogleIdTokenSuccess({required this.idToken, required this.email});
+  const GoogleIdTokenSuccess({
+    required this.name,
+    required this.idToken,
+    required this.email,
+  });
 
   @override
   List<Object> get props => [idToken, email];

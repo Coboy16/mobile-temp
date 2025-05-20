@@ -45,11 +45,6 @@ class _NewPasswordFormWidgetState extends State<NewPasswordFormWidget> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l10n.newPasswordFormTitleFor(widget.email),
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.center,
-          ),
           const SizedBox(height: AppDimensions.largeSpacing),
           FormBuilderTextField(
             name: 'newPassword',

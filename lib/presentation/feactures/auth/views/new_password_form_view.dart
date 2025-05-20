@@ -31,6 +31,7 @@ class NewPasswordFormView extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.passwordChangeSuccessMessage)),
           );
+          context.read<ForgotPasswordBloc>().add(ForgotPasswordReset());
           context.goNamed(AppRoutes.login);
         } else if (state is ForgotPasswordChangeFailure &&
             state.email == args.email) {
@@ -41,10 +42,8 @@ class NewPasswordFormView extends StatelessWidget {
         }
       },
       child: AuthLayout(
-        authView:
-            AuthView
-                .forgotPasswordOtp, // Puedes crear un nuevo AuthView si el layout es muy diferente
-        emailForOtp: args.email, // Opcional, para el subtítulo si lo mantienes
+        authView: AuthView.setNewPassword, // Cambio aquí
+        emailForOtp: args.email,
         rightPanelContent: NewPasswordFormWidget(
           email: args.email,
           otp: args.otp,
@@ -52,7 +51,6 @@ class NewPasswordFormView extends StatelessWidget {
             context.read<ForgotPasswordBloc>().add(
               ForgotPasswordNewPasswordSubmitted(
                 email: args.email,
-                otp: args.otp,
                 newPassword: newPassword,
               ),
             );

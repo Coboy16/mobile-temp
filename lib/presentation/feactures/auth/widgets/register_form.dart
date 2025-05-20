@@ -38,6 +38,7 @@ class _RegisterFormState extends State<RegisterForm> {
   // Variables para Google
   String? _pendingGoogleIdToken;
   String? _pendingGoogleEmail;
+  String? _pendingGoogleName;
 
   // Método para extraer apellidos paterno y materno del campo unificado
   Map<String, String> _extractLastNames(String fullLastNames) {
@@ -110,6 +111,7 @@ class _RegisterFormState extends State<RegisterForm> {
       // Limpiamos las variables de Google
       _pendingGoogleIdToken = null;
       _pendingGoogleEmail = null;
+      _pendingGoogleName = null;
     });
     context.read<GoogleIdTokenBloc>().add(FetchGoogleIdToken());
   }
@@ -237,13 +239,19 @@ class _RegisterFormState extends State<RegisterForm> {
       setState(() {
         _pendingGoogleIdToken = googleState.idToken;
         _pendingGoogleEmail = googleState.email;
+        _pendingGoogleName = googleState.name;
         _currentStep = RegistrationStep.processingGoogleRegistration;
       });
+      debugPrint('------------');
+      debugPrint('GoogleIdTokenBloc - email: ${googleState.email}');
+      debugPrint('GoogleIdTokenBloc - name: ${googleState.name}');
+      debugPrint('GoogleIdTokenBloc - idToken: ${googleState.idToken}');
+      debugPrint('------------');
 
       context.read<RegisterBloc>().add(
         RegisterWithGoogleSubmitted(
           email: googleState.email,
-          idToken: googleState.idToken,
+          idToken: googleState.name,
         ),
       );
     } else if (googleState is GoogleIdTokenFailure) {
@@ -256,6 +264,7 @@ class _RegisterFormState extends State<RegisterForm> {
         _currentStep = RegistrationStep.initial;
         _pendingGoogleIdToken = null;
         _pendingGoogleEmail = null;
+        _pendingGoogleName = null;
       });
     } else if (googleState is GoogleIdTokenCancelled) {
       debugPrint('Registro con Google cancelado por el usuario.');
@@ -267,6 +276,7 @@ class _RegisterFormState extends State<RegisterForm> {
         _currentStep = RegistrationStep.initial;
         _pendingGoogleIdToken = null;
         _pendingGoogleEmail = null;
+        _pendingGoogleName = null;
       });
     }
   }
@@ -280,10 +290,15 @@ class _RegisterFormState extends State<RegisterForm> {
       // Si estamos en el flujo de Google y tenemos los tokens, finalizamos el login
       if (_currentStep == RegistrationStep.processingGoogleRegistration &&
           _pendingGoogleIdToken != null &&
-          _pendingGoogleEmail != null) {
+          _pendingGoogleEmail != null &&
+          _pendingGoogleName != null) {
         debugPrint(
           "Registro en backend con Google OK. Iniciando login final con AuthGoogleBloc.",
         );
+        debugPrint('------------');
+        debugPrint('AUTH - email: ${_pendingGoogleIdToken!}');
+        debugPrint('AUTH - idToken: ${_pendingGoogleEmail!}');
+        debugPrint('------------');
         context.read<AuthGoogleBloc>().add(
           FinalizeGoogleLoginWithToken(
             idToken: _pendingGoogleIdToken!,
@@ -293,6 +308,7 @@ class _RegisterFormState extends State<RegisterForm> {
         setState(() {
           _pendingGoogleIdToken = null;
           _pendingGoogleEmail = null;
+          _pendingGoogleName = null;
           _currentStep = RegistrationStep.initial;
         });
       } else {
@@ -311,6 +327,7 @@ class _RegisterFormState extends State<RegisterForm> {
         _currentStep = RegistrationStep.initial;
         _pendingGoogleIdToken = null;
         _pendingGoogleEmail = null;
+        _pendingGoogleName = null;
       });
     }
   }

@@ -16,7 +16,7 @@ class SidebarWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SidebarWidget();
+    return const SidebarWidget();
   }
 }
 
@@ -59,7 +59,6 @@ class _SidebarWidgetState extends State<SidebarWidget>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Initial check and listen for future changes via LayoutBuilder or BlocListener
     _checkLayout(context);
   }
 
@@ -79,13 +78,7 @@ class _SidebarWidgetState extends State<SidebarWidget>
 
   void _checkLayout(BuildContext context) {
     final responsive = ResponsiveBreakpoints.of(context);
-    // Adjust this condition based on your `responsive_framework` breakpoints
-    // For example, if you consider TABLET also a "small screen" for the sidebar behavior.
     bool isCurrentlySmallScreen = responsive.isMobile || responsive.isTablet;
-    // Or: bool isCurrentlySmallScreen = responsive.smallerOrEqualTo(TABLET);
-
-    // Send event to BLoC only if the layout type has actually changed
-    // The BLoC itself will also check if state.isSmallScreenLayout needs update
     context.read<SidebarBloc>().add(
       SidebarLayoutChanged(isCurrentlySmallScreen),
     );
@@ -136,20 +129,9 @@ class _SidebarWidgetState extends State<SidebarWidget>
         listenWhen:
             (previous, current) =>
                 previous.isSidebarExpanded != current.isSidebarExpanded,
-        buildWhen: (previous, current) => true,
         builder: (context, sidebarState) {
-          // Re-check layout on each build. LayoutBuilder is more robust for this.
-          // However, for simplicity with BlocConsumer, we can call it here.
-          // For more complex scenarios, wrap parts of the tree with LayoutBuilder.
-          // _checkLayout(context); // Can be called here, but LayoutBuilder is better.
-
-          final double expandedOpacity = 1.0 - _animationController.value;
-          final double collapsedOpacity = _animationController.value;
-
           return LayoutBuilder(
-            // Use LayoutBuilder to react to constraint changes
             builder: (context, constraints) {
-              // This is a more reliable place to check for layout changes
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _checkLayout(context);
               });
@@ -170,91 +152,121 @@ class _SidebarWidgetState extends State<SidebarWidget>
                               ),
                           widthAnimation: _widthAnimation,
                         ),
-                        if (sidebarState.isSidebarExpanded ||
-                            _animationController.value < 0.5)
-                          ClipRect(
-                            child: AnimatedOpacity(
-                              duration: _animationDuration,
-                              opacity: (expandedOpacity * 1.2).clamp(0.0, 1.0),
-                              child: const UserInfo(),
-                            ),
+                        AnimatedOpacity(
+                          opacity: (1.0 - _animationController.value).clamp(
+                            0.0,
+                            1.0,
                           ),
+                          duration: Duration.zero,
+                          child: Visibility(
+                            visible: _animationController.value < 0.8,
+                            maintainState: true,
+                            maintainAnimation:
+                                true, // Added for smoother transitions if state is complex
+                            maintainSize: false,
+                            child: const UserInfo(),
+                          ),
+                        ),
                         Expanded(
                           child: SingleChildScrollView(
                             physics: const BouncingScrollPhysics(),
                             child: ClipRect(
                               child: Stack(
+                                alignment:
+                                    Alignment.topLeft, // Default alignment
                                 children: [
+                                  // Expanded Content (Not using Positioned.fill)
                                   AnimatedOpacity(
-                                    duration: _animationDuration,
-                                    opacity: (expandedOpacity * 1.2).clamp(
-                                      0.0,
-                                      1.0,
-                                    ),
-                                    child: IgnorePointer(
-                                      ignoring: !sidebarState.isSidebarExpanded,
-                                      child: ExpandedSidebarContent(
-                                        currentRoute:
-                                            sidebarState.currentSelectedRoute,
-                                        expandedParentRoutes:
-                                            sidebarState.expandedParentRoutes,
-                                        portalEmpleadoRoutes:
-                                            portalEmpleadoRoutes,
-                                        reclutamientoRoutes:
-                                            reclutamientoRoutes,
-                                        portalCandidatoRoutes:
-                                            portalCandidatoRoutes,
-                                        onNavigateToRoute: (
-                                          routeName, {
-                                          parentRouteName,
-                                          isParentItem = false,
-                                        }) {
-                                          context.read<SidebarBloc>().add(
-                                            SidebarRouteSelected(
-                                              routeName,
-                                              parentRouteName: parentRouteName,
-                                              isParentItem: isParentItem,
-                                            ),
-                                          );
-                                        },
-                                        onToggleExpansion: (parentRouteName) {
-                                          context.read<SidebarBloc>().add(
-                                            SidebarExpansionToggled(
-                                              parentRouteName,
-                                            ),
-                                          );
-                                        },
+                                    opacity: (1.0 - _animationController.value)
+                                        .clamp(0.0, 1.0),
+                                    duration: Duration.zero,
+                                    child: Visibility(
+                                      visible: _animationController.value < 1.0,
+                                      maintainState: true,
+                                      maintainAnimation: true,
+                                      maintainSize: false,
+                                      child: IgnorePointer(
+                                        ignoring:
+                                            _animationController.value > 0.5,
+                                        child: ExpandedSidebarContent(
+                                          key: const ValueKey(
+                                            'expanded_content_stack_child',
+                                          ),
+                                          currentRoute:
+                                              sidebarState.currentSelectedRoute,
+                                          expandedParentRoutes:
+                                              sidebarState.expandedParentRoutes,
+                                          portalEmpleadoRoutes:
+                                              portalEmpleadoRoutes,
+                                          reclutamientoRoutes:
+                                              reclutamientoRoutes,
+                                          portalCandidatoRoutes:
+                                              portalCandidatoRoutes,
+                                          onNavigateToRoute: (
+                                            routeName, {
+                                            parentRouteName,
+                                            isParentItem = false,
+                                          }) {
+                                            context.read<SidebarBloc>().add(
+                                              SidebarRouteSelected(
+                                                routeName,
+                                                parentRouteName:
+                                                    parentRouteName,
+                                                isParentItem: isParentItem,
+                                              ),
+                                            );
+                                          },
+                                          onToggleExpansion: (parentRouteName) {
+                                            context.read<SidebarBloc>().add(
+                                              SidebarExpansionToggled(
+                                                parentRouteName,
+                                              ),
+                                            );
+                                          },
+                                        ),
                                       ),
                                     ),
                                   ),
+                                  // Collapsed Content (Not using Positioned.fill)
                                   AnimatedOpacity(
-                                    duration: _animationDuration,
-                                    opacity: (collapsedOpacity * 1.2).clamp(
+                                    opacity: _animationController.value.clamp(
                                       0.0,
                                       1.0,
                                     ),
-                                    child: IgnorePointer(
-                                      ignoring: sidebarState.isSidebarExpanded,
-                                      child: CollapsedSidebarContent(
-                                        currentRoute:
-                                            sidebarState.currentSelectedRoute,
-                                        portalEmpleadoRoutes:
-                                            portalEmpleadoRoutes,
-                                        reclutamientoRoutes:
-                                            reclutamientoRoutes,
-                                        portalCandidatoRoutes:
-                                            portalCandidatoRoutes,
-                                        onNavigateToRoute: (
-                                          routeName, {
-                                          parentRouteName,
-                                        }) {
-                                          context.read<SidebarBloc>().add(
-                                            SidebarRouteSelected(
-                                              routeName,
-                                              parentRouteName: parentRouteName,
-                                            ),
-                                          );
-                                        },
+                                    duration: Duration.zero,
+                                    child: Visibility(
+                                      visible: _animationController.value > 0.0,
+                                      maintainState: true,
+                                      maintainAnimation: true,
+                                      maintainSize: false,
+                                      child: IgnorePointer(
+                                        ignoring:
+                                            _animationController.value < 0.5,
+                                        child: CollapsedSidebarContent(
+                                          key: const ValueKey(
+                                            'collapsed_content_stack_child',
+                                          ),
+                                          currentRoute:
+                                              sidebarState.currentSelectedRoute,
+                                          portalEmpleadoRoutes:
+                                              portalEmpleadoRoutes,
+                                          reclutamientoRoutes:
+                                              reclutamientoRoutes,
+                                          portalCandidatoRoutes:
+                                              portalCandidatoRoutes,
+                                          onNavigateToRoute: (
+                                            routeName, {
+                                            parentRouteName,
+                                          }) {
+                                            context.read<SidebarBloc>().add(
+                                              SidebarRouteSelected(
+                                                routeName,
+                                                parentRouteName:
+                                                    parentRouteName,
+                                              ),
+                                            );
+                                          },
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -268,18 +280,22 @@ class _SidebarWidgetState extends State<SidebarWidget>
                           height: 1,
                           thickness: 1,
                         ),
-                        ClipRect(
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              AnimatedOpacity(
-                                duration: _animationDuration,
-                                opacity: (expandedOpacity * 1.2).clamp(
-                                  0.0,
-                                  1.0,
-                                ),
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            AnimatedOpacity(
+                              opacity: (1.0 - _animationController.value).clamp(
+                                0.0,
+                                1.0,
+                              ),
+                              duration: Duration.zero,
+                              child: Visibility(
+                                visible: _animationController.value < 0.8,
+                                maintainState: true,
+                                maintainAnimation: true,
+                                maintainSize: false,
                                 child: IgnorePointer(
-                                  ignoring: !sidebarState.isSidebarExpanded,
+                                  ignoring: _animationController.value > 0.5,
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -320,18 +336,24 @@ class _SidebarWidgetState extends State<SidebarWidget>
                                   ),
                                 ),
                               ),
-                              AnimatedOpacity(
-                                duration: _animationDuration,
-                                opacity: (collapsedOpacity * 1.2).clamp(
-                                  0.0,
-                                  1.0,
-                                ),
+                            ),
+                            AnimatedOpacity(
+                              opacity: _animationController.value.clamp(
+                                0.0,
+                                1.0,
+                              ),
+                              duration: Duration.zero,
+                              child: Visibility(
+                                visible: _animationController.value > 0.2,
+                                maintainState: true,
+                                maintainAnimation: true,
+                                maintainSize: false,
                                 child: IgnorePointer(
-                                  ignoring: sidebarState.isSidebarExpanded,
+                                  ignoring: _animationController.value < 0.5,
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      _buildCollapsedItem(
+                                      _buildCollapsedFooterItem(
                                         LucideIcons.circleHelp,
                                         sidebarState.currentSelectedRoute ==
                                             'Ayuda y Soporte',
@@ -341,7 +363,7 @@ class _SidebarWidgetState extends State<SidebarWidget>
                                           ),
                                         ),
                                       ),
-                                      _buildCollapsedItem(
+                                      _buildCollapsedFooterItem(
                                         LucideIcons.settings,
                                         sidebarState.currentSelectedRoute ==
                                             'Configuración',
@@ -351,7 +373,7 @@ class _SidebarWidgetState extends State<SidebarWidget>
                                           ),
                                         ),
                                       ),
-                                      _buildCollapsedItem(
+                                      _buildCollapsedFooterItem(
                                         LucideIcons.logOut,
                                         false,
                                         () => _handleLogout(context),
@@ -360,8 +382,8 @@ class _SidebarWidgetState extends State<SidebarWidget>
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 10),
                       ],
@@ -376,7 +398,7 @@ class _SidebarWidgetState extends State<SidebarWidget>
     );
   }
 
-  Widget _buildCollapsedItem(
+  Widget _buildCollapsedFooterItem(
     IconData icon,
     bool isSelected,
     VoidCallback onTap,

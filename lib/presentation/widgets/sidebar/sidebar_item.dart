@@ -8,6 +8,7 @@ class SidebarItem extends StatelessWidget {
   final bool isSelected;
   final bool isChild;
   final VoidCallback? onTap;
+  final bool paddingEnabled;
 
   const SidebarItem({
     super.key,
@@ -16,6 +17,7 @@ class SidebarItem extends StatelessWidget {
     this.isSelected = false,
     this.isChild = false,
     this.onTap,
+    this.paddingEnabled = false,
   });
 
   @override
@@ -54,7 +56,10 @@ class SidebarItem extends StatelessWidget {
               highlightColor: selectedItemColor.withOpacity(0.05),
               child: Padding(
                 padding: EdgeInsets.only(
-                  left: itemHorizontalPadding,
+                  left:
+                      paddingEnabled
+                          ? itemHorizontalPadding - 6
+                          : itemHorizontalPadding,
                   right: itemHorizontalPadding / 2,
                   top: itemVerticalPadding,
                   bottom: itemVerticalPadding,

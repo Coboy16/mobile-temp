@@ -194,5 +194,18 @@
   "newPasswordFormConfirmLabel": "Confirm New Password",
   "newPasswordFormConfirmHint": "Confirm your new password",
   "newPasswordFormConfirmErrorRequired": "Please confirm your new password",
-  "newPasswordFormSubmitButton": "Change Password"
+  "newPasswordFormSubmitButton": "Change Password",
+  "leftPanelSetNewPasswordTitle": "Secure Your Account",
+  "leftPanelSetNewPasswordSubtitle": "Choose a strong, unique password to protect your hotel management data.",
+  "leftPanelSetNewPasswordHighlight1Title": "Strong Password",
+  "leftPanelSetNewPasswordHighlight1Description": "Use a mix of letters, numbers, and symbols for better security.",
+  "leftPanelSetNewPasswordHighlight2Title": "Avoid Reuse",
+  "leftPanelSetNewPasswordHighlight2Description": "Don't use passwords you've used on other sites.",
+  "leftPanelSetNewPasswordHighlight3Title": "Confirmation",
+  "leftPanelSetNewPasswordHighlight3Description": "Ensure your new password is confirmed энергия (energy) and saved securely.",
+  "setNewPasswordTitle": "Set New Password",
+  "setNewPasswordSubtitle": "Create a new secure password for your account associated with {email}.",
+  "forgotPasswordEmailVerificationLoadingMessage": "Verifying email...",
+  "forgotPasswordOtpVerificationLoadingMessage": "Verifying OTP...",
+  "forgotPasswordChangeLoadingMessage": "Updating password..."
 }

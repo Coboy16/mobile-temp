@@ -137,5 +137,7 @@ Future<void> initServiceLocator() async {
   );
 
   // --- Feature: Google Utilities ---
-  sl.registerFactory(() => GoogleIdTokenBloc());
+  sl.registerFactory(
+    () => GoogleIdTokenBloc(requestOtpUseCase: sl<RequestOtpUseCase>()),
+  );
 }

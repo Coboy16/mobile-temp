@@ -21,7 +21,6 @@ class ForgotPasswordOtpView extends StatelessWidget {
 
     if (currentEmail.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // Asegurarse de que el BLoC se resetea si se navega hacia atrás por error
         context.read<ForgotPasswordBloc>().add(ForgotPasswordReset());
         context.goNamed(AppRoutes.forgotPassword);
         ScaffoldMessenger.of(context).removeCurrentSnackBar();
@@ -33,24 +32,13 @@ class ForgotPasswordOtpView extends StatelessWidget {
     }
 
     return BlocListener<ForgotPasswordBloc, ForgotPasswordState>(
-      // listenWhen: (previous, current) { // Opcional: para ser más específico
-      //   // Solo escuchar si el estado pertenece a este email o es un estado inicial/de carga general
-      //   if (current is ForgotPasswordOtpVerificationSuccess && current.email == currentEmail) return true;
-      //   if (current is ForgotPasswordOtpVerificationFailure && current.email == currentEmail) return true;
-      //   if (current is ForgotPasswordEmailVerificationSuccess && current.email == currentEmail) return true; // Para reenvío
-      //   if (current is ForgotPasswordEmailVerificationFailure && current.email == currentEmail) return true; // Para reenvío
-      //   // Considera si quieres que el loading global maneje los InProgress o si quieres reaccionar aquí
-      //   return false;
-      // },
       listener: (context, state) {
-        // Asegúrate que el estado corresponde al email actual para evitar reacciones a flujos de otros emails si el usuario navega rápido
         if (state is ForgotPasswordOtpVerificationSuccess &&
             state.email == currentEmail) {
           ScaffoldMessenger.of(context).removeCurrentSnackBar();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.otpVerificationSuccessMessage)),
           );
-          // Navegar a la vista de cambio de contraseña
           context.goNamed(
             AppRoutes.newPasswordForm,
             extra: {'email': state.email, 'otp': state.otp},
@@ -63,14 +51,12 @@ class ForgotPasswordOtpView extends StatelessWidget {
           );
         } else if (state is ForgotPasswordEmailVerificationSuccess &&
             state.email == currentEmail) {
-          // Esto es para el reenvío de OTP
           ScaffoldMessenger.of(context).removeCurrentSnackBar();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(l10n.otpResendSuccessMessage(state.email))),
           );
         } else if (state is ForgotPasswordEmailVerificationFailure &&
             state.email == currentEmail) {
-          // Para errores durante el reenvío de OTP
           showDialog(
             context: context,
             builder: (_) => RegistrationFailedDialog(message: state.message),
@@ -83,13 +69,11 @@ class ForgotPasswordOtpView extends StatelessWidget {
         rightPanelContent: ForgotPasswordOtpForm(
           email: currentEmail,
           onOtpVerified: (otp) {
-            // Esto dispara el evento para verificar el OTP
             context.read<ForgotPasswordBloc>().add(
               ForgotPasswordOtpSubmitted(email: currentEmail, otp: otp),
             );
           },
           onResendOtp: () {
-            // Esto dispara el evento para reenviar/re-solicitar el OTP
             context.read<ForgotPasswordBloc>().add(
               ForgotPasswordEmailSubmitted(email: currentEmail),
             );

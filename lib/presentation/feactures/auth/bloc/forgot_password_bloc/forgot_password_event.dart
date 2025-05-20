@@ -28,17 +28,15 @@ class ForgotPasswordOtpSubmitted extends ForgotPasswordEvent {
 
 class ForgotPasswordNewPasswordSubmitted extends ForgotPasswordEvent {
   final String email;
-  final String otp; // Podrías necesitar el OTP o un token de verificación
   final String newPassword;
 
   const ForgotPasswordNewPasswordSubmitted({
     required this.email,
-    required this.otp,
     required this.newPassword,
   });
 
   @override
-  List<Object> get props => [email, otp, newPassword];
+  List<Object> get props => [email, newPassword];
 }
 
 class ForgotPasswordReset extends ForgotPasswordEvent {}

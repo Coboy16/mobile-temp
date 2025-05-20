@@ -88,6 +88,29 @@ class LeftPanel extends StatelessWidget {
           ),
         ];
         break;
+      case AuthView.setNewPassword:
+        title = l10n.leftPanelSetNewPasswordTitle;
+        subtitle = l10n.leftPanelSetNewPasswordSubtitle;
+        highlights = [
+          FeatureHighlight(
+            icon: LucideIcons.keySquare,
+            title: l10n.leftPanelSetNewPasswordHighlight1Title,
+            description: l10n.leftPanelSetNewPasswordHighlight1Description,
+          ),
+          const SizedBox(height: AppDimensions.largeSpacing),
+          FeatureHighlight(
+            icon: LucideIcons.shieldAlert,
+            title: l10n.leftPanelSetNewPasswordHighlight2Title,
+            description: l10n.leftPanelSetNewPasswordHighlight2Description,
+          ),
+          const SizedBox(height: AppDimensions.largeSpacing),
+          FeatureHighlight(
+            icon: LucideIcons.circleCheck,
+            title: l10n.leftPanelSetNewPasswordHighlight3Title,
+            description: l10n.leftPanelSetNewPasswordHighlight3Description,
+          ),
+        ];
+        break;
     }
 
     return Container(

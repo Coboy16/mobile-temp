@@ -17,7 +17,7 @@ class SidebarHeaderWithToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color headerBg = AppColors.sidebarHeaderBackground;
+    final Color headerBg = AppColors.primaryBlue;
     final Color logoText = AppColors.primaryPurple;
     final Color headerText = AppColors.sidebarText;
     final Color iconColor = AppColors.sidebarIcon.withOpacity(0.7);
@@ -30,10 +30,11 @@ class SidebarHeaderWithToggle extends StatelessWidget {
         horizontal:
             (parentHorizontalPadding / 2) +
             (parentHorizontalPadding /
-                    2 *
-                    (widthAnimation.value - collapsedSidebarWidth) /
-                    (sidebarWidth - collapsedSidebarWidth))
-                .clamp(0.0, parentHorizontalPadding / 2),
+                2 *
+                ((widthAnimation.value - collapsedSidebarWidth) /
+                        (sidebarWidth - collapsedSidebarWidth))
+                    .clamp(0.0, 1.0) // Ensure value is between 0 and 1
+                    ),
       ),
       child: ClipRect(
         child: AnimatedSwitcher(
@@ -103,7 +104,9 @@ class SidebarHeaderWithToggle extends StatelessWidget {
                   : Container(
                     key: const ValueKey('collapsed_header'),
                     alignment: Alignment.center,
-                    width: collapsedSidebarWidth - (parentHorizontalPadding),
+                    width:
+                        collapsedSidebarWidth -
+                        (parentHorizontalPadding), // Ensure enough space
                     child: IconButton(
                       icon: Icon(
                         LucideIcons.chevronRight,

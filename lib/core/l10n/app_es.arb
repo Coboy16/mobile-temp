@@ -158,5 +158,18 @@
   "newPasswordFormConfirmLabel": "Confirmar Nueva Contraseña",
   "newPasswordFormConfirmHint": "Confirma tu nueva contraseña",
   "newPasswordFormConfirmErrorRequired": "Por favor, confirma tu nueva contraseña",
-  "newPasswordFormSubmitButton": "Cambiar Contraseña"
+  "newPasswordFormSubmitButton": "Cambiar Contraseña",
+  "leftPanelSetNewPasswordTitle": "Asegura tu Cuenta",
+  "leftPanelSetNewPasswordSubtitle": "Elige una contraseña fuerte y única para proteger los datos de gestión de tu hotel.",
+  "leftPanelSetNewPasswordHighlight1Title": "Contraseña Fuerte",
+  "leftPanelSetNewPasswordHighlight1Description": "Usa una mezcla de letras, números y símbolos para mayor seguridad.",
+  "leftPanelSetNewPasswordHighlight2Title": "Evita Reutilizar",
+  "leftPanelSetNewPasswordHighlight2Description": "No uses contraseñas que hayas utilizado en otros sitios.",
+  "leftPanelSetNewPasswordHighlight3Title": "Confirmación",
+  "leftPanelSetNewPasswordHighlight3Description": "Asegúrate de que tu nueva contraseña esté confirmada y guardada de forma segura.",
+  "setNewPasswordTitle": "Establecer Nueva Contraseña",
+  "setNewPasswordSubtitle": "Crea una nueva contraseña segura para tu cuenta asociada con {email}.",
+  "forgotPasswordEmailVerificationLoadingMessage": "Verificando correo...",
+  "forgotPasswordOtpVerificationLoadingMessage": "Verificando OTP...",
+  "forgotPasswordChangeLoadingMessage": "Actualizando contraseña..."
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '/presentation/widgets/widgets.dart';
+import 'sidebar_menu_constants.dart';
 
 typedef NavigateToRouteCallback =
     void Function(
@@ -34,205 +35,237 @@ class ExpandedSidebarContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isPortalEmpleadoParentSelected =
         portalEmpleadoRoutes.contains(currentRoute) ||
-        currentRoute == 'Portal del Empleado';
+        currentRoute == AppSidebarMenuRoutes.portalEmpleado;
     final bool isReclutamientoParentSelected =
         reclutamientoRoutes.contains(currentRoute) ||
-        currentRoute == 'Reclutamiento';
+        currentRoute == AppSidebarMenuRoutes.reclutamiento;
     final bool isPortalCandidatoParentSelected =
         portalCandidatoRoutes.contains(currentRoute) ||
-        currentRoute == 'Portal del Candidato';
+        currentRoute == AppSidebarMenuRoutes.portalCandidato;
 
     return Column(
       key: const ValueKey('expanded_content'),
       mainAxisSize: MainAxisSize.min,
       children: [
         SidebarExpansionItem(
-          title: 'Portal del Empleado',
+          title: AppSidebarMenuRoutes.portalEmpleado,
           icon: LucideIcons.fileText,
           isParentSelected: isPortalEmpleadoParentSelected,
-          isExpanded: expandedParentRoutes.contains('Portal del Empleado'),
-          onToggle: () => onToggleExpansion('Portal del Empleado'),
+          isExpanded: expandedParentRoutes.contains(
+            AppSidebarMenuRoutes.portalEmpleado,
+          ),
+          onToggle:
+              () => onToggleExpansion(AppSidebarMenuRoutes.portalEmpleado),
           onHeaderTap:
-              () =>
-                  onNavigateToRoute('Portal del Empleado', isParentItem: true),
+              () => onNavigateToRoute(
+                AppSidebarMenuRoutes.portalEmpleado,
+                isParentItem: true,
+              ),
           childrenRoutes: portalEmpleadoRoutes,
           children: [
             SidebarItem(
-              title: 'Solicitudes',
+              title: AppSidebarMenuRoutes.solicitudes,
               icon: LucideIcons.fileText,
-              isSelected: currentRoute == 'Solicitudes',
+              isSelected: currentRoute == AppSidebarMenuRoutes.solicitudes,
               isChild: true,
               onTap:
                   () => onNavigateToRoute(
-                    'Solicitudes',
-                    parentRouteName: 'Portal del Empleado',
+                    AppSidebarMenuRoutes.solicitudes,
+                    parentRouteName: AppSidebarMenuRoutes.portalEmpleado,
                   ),
             ),
             SidebarItem(
-              title: 'Comprobantes de Pago',
+              title: AppSidebarMenuRoutes.comprobantesPago,
               icon: LucideIcons.receipt,
-              isSelected: currentRoute == 'Comprobantes de Pago',
+              isSelected: currentRoute == AppSidebarMenuRoutes.comprobantesPago,
               isChild: true,
               onTap:
                   () => onNavigateToRoute(
-                    'Comprobantes de Pago',
-                    parentRouteName: 'Portal del Empleado',
+                    AppSidebarMenuRoutes.comprobantesPago,
+                    parentRouteName: AppSidebarMenuRoutes.portalEmpleado,
                   ),
             ),
             SidebarItem(
-              title: 'Informe de Cursos',
+              title: AppSidebarMenuRoutes.informeCursos,
               icon: LucideIcons.graduationCap,
-              isSelected: currentRoute == 'Informe de Cursos',
+              isSelected: currentRoute == AppSidebarMenuRoutes.informeCursos,
               isChild: true,
               onTap:
                   () => onNavigateToRoute(
-                    'Informe de Cursos',
-                    parentRouteName: 'Portal del Empleado',
+                    AppSidebarMenuRoutes.informeCursos,
+                    parentRouteName: AppSidebarMenuRoutes.portalEmpleado,
                   ),
             ),
             SidebarItem(
-              title: 'Cola de Aprobación',
+              title: AppSidebarMenuRoutes.colaAprobacion,
               icon: LucideIcons.fileCheck,
-              isSelected: currentRoute == 'Cola de Aprobación',
+              isSelected: currentRoute == AppSidebarMenuRoutes.colaAprobacion,
               isChild: true,
               onTap:
                   () => onNavigateToRoute(
-                    'Cola de Aprobación',
-                    parentRouteName: 'Portal del Empleado',
+                    AppSidebarMenuRoutes.colaAprobacion,
+                    parentRouteName: AppSidebarMenuRoutes.portalEmpleado,
                   ),
             ),
           ],
         ),
         SidebarExpansionItem(
-          title: 'Reclutamiento',
+          title: AppSidebarMenuRoutes.reclutamiento,
           icon: LucideIcons.users,
           isParentSelected: isReclutamientoParentSelected,
-          isExpanded: expandedParentRoutes.contains('Reclutamiento'),
-          onToggle: () => onToggleExpansion('Reclutamiento'),
+          isExpanded: expandedParentRoutes.contains(
+            AppSidebarMenuRoutes.reclutamiento,
+          ),
+          onToggle: () => onToggleExpansion(AppSidebarMenuRoutes.reclutamiento),
           onHeaderTap:
-              () => onNavigateToRoute('Reclutamiento', isParentItem: true),
+              () => onNavigateToRoute(
+                AppSidebarMenuRoutes.reclutamiento,
+                isParentItem: true,
+              ),
           childrenRoutes: reclutamientoRoutes,
           children: [
             SidebarItem(
-              title: 'Ofertas de Trabajo',
+              title: AppSidebarMenuRoutes.ofertasTrabajo,
               icon: LucideIcons.briefcase,
-              isSelected: currentRoute == 'Ofertas de Trabajo',
+              isSelected: currentRoute == AppSidebarMenuRoutes.ofertasTrabajo,
               isChild: true,
               onTap:
                   () => onNavigateToRoute(
-                    'Ofertas de Trabajo',
-                    parentRouteName: 'Reclutamiento',
+                    AppSidebarMenuRoutes.ofertasTrabajo,
+                    parentRouteName: AppSidebarMenuRoutes.reclutamiento,
                   ),
             ),
             SidebarItem(
-              title: 'Candidatos',
+              title: AppSidebarMenuRoutes.candidatos,
               icon: LucideIcons.users,
-              isSelected: currentRoute == 'Candidatos',
+              isSelected: currentRoute == AppSidebarMenuRoutes.candidatos,
               isChild: true,
               onTap:
                   () => onNavigateToRoute(
-                    'Candidatos',
-                    parentRouteName: 'Reclutamiento',
+                    AppSidebarMenuRoutes.candidatos,
+                    parentRouteName: AppSidebarMenuRoutes.reclutamiento,
                   ),
             ),
             SidebarItem(
-              title: 'Portal Público',
+              title: AppSidebarMenuRoutes.portalPublico,
               icon: LucideIcons.globe,
-              isSelected: currentRoute == 'Portal Público',
+              isSelected: currentRoute == AppSidebarMenuRoutes.portalPublico,
               isChild: true,
               onTap:
                   () => onNavigateToRoute(
-                    'Portal Público',
-                    parentRouteName: 'Reclutamiento',
+                    AppSidebarMenuRoutes.portalPublico,
+                    parentRouteName: AppSidebarMenuRoutes.reclutamiento,
                   ),
             ),
             SidebarItem(
-              title: 'Pruebas Psicométricas',
+              title: AppSidebarMenuRoutes.pruebasPsicometricas,
               icon: LucideIcons.brain,
-              isSelected: currentRoute == 'Pruebas Psicométricas',
+              isSelected:
+                  currentRoute == AppSidebarMenuRoutes.pruebasPsicometricas,
               isChild: true,
               onTap:
                   () => onNavigateToRoute(
-                    'Pruebas Psicométricas',
-                    parentRouteName: 'Reclutamiento',
+                    AppSidebarMenuRoutes.pruebasPsicometricas,
+                    parentRouteName: AppSidebarMenuRoutes.reclutamiento,
                   ),
             ),
             SidebarItem(
-              title: 'Ajustes',
+              title: AppSidebarMenuRoutes.ajustes,
               icon: LucideIcons.settings,
-              isSelected: currentRoute == 'Ajustes',
+              isSelected: currentRoute == AppSidebarMenuRoutes.ajustes,
               isChild: true,
               onTap:
                   () => onNavigateToRoute(
-                    'Ajustes',
-                    parentRouteName: 'Reclutamiento',
+                    AppSidebarMenuRoutes.ajustes,
+                    parentRouteName: AppSidebarMenuRoutes.reclutamiento,
                   ),
             ),
           ],
         ),
         SidebarExpansionItem(
-          title: 'Portal del Candidato',
+          title: AppSidebarMenuRoutes.portalCandidato,
           icon: LucideIcons.contact,
           isParentSelected: isPortalCandidatoParentSelected,
-          isExpanded: expandedParentRoutes.contains('Portal del Candidato'),
-          onToggle: () => onToggleExpansion('Portal del Candidato'),
+          isExpanded: expandedParentRoutes.contains(
+            AppSidebarMenuRoutes.portalCandidato,
+          ),
+          onToggle:
+              () => onToggleExpansion(AppSidebarMenuRoutes.portalCandidato),
           onHeaderTap:
-              () =>
-                  onNavigateToRoute('Portal del Candidato', isParentItem: true),
+              () => onNavigateToRoute(
+                AppSidebarMenuRoutes.portalCandidato,
+                isParentItem: true,
+              ),
           childrenRoutes: portalCandidatoRoutes,
           children: [
             SidebarItem(
-              title: 'Subitem Candidato',
+              title: AppSidebarMenuRoutes.subitemCandidato,
               icon: LucideIcons.userSearch,
-              isSelected: currentRoute == 'Subitem Candidato',
+              isSelected: currentRoute == AppSidebarMenuRoutes.subitemCandidato,
               isChild: true,
               onTap:
                   () => onNavigateToRoute(
-                    'Subitem Candidato',
-                    parentRouteName: 'Portal del Candidato',
+                    AppSidebarMenuRoutes.subitemCandidato,
+                    parentRouteName: AppSidebarMenuRoutes.portalCandidato,
                   ),
             ),
             SidebarItem(
-              title: 'Mis Postulaciones',
+              title: AppSidebarMenuRoutes.misPostulaciones,
               icon: LucideIcons.clipboardList,
-              isSelected: currentRoute == 'Mis Postulaciones',
+              isSelected: currentRoute == AppSidebarMenuRoutes.misPostulaciones,
               isChild: true,
               onTap:
                   () => onNavigateToRoute(
-                    'Mis Postulaciones',
-                    parentRouteName: 'Portal del Candidato',
+                    AppSidebarMenuRoutes.misPostulaciones,
+                    parentRouteName: AppSidebarMenuRoutes.portalCandidato,
                   ),
             ),
             SidebarItem(
-              title: 'Mi Perfil',
+              title: AppSidebarMenuRoutes.miPerfilCandidato,
               icon: LucideIcons.circleUser,
-              isSelected: currentRoute == 'Mi Perfil',
+              isSelected:
+                  currentRoute == AppSidebarMenuRoutes.miPerfilCandidato,
               isChild: true,
               onTap:
                   () => onNavigateToRoute(
-                    'Mi Perfil',
-                    parentRouteName: 'Portal del Candidato',
+                    AppSidebarMenuRoutes.miPerfilCandidato,
+                    parentRouteName: AppSidebarMenuRoutes.portalCandidato,
                   ),
             ),
           ],
         ),
+        // SidebarItem(
+        //   title: AppSidebarMenuRoutes.perfilUsuarioSistema,
+        //   icon: LucideIcons.userCog,
+        //   isSelected: currentRoute == AppSidebarMenuRoutes.perfilUsuarioSistema,
+        //   onTap:
+        //       () =>
+        //           onNavigateToRoute(AppSidebarMenuRoutes.perfilUsuarioSistema),
+        // ),
         SidebarItem(
-          title: 'Evaluación de desempeño',
+          title: AppSidebarMenuRoutes.evaluacionDesempeno,
           icon: LucideIcons.chartLine,
-          isSelected: currentRoute == 'Evaluación de desempeño',
-          onTap: () => onNavigateToRoute('Evaluación de desempeño'),
+          paddingEnabled: true,
+          isSelected: currentRoute == AppSidebarMenuRoutes.evaluacionDesempeno,
+          onTap:
+              () => onNavigateToRoute(AppSidebarMenuRoutes.evaluacionDesempeno),
         ),
         SidebarItem(
-          title: 'Consolidación',
+          title: AppSidebarMenuRoutes.consolidacion,
           icon: LucideIcons.layers,
-          isSelected: currentRoute == 'Consolidación',
-          onTap: () => onNavigateToRoute('Consolidación'),
+          paddingEnabled: true,
+
+          isSelected: currentRoute == AppSidebarMenuRoutes.consolidacion,
+          onTap: () => onNavigateToRoute(AppSidebarMenuRoutes.consolidacion),
         ),
         SidebarItem(
-          title: 'Cálculos Impositivos',
+          title: AppSidebarMenuRoutes.calculosImpositivos,
           icon: LucideIcons.calculator,
-          isSelected: currentRoute == 'Cálculos Impositivos',
-          onTap: () => onNavigateToRoute('Cálculos Impositivos'),
+          paddingEnabled: true,
+
+          isSelected: currentRoute == AppSidebarMenuRoutes.calculosImpositivos,
+          onTap:
+              () => onNavigateToRoute(AppSidebarMenuRoutes.calculosImpositivos),
         ),
       ],
     );
