@@ -1,4 +1,3 @@
-// lib/presentation/routes/app_router.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fe_core_vips/presentation/bloc/blocs.dart';
@@ -8,20 +7,21 @@ import 'package:fe_core_vips/domain/use_cases/use_cases.dart';
 import '/presentation/feactures/splash/splash.dart';
 import '/presentation/feactures/auth/auth.dart';
 import '/presentation/feactures/home/home.dart';
-// Asegúrate que PerfilScreen esté importada si usas la ruta /profile original
-// import '/presentation/feactures/perfil/perfil.dart';
 import '/presentation/widgets/sidebar/sidebar_menu_constants.dart';
 import 'go_router_refresh_stream.dart';
 
+import '/presentation/feactures/request/request.dart';
+import '/presentation/feactures/check_payment/check.dart';
+import '/presentation/feactures/perfil/perfil.dart';
+
 class AppRoutes {
-  // --- Tus constantes originales de paths y segmentos (SIN CAMBIOS) ---
   static const String splash = '/';
   static const String auth = '/auth';
   static const String authRegister = 'register';
   static const String authRegisterOtp = 'register-otp';
   static const String authForgotPassword = 'forgot-password';
   static const String authOtp = 'otp';
-  static const String home = '/home'; // Será la ruta base para las subrutas
+  static const String home = '/home';
   static const String authNewPassword = 'new-password';
 
   static const String login = auth;
@@ -30,9 +30,7 @@ class AppRoutes {
   static const String forgotPassword = '$auth/$authForgotPassword';
   static const String otp = '$auth/$authOtp';
   static const String newPasswordForm = '$auth/$authNewPassword';
-  // --- Fin constantes originales ---
 
-  // --- NUEVOS: SEGMENTOS de Path para sub-rutas de Home ---
   static const String homeSubRequest = 'request';
   static const String homeSubCheckPayment = 'check-payment';
   static const String homeSubInformeCursos = 'informe-cursos';
@@ -52,11 +50,7 @@ class AppRoutes {
   static const String homeSubAyudaSoporte = 'ayuda-soporte';
   static const String homeSubConfiguracion = 'configuracion';
 
-  // --- NUEVOS: NOMBRES DE RUTA para usar con context.goNamed() SOLO PARA LAS SUBRUTAS DE HOME ---
-  // Para auth, seguiremos usando tus paths como nombres para no romper tu SplashScreen.
-  // La recomendación sigue siendo usar nombres únicos, pero para cumplir tu requisito:
-  static const String homeRequestName =
-      'homeRequest'; // Nombres simples y únicos para subrutas de home
+  static const String homeRequestName = 'homeRequest';
   static const String homeCheckPaymentName = 'homeCheckPayment';
   static const String homeInformeCursosName = 'homeInformeCursos';
   static const String homeColaAprobacionName = 'homeColaAprobacion';
@@ -89,64 +83,56 @@ class AppRouter {
         (user) => user != null,
       );
       final String location = state.uri.toString();
+      final String matchedLocation = state.matchedLocation;
 
-      // Tu lógica original de redirect se mantiene aquí.
-      final authRoutes = [
-        AppRoutes.login,
-        AppRoutes.register,
-        AppRoutes.registerOtp,
-        AppRoutes.forgotPassword,
-        AppRoutes.otp,
-        AppRoutes.newPasswordForm,
-      ];
-      final bool isTryingToAccessAuthPath = location.startsWith(AppRoutes.auth);
       final bool isGoingToSplash = location == AppRoutes.splash;
+      final bool isTryingToAccessAuthPath = location.startsWith(AppRoutes.auth);
 
       if (isGoingToSplash) return null;
 
       if (loggedIn && isTryingToAccessAuthPath) {
-        return '${AppRoutes.home}/${AppRoutes.homeSubRequest}'; // Redirige a path de subruta home
+        return '${AppRoutes.home}/${AppRoutes.homeSubRequest}';
       }
 
       if (!loggedIn && !isTryingToAccessAuthPath && !isGoingToSplash) {
-        return AppRoutes.login; // Redirige a path '/auth'
+        return AppRoutes.login;
       }
 
-      if (loggedIn && location == AppRoutes.home) {
-        return '${AppRoutes.home}/${AppRoutes.homeSubRequest}'; // Redirige a path de subruta home
+      if (loggedIn &&
+          (location == AppRoutes.home || matchedLocation == AppRoutes.home)) {
+        return '${AppRoutes.home}/${AppRoutes.homeSubRequest}';
       }
       return null;
     },
     routes: <RouteBase>[
       GoRoute(
-        path: AppRoutes.splash, // Es '/'
-        name: AppRoutes.splash, // Usas '/' como nombre
+        path: AppRoutes.splash,
+        name: AppRoutes.splash,
         builder:
             (BuildContext context, GoRouterState state) => const SplashScreen(),
       ),
       GoRoute(
-        path: AppRoutes.auth, // Es '/auth'
-        name: AppRoutes.login, // Usas '/auth' como nombre para esta ruta padre
+        path: AppRoutes.auth,
+        name: AppRoutes.login,
         builder:
             (BuildContext context, GoRouterState state) => const LoginView(),
         routes: <RouteBase>[
           GoRoute(
-            path: AppRoutes.authRegister, // Es 'register' (segmento)
-            name: AppRoutes.register, // Usas '/auth/register' como nombre
+            path: AppRoutes.authRegister,
+            name: AppRoutes.register,
             builder:
                 (BuildContext context, GoRouterState state) =>
                     const RegisterView(),
           ),
           GoRoute(
-            path: AppRoutes.authRegisterOtp, // Es 'register-otp' (segmento)
-            name:
-                AppRoutes.registerOtp, // Usas '/auth/register-otp' como nombre
+            path: AppRoutes.authRegisterOtp,
+            name: AppRoutes.registerOtp,
             builder: (BuildContext context, GoRouterState state) {
               final args = state.extra as RegisterOtpViewArguments?;
               if (args == null) {
                 WidgetsBinding.instance.addPostFrameCallback(
                   (_) => context.goNamed(AppRoutes.register),
-                ); // Usa el nombre (que es path)
+                );
                 return const Scaffold(
                   body: Center(child: CircularProgressIndicator()),
                 );
@@ -186,7 +172,7 @@ class AppRouter {
               }
               WidgetsBinding.instance.addPostFrameCallback(
                 (_) => context.goNamed(AppRoutes.forgotPassword),
-              ); // Usa el nombre (que es path)
+              );
               return const Scaffold(
                 body: Center(child: CircularProgressIndicator()),
               );
@@ -194,184 +180,250 @@ class AppRouter {
           ),
         ],
       ),
-      // --- CONFIGURACIÓN PARA /HOME CON SUBRUTAS ---
-      GoRoute(
-        path: AppRoutes.home, // Es '/home'
-        name:
-            AppRoutes.home, // Usas '/home' como nombre para la ruta padre /home
-        redirect: (context, state) {
-          if (state.matchedLocation == AppRoutes.home) {
-            return '${AppRoutes.home}/${AppRoutes.homeSubRequest}'; // Navega a path
-          }
-          return null;
+      ShellRoute(
+        builder: (BuildContext context, GoRouterState state, Widget child) {
+          return HomeScreen(key: state.pageKey, child: child);
         },
-        // El builder para /home (AppRoutes.home) puede ser necesario si el redirect no siempre aplica.
-        // builder: (context, state) => const HomeScreen(currentRouteKeyFromRouter: AppSidebarMenuRoutes.solicitudes),
         routes: <RouteBase>[
           GoRoute(
-            path:
-                AppRoutes
-                    .homeSubRequest, // 'request' (segmento relativo a /home)
-            name: AppRoutes.homeRequestName, // NOMBRE ÚNICO: 'homeRequest'
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter: AppSidebarMenuRoutes.solicitudes,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubRequest}',
+            name: AppRoutes.homeRequestName,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: const RequestScreen(
+                    key: ValueKey(AppSidebarMenuRoutes.solicitudes),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubCheckPayment,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubCheckPayment}',
             name: AppRoutes.homeCheckPaymentName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter:
-                      AppSidebarMenuRoutes.comprobantesPago,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: const CheckPaymentScreen(
+                    key: ValueKey(AppSidebarMenuRoutes.comprobantesPago),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubInformeCursos,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubInformeCursos}',
             name: AppRoutes.homeInformeCursosName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter: AppSidebarMenuRoutes.informeCursos,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(AppSidebarMenuRoutes.informeCursos),
+                    child: Text(AppSidebarMenuRoutes.informeCursos),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubColaAprobacion,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubColaAprobacion}',
             name: AppRoutes.homeColaAprobacionName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter:
-                      AppSidebarMenuRoutes.colaAprobacion,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(AppSidebarMenuRoutes.colaAprobacion),
+                    child: Text(AppSidebarMenuRoutes.colaAprobacion),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubOfertasTrabajo,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubOfertasTrabajo}',
             name: AppRoutes.homeOfertasTrabajoName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter:
-                      AppSidebarMenuRoutes.ofertasTrabajo,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(AppSidebarMenuRoutes.ofertasTrabajo),
+                    child: Text(AppSidebarMenuRoutes.ofertasTrabajo),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubCandidatos,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubCandidatos}',
             name: AppRoutes.homeCandidatosName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter: AppSidebarMenuRoutes.candidatos,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(AppSidebarMenuRoutes.candidatos),
+                    child: Text(AppSidebarMenuRoutes.candidatos),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubPortalPublico,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubPortalPublico}',
             name: AppRoutes.homePortalPublicoName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter: AppSidebarMenuRoutes.portalPublico,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(AppSidebarMenuRoutes.portalPublico),
+                    child: Text(AppSidebarMenuRoutes.portalPublico),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubPruebasPsicometricas,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubPruebasPsicometricas}',
             name: AppRoutes.homePruebasPsicometricasName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter:
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(
                       AppSidebarMenuRoutes.pruebasPsicometricas,
+                    ),
+                    child: Text(AppSidebarMenuRoutes.pruebasPsicometricas),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubAjustes,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubAjustes}',
             name: AppRoutes.homeAjustesName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter: AppSidebarMenuRoutes.ajustes,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(AppSidebarMenuRoutes.ajustes),
+                    child: Text(AppSidebarMenuRoutes.ajustes),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubSubitemCandidato,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubSubitemCandidato}',
             name: AppRoutes.homeSubitemCandidatoName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter:
-                      AppSidebarMenuRoutes.subitemCandidato,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(AppSidebarMenuRoutes.subitemCandidato),
+                    child: Text(AppSidebarMenuRoutes.subitemCandidato),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubMisPostulaciones,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubMisPostulaciones}',
             name: AppRoutes.homeMisPostulacionesName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter:
-                      AppSidebarMenuRoutes.misPostulaciones,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(AppSidebarMenuRoutes.misPostulaciones),
+                    child: Text(AppSidebarMenuRoutes.misPostulaciones),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubMiPerfilCandidato,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubMiPerfilCandidato}',
             name: AppRoutes.homeMiPerfilCandidatoName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter:
-                      AppSidebarMenuRoutes.miPerfilCandidato,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(AppSidebarMenuRoutes.miPerfilCandidato),
+                    child: Text(AppSidebarMenuRoutes.miPerfilCandidato),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubEvaluacionDesempeno,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubEvaluacionDesempeno}',
             name: AppRoutes.homeEvaluacionDesempenoName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter:
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(
                       AppSidebarMenuRoutes.evaluacionDesempeno,
+                    ),
+                    child: Text(AppSidebarMenuRoutes.evaluacionDesempeno),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubConsolidacion,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubConsolidacion}',
             name: AppRoutes.homeConsolidacionName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter: AppSidebarMenuRoutes.consolidacion,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(AppSidebarMenuRoutes.consolidacion),
+                    child: Text(AppSidebarMenuRoutes.consolidacion),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubCalculosImpositivos,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubCalculosImpositivos}',
             name: AppRoutes.homeCalculosImpositivosName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter:
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(
                       AppSidebarMenuRoutes.calculosImpositivos,
+                    ),
+                    child: Text(AppSidebarMenuRoutes.calculosImpositivos),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubProfileUserSystem, // 'profile-user-system'
-            name: AppRoutes.homeProfileUserSystemName, // NOMBRE ÚNICO
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter:
-                      AppSidebarMenuRoutes.perfilUsuarioSistema,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubProfileUserSystem}',
+            name: AppRoutes.homeProfileUserSystemName,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: const PerfilScreen(
+                    key: ValueKey(AppSidebarMenuRoutes.perfilUsuarioSistema),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubAyudaSoporte,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubAyudaSoporte}',
             name: AppRoutes.homeAyudaSoporteName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter: AppSidebarMenuRoutes.ayudaSoporte,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(AppSidebarMenuRoutes.ayudaSoporte),
+                    child: Text(AppSidebarMenuRoutes.ayudaSoporte),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
           GoRoute(
-            path: AppRoutes.homeSubConfiguracion,
+            path: '${AppRoutes.home}/${AppRoutes.homeSubConfiguracion}',
             name: AppRoutes.homeConfiguracionName,
-            builder:
-                (context, state) => const HomeScreen(
-                  currentRouteKeyFromRouter: AppSidebarMenuRoutes.configuracion,
+            pageBuilder:
+                (context, state) => NoTransitionPage(
+                  child: Center(
+                    key: const ValueKey(AppSidebarMenuRoutes.configuracion),
+                    child: Text(AppSidebarMenuRoutes.configuracion),
+                  ),
+                  key: state.pageKey,
+                  name: state.name,
                 ),
           ),
         ],
       ),
-      // Si tenías una ruta /profile original e independiente:
-      // GoRoute(
-      //   path: AppRoutes.profile,
-      //   name: AppRoutes.profile, // Usar AppRoutes.profile (path '/profile') como nombre
-      //   builder: (BuildContext context, GoRouterState state) => const PerfilScreen(),
-      // ),
     ],
     errorBuilder:
         (context, state) => Scaffold(

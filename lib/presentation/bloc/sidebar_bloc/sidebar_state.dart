@@ -4,7 +4,7 @@ class SidebarState extends Equatable {
   final String currentSelectedRoute;
   final bool isSidebarExpanded;
   final Set<String> expandedParentRoutes;
-  final bool isSmallScreenLayout; // Renamed from isMobileLayout for clarity
+  final bool isSmallScreenLayout;
 
   const SidebarState({
     required this.currentSelectedRoute,
@@ -14,21 +14,53 @@ class SidebarState extends Equatable {
   });
 
   factory SidebarState.initial({
-    String initialRoute = 'Solicitudes',
+    String initialRoute = AppSidebarMenuRoutes.solicitudes,
     String? initialParentRoute,
     bool initialIsSmallScreen = false,
   }) {
     final initialExpandedRoutes = <String>{};
-    if (initialParentRoute != null) {
-      initialExpandedRoutes.add(initialParentRoute);
-    } else if (initialRoute == 'Solicitudes') {
-      initialExpandedRoutes.add('Portal del Empleado');
+    String determinedParentRoute = "";
+
+    if (initialParentRoute != null && initialParentRoute.isNotEmpty) {
+      determinedParentRoute = initialParentRoute;
+    } else {
+      if ([
+        AppSidebarMenuRoutes.solicitudes,
+        AppSidebarMenuRoutes.comprobantesPago,
+        AppSidebarMenuRoutes.informeCursos,
+        AppSidebarMenuRoutes.colaAprobacion,
+      ].contains(initialRoute)) {
+        determinedParentRoute = AppSidebarMenuRoutes.portalEmpleado;
+      } else if ([
+        AppSidebarMenuRoutes.ofertasTrabajo,
+        AppSidebarMenuRoutes.candidatos,
+        AppSidebarMenuRoutes.portalPublico,
+        AppSidebarMenuRoutes.pruebasPsicometricas,
+        AppSidebarMenuRoutes.ajustes,
+      ].contains(initialRoute)) {
+        determinedParentRoute = AppSidebarMenuRoutes.reclutamiento;
+      } else if ([
+        AppSidebarMenuRoutes.subitemCandidato,
+        AppSidebarMenuRoutes.misPostulaciones,
+        AppSidebarMenuRoutes.miPerfilCandidato,
+      ].contains(initialRoute)) {
+        determinedParentRoute = AppSidebarMenuRoutes.portalCandidato;
+      }
+    }
+
+    if (determinedParentRoute.isNotEmpty) {
+      initialExpandedRoutes.add(determinedParentRoute);
+    }
+
+    if (initialRoute == AppSidebarMenuRoutes.portalEmpleado ||
+        initialRoute == AppSidebarMenuRoutes.reclutamiento ||
+        initialRoute == AppSidebarMenuRoutes.portalCandidato) {
+      initialExpandedRoutes.add(initialRoute);
     }
 
     return SidebarState(
       currentSelectedRoute: initialRoute,
-      isSidebarExpanded:
-          !initialIsSmallScreen, // Collapsed by default on small screens
+      isSidebarExpanded: !initialIsSmallScreen,
       expandedParentRoutes: initialExpandedRoutes,
       isSmallScreenLayout: initialIsSmallScreen,
     );

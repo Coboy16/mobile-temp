@@ -21,7 +21,7 @@ class LoginView extends StatelessWidget {
 
   // Maneja el éxito de la autenticación
   void _handleAuthSuccess(BuildContext context) {
-    context.goNamed(AppRoutes.home);
+    context.goNamed(AppRoutes.homeRequestName);
   }
 
   // Maneja fallos generales de AuthBloc durante el login
@@ -35,7 +35,7 @@ class LoginView extends StatelessWidget {
     BuildContext context,
     AuthGoogleAuthenticated state,
   ) {
-    context.goNamed(AppRoutes.home);
+    context.goNamed(AppRoutes.homeRequestName);
   }
 
   // Maneja fallos durante el proceso de Google Sign In

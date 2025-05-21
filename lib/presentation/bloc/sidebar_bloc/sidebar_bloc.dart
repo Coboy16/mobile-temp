@@ -1,6 +1,8 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
+import '/presentation/widgets/widgets.dart';
+
 part 'sidebar_event.dart';
 part 'sidebar_state.dart';
 
@@ -31,7 +33,6 @@ class SidebarBloc extends Bloc<SidebarEvent, SidebarState> {
     );
 
     if (event.isParentItem) {
-      //Activar o desactivar la expansión si se toca un elemento principal
       if (newExpandedParentRoutes.contains(event.routeName)) {
         newExpandedParentRoutes.remove(event.routeName);
       } else {
@@ -39,7 +40,6 @@ class SidebarBloc extends Bloc<SidebarEvent, SidebarState> {
       }
     } else if (event.parentRouteName != null &&
         !newExpandedParentRoutes.contains(event.parentRouteName!)) {
-      // Expandir automáticamente el elemento principal si se selecciona un elemento secundario y el elemento principal no está expandido aún
       newExpandedParentRoutes.add(event.parentRouteName!);
     }
 
@@ -47,8 +47,7 @@ class SidebarBloc extends Bloc<SidebarEvent, SidebarState> {
     if (state.isSmallScreenLayout &&
         state.isSidebarExpanded &&
         !event.isParentItem) {
-      sidebarShouldBeExpanded =
-          false; //Colapso en la selección de elementos en pantallas pequeñas si no hay un interruptor principal
+      sidebarShouldBeExpanded = false;
     }
 
     emit(
@@ -94,8 +93,7 @@ class SidebarBloc extends Bloc<SidebarEvent, SidebarState> {
       emit(
         state.copyWith(
           isSmallScreenLayout: event.isSmallScreen,
-          isSidebarExpanded:
-              !event.isSmallScreen, //Expandir en grande, contraer en pequeño
+          isSidebarExpanded: !event.isSmallScreen,
         ),
       );
     }

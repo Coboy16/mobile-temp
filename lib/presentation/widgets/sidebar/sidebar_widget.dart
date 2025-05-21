@@ -141,7 +141,7 @@ class _SidebarWidgetState extends State<SidebarWidget>
                 builder: (context, child) {
                   return Container(
                     width: _widthAnimation.value,
-                    color: AppColors.sidebarBackground,
+                    color: AppColors.primaryBlue,
                     child: Column(
                       children: [
                         SidebarHeaderWithToggle(
@@ -161,8 +161,7 @@ class _SidebarWidgetState extends State<SidebarWidget>
                           child: Visibility(
                             visible: _animationController.value < 0.8,
                             maintainState: true,
-                            maintainAnimation:
-                                true, // Added for smoother transitions if state is complex
+                            maintainAnimation: true,
                             maintainSize: false,
                             child: const UserInfo(),
                           ),
@@ -172,10 +171,8 @@ class _SidebarWidgetState extends State<SidebarWidget>
                             physics: const BouncingScrollPhysics(),
                             child: ClipRect(
                               child: Stack(
-                                alignment:
-                                    Alignment.topLeft, // Default alignment
+                                alignment: Alignment.topLeft,
                                 children: [
-                                  // Expanded Content (Not using Positioned.fill)
                                   AnimatedOpacity(
                                     opacity: (1.0 - _animationController.value)
                                         .clamp(0.0, 1.0),
@@ -227,7 +224,6 @@ class _SidebarWidgetState extends State<SidebarWidget>
                                       ),
                                     ),
                                   ),
-                                  // Collapsed Content (Not using Positioned.fill)
                                   AnimatedOpacity(
                                     opacity: _animationController.value.clamp(
                                       0.0,

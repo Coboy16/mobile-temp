@@ -40,7 +40,7 @@ class SidebarVisibilityToggled extends SidebarEvent {
 }
 
 class SidebarLayoutChanged extends SidebarEvent {
-  final bool isSmallScreen; // True if mobile/tablet, false if desktop
+  final bool isSmallScreen;
   const SidebarLayoutChanged(this.isSmallScreen);
 
   @override

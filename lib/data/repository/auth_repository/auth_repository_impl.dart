@@ -93,6 +93,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
   Future<Either<Failure, void>> logout({required String email}) async {
     if (await networkInfo.isConnected) {
       try {
