@@ -38,6 +38,10 @@ Future<void> initServiceLocator() async {
     () => AuthLocalDataSourceImpl(sharedPreferences: sl()),
   );
 
+  sl.registerLazySingleton<UserRemoteDataSource>(
+    () => UserRemoteDataSourceImpl(chopperService: sl()),
+  );
+
   // Repository
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
@@ -45,6 +49,9 @@ Future<void> initServiceLocator() async {
       localDataSource: sl(),
       networkInfo: sl(),
     ),
+  );
+  sl.registerLazySingleton<UserRepository>(
+    () => UserRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
   );
 
   // Use cases
@@ -61,6 +68,11 @@ Future<void> initServiceLocator() async {
   sl.registerLazySingleton(() => CheckUserLockStatusUseCase(sl()));
   sl.registerLazySingleton(() => ChangePasswordUseCase(sl()));
 
+  // User Details
+  sl.registerLazySingleton(() => GetUserDetailsUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateUserDetailsUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteUserUseCase(sl()));
+
   // BLoC
   sl.registerFactory(
     () => AuthBloc(
@@ -76,6 +88,18 @@ Future<void> initServiceLocator() async {
       loginWithGoogleUseCase: sl(),
       logoutFromGoogleUseCase: sl(),
       getCurrentUserUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => LocalUserDataBloc(authLocalDataSource: sl<AuthLocalDataSource>()),
+  );
+
+  // BLoC para UserDetails
+  sl.registerFactory(
+    () => UserDetailsBloc(
+      getUserDetailsUseCase: sl<GetUserDetailsUseCase>(),
+      localUserDataBloc: sl<LocalUserDataBloc>(),
     ),
   );
 

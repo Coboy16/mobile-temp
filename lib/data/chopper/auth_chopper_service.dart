@@ -69,4 +69,20 @@ abstract class AuthChopperService extends ChopperService {
   Future<Response<ChangePasswordResponseModel>> changePassword({
     @Body() required ChangePasswordRequestModel body,
   });
+
+  @GET(path: ApiEndpoints.getUserDetails)
+  Future<Response<UserDetailsResponseModel>> getUserDetails({
+    @Path('id') required String userId,
+  });
+
+  @PUT(path: ApiEndpoints.updateUserDetails)
+  Future<Response<GeneralResponseModel>> updateUserDetails({
+    @Path('id') required String userId,
+    @Body() required UpdateUserRequestModel body,
+  });
+
+  @DELETE(path: ApiEndpoints.deleteUser)
+  Future<Response<GeneralResponseModel>> deleteUser({
+    @Path('id') required String userId,
+  });
 }

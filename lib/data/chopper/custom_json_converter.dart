@@ -30,6 +30,8 @@ class CustomJsonConverter extends JsonConverter {
         jsonBody = json.encode(body.toJson());
       } else if (body is Map<String, dynamic>) {
         jsonBody = json.encode(body);
+      } else if (body is UpdateUserRequestModel) {
+        jsonBody = json.encode(body.toJson());
       } else {
         try {
           final toJsonMethod = body.toJson;
@@ -100,6 +102,12 @@ class CustomJsonConverter extends JsonConverter {
         return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
       } else if (BodyType == ChangePasswordResponseModel) {
         final model = ChangePasswordResponseModel.fromJson(body);
+        return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
+      } else if (BodyType == UserDetailsResponseModel) {
+        final model = UserDetailsResponseModel.fromJson(body);
+        return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
+      } else if (BodyType == GeneralResponseModel) {
+        final model = GeneralResponseModel.fromJson(body);
         return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
       }
 

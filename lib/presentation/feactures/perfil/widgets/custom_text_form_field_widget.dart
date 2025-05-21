@@ -9,6 +9,7 @@ class CustomTextFormField extends StatelessWidget {
   final String labelText;
   final String? hintText;
   final String? initialValue;
+  final TextEditingController? controller;
   final bool obscureText;
   final bool readOnly;
   final Widget? prefixIcon;
@@ -17,6 +18,7 @@ class CustomTextFormField extends StatelessWidget {
   final TextInputType? keyboardType;
   final FocusNode? focusNode;
   final AutovalidateMode? autovalidateMode;
+  final bool autofocus;
 
   const CustomTextFormField({
     super.key,
@@ -24,6 +26,7 @@ class CustomTextFormField extends StatelessWidget {
     required this.labelText,
     this.hintText,
     this.initialValue,
+    this.controller,
     this.obscureText = false,
     this.readOnly = false,
     this.prefixIcon,
@@ -32,34 +35,35 @@ class CustomTextFormField extends StatelessWidget {
     this.keyboardType,
     this.focusNode,
     this.autovalidateMode = AutovalidateMode.onUserInteraction,
+    this.autofocus = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: FormBuilderTextField(
         name: name,
-        initialValue: initialValue,
+        controller: controller,
+        initialValue: controller == null ? initialValue : null,
         obscureText: obscureText,
         readOnly: readOnly,
         focusNode: focusNode,
+        autofocus: autofocus,
         onChanged: onChanged,
         keyboardType: keyboardType,
         autovalidateMode: autovalidateMode,
         style: AppTextStyles.bodyText1.copyWith(
           color: readOnly ? AppColors.textDisabled : AppColors.textPrimary,
+          fontWeight: FontWeight.w500,
         ),
         validator: FormBuilderValidators.compose(validators),
         decoration: InputDecoration(
           labelText: labelText,
-          hintText:
-              hintText ??
-              (initialValue == null || initialValue!.isEmpty
-                  ? 'Ingresa ${labelText.toLowerCase().replaceAll("*", "")}'
-                  : null),
+          hintText: hintText,
           labelStyle: AppTextStyles.label.copyWith(
             color: readOnly ? AppColors.textDisabled : AppColors.textSecondary,
+            fontSize: 12,
           ),
           hintStyle: AppTextStyles.bodyText2.copyWith(
             color: AppColors.textSecondary.withOpacity(0.7),
@@ -67,12 +71,14 @@ class CustomTextFormField extends StatelessWidget {
           prefixIcon:
               prefixIcon != null
                   ? Padding(
-                    padding: const EdgeInsets.only(left: 12.0, right: 8.0),
+                    padding: const EdgeInsets.only(left: 12.0, right: 10.0),
                     child: IconTheme(
                       data: IconThemeData(
                         color:
-                            readOnly ? AppColors.textDisabled : AppColors.icon,
-                        size: 20,
+                            readOnly
+                                ? AppColors.textDisabled
+                                : AppColors.icon.withOpacity(0.8),
+                        size: 18,
                       ),
                       child: prefixIcon!,
                     ),
@@ -81,7 +87,7 @@ class CustomTextFormField extends StatelessWidget {
           filled: true,
           fillColor:
               readOnly
-                  ? AppColors.inputBackground.withOpacity(0.5)
+                  ? AppColors.inputBackground.withOpacity(0.3)
                   : AppColors.inputBackground,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
@@ -89,11 +95,11 @@ class CustomTextFormField extends StatelessWidget {
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10.0),
-            borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
+            borderSide: BorderSide(color: AppColors.border.withOpacity(0.3)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10.0),
-            borderSide: BorderSide(color: AppColors.border.withOpacity(0.7)),
+            borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10.0),
@@ -108,9 +114,8 @@ class CustomTextFormField extends StatelessWidget {
             borderSide: const BorderSide(color: AppColors.error, width: 1.5),
           ),
           disabledBorder: OutlineInputBorder(
-            // For readOnly state
             borderRadius: BorderRadius.circular(10.0),
-            borderSide: BorderSide(color: AppColors.border.withOpacity(0.3)),
+            borderSide: BorderSide(color: AppColors.border.withOpacity(0.2)),
           ),
         ),
       ),

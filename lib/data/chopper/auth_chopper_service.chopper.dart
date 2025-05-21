@@ -128,4 +128,33 @@ final class _$AuthChopperService extends AuthChopperService {
           $request,
         );
   }
+
+  @override
+  Future<Response<UserDetailsResponseModel>> getUserDetails({
+    required String userId,
+  }) {
+    final Uri $url = Uri.parse('/auth/user/${userId}');
+    final Request $request = Request('GET', $url, client.baseUrl);
+    return client.send<UserDetailsResponseModel, UserDetailsResponseModel>(
+      $request,
+    );
+  }
+
+  @override
+  Future<Response<GeneralResponseModel>> updateUserDetails({
+    required String userId,
+    required UpdateUserRequestModel body,
+  }) {
+    final Uri $url = Uri.parse('/auth/user/${userId}');
+    final $body = body;
+    final Request $request = Request('PUT', $url, client.baseUrl, body: $body);
+    return client.send<GeneralResponseModel, GeneralResponseModel>($request);
+  }
+
+  @override
+  Future<Response<GeneralResponseModel>> deleteUser({required String userId}) {
+    final Uri $url = Uri.parse('/auth/user/${userId}');
+    final Request $request = Request('DELETE', $url, client.baseUrl);
+    return client.send<GeneralResponseModel, GeneralResponseModel>($request);
+  }
 }
