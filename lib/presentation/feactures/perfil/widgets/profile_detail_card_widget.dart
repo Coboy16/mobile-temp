@@ -1,10 +1,8 @@
-// lib/widgets/profile_detail_card.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../utils/app_colors.dart';
-import '../utils/app_text_styles.dart';
+import '/presentation/resources/resources.dart';
 import 'custom_text_form_field_widget.dart';
 
 class ProfileDetailCard extends StatefulWidget {
@@ -109,8 +107,9 @@ class _ProfileDetailCardState extends State<ProfileDetailCard> {
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6.0),
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4),
       decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.withOpacity(0.4), width: 1.0),
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12.0),
         boxShadow: [
@@ -135,7 +134,10 @@ class _ProfileDetailCardState extends State<ProfileDetailCard> {
                       hintText:
                           widget.hintText ??
                           'Ingresa ${widget.title.toLowerCase()}',
-                      prefixIcon: FaIcon(widget.displayIcon, size: 18),
+                      prefixIcon: Padding(
+                        padding: const EdgeInsets.only(top: 3),
+                        child: Icon(widget.displayIcon, size: 18),
+                      ),
                       validators: widget.validators,
                       keyboardType: widget.keyboardType,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -198,10 +200,10 @@ class _ProfileDetailCardState extends State<ProfileDetailCard> {
                         children: [
                           Padding(
                             padding: const EdgeInsets.only(right: 12.0),
-                            child: FaIcon(
+                            child: Icon(
                               widget.displayIcon,
                               size: 18,
-                              color: AppColors.icon.withOpacity(0.8),
+                              color: Colors.black.withOpacity(0.5),
                             ),
                           ),
                           Expanded(
@@ -222,7 +224,7 @@ class _ProfileDetailCardState extends State<ProfileDetailCard> {
                           ),
                           if (!widget.readOnly)
                             Icon(
-                              FontAwesomeIcons.penToSquare,
+                              LucideIcons.penLine,
                               size: 16,
                               color: AppColors.primary.withOpacity(0.7),
                             ),

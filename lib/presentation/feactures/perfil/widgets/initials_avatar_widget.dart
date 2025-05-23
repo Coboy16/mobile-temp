@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import '../utils/app_colors.dart';
+
+import '/presentation/resources/resources.dart';
 
 class InitialsAvatar extends StatelessWidget {
   final String firstName;

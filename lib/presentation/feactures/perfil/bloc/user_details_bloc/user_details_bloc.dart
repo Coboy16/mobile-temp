@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:fe_core_vips/core/core.dart';
 import 'package:fe_core_vips/domain/domain.dart';
 import 'package:fe_core_vips/presentation/bloc/blocs.dart';
+import 'package:flutter/material.dart';
 
 part 'user_details_event.dart';
 part 'user_details_state.dart';
@@ -35,6 +36,10 @@ class UserDetailsBloc extends Bloc<UserDetailsEvent, UserDetailsState> {
 
     if (localUserState is LocalUserDataLoaded) {
       final userId = localUserState.user.id;
+      debugPrint("_-----------------------");
+      debugPrint("ID de usuario local: $userId");
+      debugPrint("_-----------------------");
+
       emit(UserDetailsLoading());
       final failureOrUserDetails = await _getUserDetailsUseCase(userId: userId);
 

@@ -83,8 +83,6 @@ class ForgotPasswordBloc
     Emitter<ForgotPasswordState> emit,
   ) async {
     emit(ForgotPasswordChangeInProgress(email: event.email));
-    // El OTP no se envía al endpoint de cambio de contraseña según tu definición,
-    // pero lo teníamos en el evento por si acaso. Lo quitamos de la llamada al use case.
     final result = await _changePasswordUseCase(
       email: event.email,
       newPassword: event.newPassword,
@@ -94,7 +92,6 @@ class ForgotPasswordBloc
         ForgotPasswordChangeFailure(
           email: event.email,
           message: failure.message,
-          // statusCode: (failure is ServerFailure) ? failure.statusCode : null, // Si el Failure del use case lo tiene
         ),
       ),
       (_) => emit(ForgotPasswordChangeSuccess(email: event.email)),

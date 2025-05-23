@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:adaptive_dialog/adaptive_dialog.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '/presentation/feactures/perfil/utils/user_temp.dart';
+import 'package:fe_core_vips/presentation/widgets/widgets.dart';
 import '/presentation/feactures/perfil/widgets/widgets.dart';
-
-import '../utils/app_colors.dart';
-import '../utils/app_text_styles.dart';
+import 'package:fe_core_vips/presentation/bloc/blocs.dart';
+import 'package:fe_core_vips/domain/domain.dart';
+import '/presentation/resources/resources.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -19,18 +18,33 @@ class PerfilScreen extends StatefulWidget {
 }
 
 class _PerfilScreenState extends State<PerfilScreen> {
-  UserProfileData _userData = UserProfileData(
-    firstName: "Olivia",
-    paternalLastName: "Wilfson",
-    email: "olivia.wilfson@example.com",
-    phone: "+1-956-945-3210",
-    birthday: DateTime(2004, 1, 12),
-    city: "Los Angeles, CA",
-  );
-
+  UserDetailsEntity? _currentUserDetails;
   final _securityFormKey = GlobalKey<FormBuilderState>();
+  String? _currentUserId;
+
+  late LocalUserDataBloc _localUserDataBloc;
+  late UserDetailsBloc _userDetailsBloc;
+  late UpdateUserBloc _updateUserBloc;
+  late DeleteUserBloc _deleteUserBloc;
+  late ForgotPasswordBloc _forgotPasswordBloc;
+
+  bool _isLoadingInitialData = true;
+  bool _isChangingPassword = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _localUserDataBloc = BlocProvider.of<LocalUserDataBloc>(context);
+    _userDetailsBloc = BlocProvider.of<UserDetailsBloc>(context);
+    _updateUserBloc = BlocProvider.of<UpdateUserBloc>(context);
+    _deleteUserBloc = BlocProvider.of<DeleteUserBloc>(context);
+    _forgotPasswordBloc = BlocProvider.of<ForgotPasswordBloc>(context);
+
+    _localUserDataBloc.add(const LoadLocalUserData());
+  }
 
   void _showSnackBar(String message, {bool isError = false}) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -47,111 +61,64 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
-  String _capitalizeFirstLetter(String text) {
-    if (text.isEmpty) return text;
-    return text[0].toUpperCase() + text.substring(1);
-  }
-
   void _onUpdateField(String fieldName, String newValue) {
-    Future.delayed(const Duration(milliseconds: 300), () {
-      setState(() {
-        String displayFieldName = fieldName;
-        // Mapeo de fieldName a su representación en español para el SnackBar
-        const fieldNameMap = {
-          'firstName': 'Nombre',
-          'paternalLastName': 'Apellido Paterno',
-          'maternalLastName': 'Apellido Materno',
-          'phone': 'Teléfono',
-          'birthday': 'Fecha de Nacimiento',
-          'city': 'Ciudad de Residencia',
-          'postCode': 'Código Postal',
-        };
-        displayFieldName = fieldNameMap[fieldName] ?? fieldName;
+    if (_currentUserId == null || _currentUserDetails == null) {
+      _showSnackBar(
+        'Datos del perfil no cargados. No se puede actualizar.',
+        isError: true,
+      );
+      return;
+    }
 
-        try {
-          // Crear una copia del UserProfileData con el campo actualizado
-          Map<String, dynamic> updates = {fieldName: newValue};
-          if (fieldName == 'birthday' && newValue.isNotEmpty) {
-            updates[fieldName] = DateFormat(
-              'MMM dd, yyyy',
-              'es_ES',
-            ).parseStrict(newValue);
-          } else if (fieldName == 'maternalLastName' ||
-              fieldName == 'phone' ||
-              fieldName == 'city' ||
-              fieldName == 'postCode') {
-            updates[fieldName] = newValue.isNotEmpty ? newValue : null;
-          }
+    String updatedName = _currentUserDetails!.name;
+    String updatedFatherLastname = _currentUserDetails!.fatherLastname;
+    String updatedMotherLastname = _currentUserDetails!.motherLastname;
 
-          _userData = _userData.copyWith(
-            firstName:
-                fieldName == 'firstName' ? newValue : _userData.firstName,
-            paternalLastName:
-                fieldName == 'paternalLastName'
-                    ? newValue
-                    : _userData.paternalLastName,
-            maternalLastName:
-                fieldName == 'maternalLastName'
-                    ? (newValue.isNotEmpty ? newValue : null)
-                    : _userData.maternalLastName,
-            phone:
-                fieldName == 'phone'
-                    ? (newValue.isNotEmpty ? newValue : null)
-                    : _userData.phone,
-            birthday:
-                fieldName == 'birthday'
-                    ? (newValue.isNotEmpty
-                        ? DateFormat(
-                          'MMM dd, yyyy',
-                          'es_ES',
-                        ).parseStrict(newValue)
-                        : null)
-                    : _userData.birthday,
-            city:
-                fieldName == 'city'
-                    ? (newValue.isNotEmpty ? newValue : null)
-                    : _userData.city,
-          );
-          _showSnackBar(
-            '${_capitalizeFirstLetter(displayFieldName)} actualizado con éxito!',
-          );
-        } catch (e) {
-          if (fieldName == 'birthday') {
-            _showSnackBar(
-              'Formato de fecha inválido. Usar: Mes Día, Año (Ej: Ene 12, 2004)',
-              isError: true,
-            );
-          } else {
-            _showSnackBar(
-              'Error al actualizar $displayFieldName.',
-              isError: true,
-            );
-          }
-        }
-      });
-    });
+    if (fieldName == 'name') {
+      updatedName = newValue;
+    } else if (fieldName == 'fatherLastname') {
+      updatedFatherLastname = newValue;
+    } else if (fieldName == 'motherLastname') {
+      updatedMotherLastname = newValue;
+    } else {
+      debugPrint(
+        "Campo '$fieldName' no es parte de la actualización del backend en este flujo.",
+      );
+      return;
+    }
+
+    _updateUserBloc.add(
+      UpdateUserDataRequested(
+        userId: _currentUserId!,
+        name: updatedName,
+        fatherLastname: updatedFatherLastname,
+        motherLastname: updatedMotherLastname,
+      ),
+    );
   }
 
   void _onSaveChangesPassword() {
+    if (_isChangingPassword) return;
+
     if (_securityFormKey.currentState?.saveAndValidate() ?? false) {
-      final currentPassword =
-          _securityFormKey.currentState!.value['contrasenaActual'] as String?;
       final newPassword =
           _securityFormKey.currentState!.value['contrasenaNueva'] as String?;
 
-      if (currentPassword != "password123") {
-        _showSnackBar('La contraseña actual es incorrecta.', isError: true);
-        _securityFormKey.currentState?.fields['contrasenaActual']?.invalidate(
-          'Contraseña incorrecta',
+      if (_currentUserDetails == null || _currentUserDetails!.email.isEmpty) {
+        _showSnackBar(
+          'No se pudo obtener el email del usuario. Intenta recargar la página.',
+          isError: true,
         );
         return;
       }
 
       if (newPassword != null && newPassword.isNotEmpty) {
-        Future.delayed(const Duration(milliseconds: 300), () {
-          _showSnackBar('Contraseña actualizada con éxito');
-          _securityFormKey.currentState?.reset();
-        });
+        _forgotPasswordBloc.add(
+          ForgotPasswordNewPasswordSubmitted(
+            email: _currentUserDetails!.email,
+            newPassword: newPassword,
+          ),
+        );
       } else {
         _showSnackBar('No se especificó una nueva contraseña.', isError: true);
       }
@@ -164,6 +131,13 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   Future<void> _onDeleteAccount() async {
+    if (_currentUserId == null) {
+      _showSnackBar(
+        'ID de usuario no disponible para eliminar la cuenta.',
+        isError: true,
+      );
+      return;
+    }
     final result = await showOkCancelAlertDialog(
       context: context,
       title: 'Eliminar Cuenta',
@@ -172,7 +146,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
       okLabel: 'Sí, Eliminar',
       cancelLabel: 'Cancelar',
       isDestructiveAction: true,
-      barrierDismissible: true,
       builder:
           (context, child) => Theme(
             data: ThemeData(
@@ -189,9 +162,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
           ),
     );
     if (result == OkCancelResult.ok) {
-      _showSnackBar(
-        'Solicitud de eliminación de cuenta procesada (simulación). Serás redirigido.',
-      );
+      _deleteUserBloc.add(DeleteUserRequested(userId: _currentUserId!));
     }
   }
 
@@ -202,29 +173,228 @@ class _PerfilScreenState extends State<PerfilScreen> {
       context,
     ).largerThan(MOBILE);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: MaxWidthBox(
-          maxWidth: useTwoColumnLayout ? 1100 : 700,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 16.0 : (useTwoColumnLayout ? 32.0 : 24.0),
-              vertical: 40.0,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ProfileHeader(userData: _userData, isMobile: isMobile),
-                const SizedBox(height: 32.0),
-                if (useTwoColumnLayout)
-                  _buildWebContent(isMobile)
-                else
-                  _buildMobileContent(isMobile),
-              ],
-            ),
-          ),
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<LocalUserDataBloc, LocalUserDataState>(
+          bloc: _localUserDataBloc,
+          listener: (context, state) {
+            if (state is LocalUserDataLoaded) {
+              if (_currentUserId != state.user.id ||
+                  _userDetailsBloc.state is UserDetailsInitial) {
+                _currentUserId = state.user.id;
+                _userDetailsBloc.add(
+                  FetchUserDetailsById(userId: state.user.id),
+                );
+              }
+            } else if (state is NoLocalUserData) {
+              if (mounted) setState(() => _isLoadingInitialData = false);
+              _showSnackBar(
+                'No se encontraron datos de usuario local. Por favor, inicia sesión.',
+                isError: true,
+              );
+              _userDetailsBloc.add(const ResetUserDetails());
+            } else if (state is LocalUserDataFailure) {
+              if (mounted) setState(() => _isLoadingInitialData = false);
+              _showSnackBar(
+                'Error al cargar datos locales: ${state.message}',
+                isError: true,
+              );
+              _userDetailsBloc.add(const ResetUserDetails());
+            } else if (state is LocalUserDataLoading) {
+              if (mounted) setState(() => _isLoadingInitialData = true);
+            }
+          },
         ),
+        BlocListener<UserDetailsBloc, UserDetailsState>(
+          bloc: _userDetailsBloc,
+          listener: (context, state) {
+            if (state is UserDetailsLoaded) {
+              if (mounted) {
+                setState(() {
+                  _currentUserDetails = state.userDetails;
+                  _currentUserId = state.userDetails.userId;
+                  _isLoadingInitialData = false;
+                });
+              }
+              _updateUserBloc.add(const ResetUpdateUserState());
+            } else if (state is UserDetailsFailure) {
+              if (mounted) setState(() => _isLoadingInitialData = false);
+              _showSnackBar(
+                'Error al cargar detalles del perfil: ${state.message}',
+                isError: true,
+              );
+            } else if (state is UserDetailsLoading) {
+              if (_currentUserDetails == null && mounted) {
+                setState(() => _isLoadingInitialData = true);
+              }
+            } else if (state is UserDetailsInitial) {
+              if (_localUserDataBloc.state is! LocalUserDataLoading &&
+                  mounted) {
+                setState(() {
+                  _currentUserDetails = null;
+                  _isLoadingInitialData = false;
+                });
+              }
+            }
+          },
+        ),
+        BlocListener<UpdateUserBloc, UpdateUserState>(
+          bloc: _updateUserBloc,
+          listener: (context, state) {
+            if (state is UpdateUserSuccess) {
+              _showSnackBar(state.message);
+              if (_currentUserId != null) {
+                _userDetailsBloc.add(
+                  FetchUserDetailsById(userId: _currentUserId!),
+                );
+              }
+            } else if (state is UpdateUserFailure) {
+              _showSnackBar(
+                'Error del servidor al actualizar: ${state.message}',
+                isError: true,
+              );
+            }
+          },
+        ),
+        BlocListener<DeleteUserBloc, DeleteUserState>(
+          bloc: _deleteUserBloc,
+          listener: (context, state) {
+            if (state is DeleteUserSuccess) {
+              _showSnackBar(state.message);
+              debugPrint(
+                "CUENTA ELIMINADA: Implementar logout y navegación a login",
+              );
+            } else if (state is DeleteUserFailure) {
+              _showSnackBar(
+                'Error al eliminar cuenta: ${state.message}',
+                isError: true,
+              );
+            }
+          },
+        ),
+        BlocListener<ForgotPasswordBloc, ForgotPasswordState>(
+          bloc: _forgotPasswordBloc,
+          listener: (context, state) {
+            if (state is ForgotPasswordChangeInProgress) {
+              if (mounted) setState(() => _isChangingPassword = true);
+            } else if (state is ForgotPasswordChangeSuccess) {
+              if (mounted) setState(() => _isChangingPassword = false);
+              _showSnackBar('Contraseña actualizada con éxito.');
+              _securityFormKey.currentState?.reset();
+              _forgotPasswordBloc.add(ForgotPasswordReset());
+            } else if (state is ForgotPasswordChangeFailure) {
+              if (mounted) setState(() => _isChangingPassword = false);
+              _showSnackBar(
+                'Error al cambiar contraseña: ${state.message}',
+                isError: true,
+              );
+              _forgotPasswordBloc.add(ForgotPasswordReset());
+            } else if (state is ForgotPasswordInitial) {
+              if (mounted && _isChangingPassword) {
+                setState(() => _isChangingPassword = false);
+              }
+            }
+          },
+        ),
+      ],
+      child: Stack(
+        children: [
+          if (!_isLoadingInitialData && _currentUserDetails != null)
+            Center(
+              child: MaxWidthBox(
+                maxWidth: useTwoColumnLayout ? 1100 : 700,
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal:
+                        isMobile ? 16.0 : (useTwoColumnLayout ? 32.0 : 24.0),
+                    vertical: 20.0,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (useTwoColumnLayout)
+                        _buildWebContent(isMobile)
+                      else
+                        _buildMobileContent(isMobile),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          if (_isLoadingInitialData)
+            Container(
+              color: Colors.white,
+              width: MediaQuery.of(context).size.width * 0.8,
+              height: MediaQuery.of(context).size.height * 0.4,
+              child: const CustomLoadingHotech(
+                overlay: false,
+                message: "Cargando datos del perfil...",
+              ),
+            ),
+          BlocBuilder<UpdateUserBloc, UpdateUserState>(
+            bloc: _updateUserBloc,
+            builder: (context, state) {
+              if (state is UpdateUserLoading) {
+                return Container(
+                  color: Colors.white,
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  height: MediaQuery.of(context).size.height * 0.4,
+                  child: const CustomLoadingHotech(
+                    overlay: false,
+                    message: "Actualizando datos...",
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          BlocBuilder<DeleteUserBloc, DeleteUserState>(
+            bloc: _deleteUserBloc,
+            builder: (context, state) {
+              if (state is DeleteUserLoading) {
+                return Container(
+                  color: Colors.white,
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  height: MediaQuery.of(context).size.height * 0.4,
+                  child: const CustomLoadingHotech(
+                    overlay: false,
+                    message: "Eliminando cuenta...",
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          BlocBuilder<UserDetailsBloc, UserDetailsState>(
+            bloc: _userDetailsBloc,
+            builder: (context, state) {
+              if (state is UserDetailsLoading &&
+                  !_isLoadingInitialData &&
+                  _currentUserDetails == null) {
+                return const CustomLoadingHotech(
+                  overlay: true,
+                  message: "Cargando perfil...",
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          if (_isChangingPassword &&
+              _updateUserBloc.state is! UpdateUserLoading &&
+              _deleteUserBloc.state is! DeleteUserLoading &&
+              !(_userDetailsBloc.state is UserDetailsLoading &&
+                  _currentUserDetails == null) &&
+              !_isLoadingInitialData)
+            Container(
+              color: Colors.white,
+              width: MediaQuery.of(context).size.width * 0.8,
+              height: MediaQuery.of(context).size.height * 0.4,
+              child: const CustomLoadingHotech(
+                overlay: false,
+                message: "Actualizando contraseña...",
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -233,15 +403,17 @@ class _PerfilScreenState extends State<PerfilScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ProfileDetailsList(userData: _userData, onUpdateField: _onUpdateField),
+        ProfileDetailsList(
+          userDataFromEntity: _currentUserDetails,
+          onUpdateField: _onUpdateField,
+        ),
         const SizedBox(height: 24.0),
         SecuritySettingsCard(
           formKey: _securityFormKey,
-          email: _userData.email,
+          email: _currentUserDetails?.email ?? 'cargando...',
           onSaveChangesPassword: _onSaveChangesPassword,
+          isChangingPassword: _isChangingPassword,
         ),
-        const SizedBox(height: 32.0),
-        ProfileActions(onDeleteAccount: _onDeleteAccount, isMobile: isMobile),
       ],
     );
   }
@@ -253,25 +425,22 @@ class _PerfilScreenState extends State<PerfilScreen> {
         Expanded(
           flex: 5,
           child: ProfileDetailsList(
-            userData: _userData,
+            userDataFromEntity: _currentUserDetails,
             onUpdateField: _onUpdateField,
           ),
         ),
         const SizedBox(width: 32.0),
         Expanded(
-          flex: 3,
+          flex: 4,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
             children: [
               SecuritySettingsCard(
                 formKey: _securityFormKey,
-                email: _userData.email,
+                email: _currentUserDetails?.email ?? 'cargando...',
                 onSaveChangesPassword: _onSaveChangesPassword,
-              ),
-              const SizedBox(height: 24.0),
-              ProfileActions(
-                onDeleteAccount: _onDeleteAccount,
-                isMobile: isMobile,
+                isChangingPassword: _isChangingPassword,
               ),
             ],
           ),

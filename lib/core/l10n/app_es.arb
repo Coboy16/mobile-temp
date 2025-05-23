@@ -171,5 +171,13 @@
   "setNewPasswordSubtitle": "Crea una nueva contraseña segura para tu cuenta asociada con {email}.",
   "forgotPasswordEmailVerificationLoadingMessage": "Verificando correo...",
   "forgotPasswordOtpVerificationLoadingMessage": "Verificando OTP...",
-  "forgotPasswordChangeLoadingMessage": "Actualizando contraseña..."
+  "forgotPasswordChangeLoadingMessage": "Actualizando contraseña...",
+  "settingsTitle": "Configuración",
+  "settingsSubtitle": "Administra tus preferencias y ajustes del sistema",
+  "backButton": "Volver",
+  "accountTab": "Cuenta",
+  "appearanceTab": "Apariencia",
+  "userInfoTitle": "Información de Usuario",
+  "userInfoSubtitle": "Información básica sobre tu cuenta y preferencias de usuario",
+  "appearanceContentPlaceholder": "Contenido de Apariencia Aquí"
 }

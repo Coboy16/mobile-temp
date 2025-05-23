@@ -12,4 +12,7 @@ export './sidebar_bloc/sidebar_bloc.dart';
 export './local_user_data_bloc/local_user_data_bloc.dart';
 
 //bloc - user details
-export '../feactures/perfil/bloc/user_details_bloc/user_details_bloc.dart';
+export '../feactures/perfil/bloc/blocs.dart';
+
+//settings
+export '/presentation/feactures/settings/bloc/bloc.dart';

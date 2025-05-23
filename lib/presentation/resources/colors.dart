@@ -33,4 +33,30 @@ class AppColors {
   static const Color lightGreyTextColor = Color(0xFFB0B0B0);
   static const Color darkBorderColor = Color(0xFF3A3A3A);
   static const Color darkIconBackground = Color(0xFF0052CC);
+
+  //colos perfil
+  static const Color primary = Color(0xFF0052CC);
+  static const Color primaryVariant = Color.fromARGB(255, 7, 74, 175);
+
+  static const Color background = Color(0xFFF8F9FA);
+  static const Color surface = Colors.white;
+
+  static const Color error = Color.fromARGB(255, 233, 34, 34);
+
+  static const Color onPrimary = Colors.white;
+  static const Color onSecondary = Colors.black;
+  static const Color onBackground = Color(0xFF212529);
+  static const Color onSurface = Color(0xFF212529);
+  static const Color onError = Colors.white;
+
+  static const Color textPrimary = Color(0xFF212529);
+  static const Color textSecondary = Color(0xFF6C757D);
+  static const Color textDisabled = Color(0xFFADB5BD);
+
+  static const Color border = Color(0xFFDEE2E6);
+  static const Color inputBackground = Color(0xFFF1F3F5);
+  static const Color icon = Color(0xFF6C757D);
+
+  static const Color deleteButtonText = Color.fromARGB(255, 234, 25, 46);
+  static const Color deleteButtonBorder = Color.fromARGB(255, 214, 30, 49);
 }

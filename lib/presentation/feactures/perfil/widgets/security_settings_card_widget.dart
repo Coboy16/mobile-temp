@@ -1,25 +1,24 @@
+// SecuritySettingsCard.dart
 import 'package:flutter/material.dart';
-
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:form_builder_validators/form_builder_validators.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '/presentation/feactures/perfil/utils/app_colors.dart';
-import '/presentation/feactures/perfil/utils/app_text_styles.dart';
-
-import 'custom_text_form_field_widget.dart';
+import '/presentation/resources/resources.dart';
+import 'custom_text_form_field_widget.dart'; // Tu widget
 import 'profile_section_container_widget.dart';
 
 class SecuritySettingsCard extends StatelessWidget {
   final GlobalKey<FormBuilderState> formKey;
   final String email;
   final VoidCallback onSaveChangesPassword;
+  final bool isChangingPassword; // <--- AÑADIDO
 
   const SecuritySettingsCard({
     super.key,
     required this.formKey,
     required this.email,
     required this.onSaveChangesPassword,
+    this.isChangingPassword = false, // <--- AÑADIDO: Con valor por defecto
   });
 
   @override
@@ -30,6 +29,8 @@ class SecuritySettingsCard extends StatelessWidget {
       children: [
         FormBuilder(
           key: formKey,
+          // El FormBuilder en sí no necesita ser deshabilitado si los campos individuales lo están.
+          // enabled: !isChangingPassword, // Opcional: Podrías deshabilitar todo el form.
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -50,8 +51,8 @@ class SecuritySettingsCard extends StatelessWidget {
                       children: [
                         Padding(
                           padding: const EdgeInsets.only(right: 12.0),
-                          child: FaIcon(
-                            FontAwesomeIcons.solidEnvelope,
+                          child: Icon(
+                            LucideIcons.mail,
                             size: 18,
                             color: AppColors.icon.withOpacity(0.8),
                           ),
@@ -70,25 +71,18 @@ class SecuritySettingsCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 10),
-              CustomTextFormField(
-                name: 'contrasenaActual',
-                labelText: 'Contraseña Actual',
-                hintText: 'Ingresa tu contraseña actual',
-                obscureText: true,
-                prefixIcon: const FaIcon(FontAwesomeIcons.key),
-                validators: [
-                  FormBuilderValidators.required(
-                    errorText: 'La contraseña actual es requerida.',
-                  ),
-                ],
-              ),
+              // Campo "Contraseña Actual" eliminado según el nuevo enfoque
+              // CustomTextFormField(
+              //   name: 'contrasenaActual',
+              //   ...
+              // ),
               CustomTextFormField(
                 name: 'contrasenaNueva',
                 labelText: 'Nueva Contraseña',
                 hintText: 'Mínimo 8 caracteres',
                 obscureText: true,
-                prefixIcon: const FaIcon(FontAwesomeIcons.lock),
+                prefixIcon: const Icon(LucideIcons.lock),
+                readOnly: isChangingPassword, // <--- MODIFICADO: Usar readOnly
                 validators: [
                   (val) {
                     if (val != null && val.isNotEmpty && val.length < 8) {
@@ -109,8 +103,11 @@ class SecuritySettingsCard extends StatelessWidget {
                   },
                 ],
                 onChanged: (val) {
-                  formKey.currentState?.fields['confirmarContrasena']
-                      ?.validate();
+                  if (!isChangingPassword) {
+                    // <--- AÑADIDO: Condición
+                    formKey.currentState?.fields['confirmarContrasena']
+                        ?.validate();
+                  }
                 },
               ),
               CustomTextFormField(
@@ -118,7 +115,8 @@ class SecuritySettingsCard extends StatelessWidget {
                 labelText: 'Confirmar Nueva Contraseña',
                 hintText: 'Repetir nueva contraseña',
                 obscureText: true,
-                prefixIcon: const FaIcon(FontAwesomeIcons.lock),
+                prefixIcon: const Icon(LucideIcons.lock),
+                readOnly: isChangingPassword, // <--- MODIFICADO: Usar readOnly
                 validators: [
                   (val) {
                     final newPassword =
@@ -138,15 +136,35 @@ class SecuritySettingsCard extends StatelessWidget {
                   },
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 10),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  icon: const FaIcon(FontAwesomeIcons.arrowsRotate, size: 18),
-                  label: const Text('Actualizar Contraseña'),
-                  onPressed: onSaveChangesPassword,
+                  // --- MODIFICADO: Botón ---
+                  icon:
+                      isChangingPassword
+                          ? Container() // Ocultar icono durante la carga
+                          : const Icon(LucideIcons.refreshCcw, size: 18),
+                  label:
+                      isChangingPassword
+                          ? SizedBox(
+                            height: 20, // Ajusta según el estilo de tu app
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.onPrimary,
+                              ),
+                            ),
+                          )
+                          : const Text('Actualizar Contraseña'),
+                  onPressed:
+                      isChangingPassword
+                          ? null
+                          : onSaveChangesPassword, // Deshabilitar si está cargando
+                  // --- Fin Modificación Botón ---
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
+                    backgroundColor: AppColors.primaryBlue,
                     foregroundColor: AppColors.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     textStyle: AppTextStyles.button.copyWith(

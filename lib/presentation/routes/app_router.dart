@@ -10,8 +10,9 @@ import '/presentation/feactures/home/home.dart';
 import '/presentation/widgets/sidebar/sidebar_menu_constants.dart';
 import 'go_router_refresh_stream.dart';
 
-import '/presentation/feactures/request/request.dart';
 import '/presentation/feactures/check_payment/check.dart';
+import '/presentation/feactures/request/request.dart';
+import '/presentation/feactures/settings/setting.dart';
 import '/presentation/feactures/perfil/perfil.dart';
 
 class AppRoutes {
@@ -414,9 +415,8 @@ class AppRouter {
             name: AppRoutes.homeConfiguracionName,
             pageBuilder:
                 (context, state) => NoTransitionPage(
-                  child: Center(
-                    key: const ValueKey(AppSidebarMenuRoutes.configuracion),
-                    child: Text(AppSidebarMenuRoutes.configuracion),
+                  child: SettingsScreen(
+                    key: ValueKey(AppSidebarMenuRoutes.configuracion),
                   ),
                   key: state.pageKey,
                   name: state.name,

@@ -41,6 +41,9 @@ List<SingleChildWidget> getListBloc() {
     BlocProvider(create: (context) => FcmBloc()),
     BlocProvider(create: (context) => SidebarBloc()),
     BlocProvider(create: (context) => sl<UserDetailsBloc>()),
+    BlocProvider(create: (context) => sl<UpdateUserBloc>()),
+    BlocProvider(create: (context) => sl<DeleteUserBloc>()),
     BlocProvider(create: (context) => NavegationBarBloc()),
+    BlocProvider(create: (context) => SettingsBloc()),
   ];
 }

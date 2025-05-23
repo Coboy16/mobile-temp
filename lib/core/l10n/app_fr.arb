@@ -170,5 +170,13 @@
   "setNewPasswordSubtitle": "Créez un nouveau mot de passe sécurisé pour votre compte associé à {email}.",
   "forgotPasswordEmailVerificationLoadingMessage": "Vérification de l'e-mail en cours...",
   "forgotPasswordOtpVerificationLoadingMessage": "Vérification de l'OTP en cours...",
-  "forgotPasswordChangeLoadingMessage": "Mise à jour du mot de passe en cours..."
+  "forgotPasswordChangeLoadingMessage": "Mise à jour du mot de passe en cours...",
+  "settingsTitle": "Paramètres",
+  "settingsSubtitle": "Gérez vos préférences et paramètres système",
+  "backButton": "Retour",
+  "accountTab": "Compte",
+  "appearanceTab": "Apparence",
+  "userInfoTitle": "Informations utilisateur",
+  "userInfoSubtitle": "Informations de base sur votre compte et vos préférences utilisateur",
+  "appearanceContentPlaceholder": "Contenu de l'apparence ici"
 }

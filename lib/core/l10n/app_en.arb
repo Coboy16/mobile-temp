@@ -207,5 +207,13 @@
   "setNewPasswordSubtitle": "Create a new secure password for your account associated with {email}.",
   "forgotPasswordEmailVerificationLoadingMessage": "Verifying email...",
   "forgotPasswordOtpVerificationLoadingMessage": "Verifying OTP...",
-  "forgotPasswordChangeLoadingMessage": "Updating password..."
+  "forgotPasswordChangeLoadingMessage": "Updating password...",
+  "settingsTitle": "Settings",
+  "settingsSubtitle": "Manage your preferences and system settings",
+  "backButton": "Back",
+  "accountTab": "Account",
+  "appearanceTab": "Appearance",
+  "userInfoTitle": "User Information",
+  "userInfoSubtitle": "Basic information about your account and user preferences",
+  "appearanceContentPlaceholder": "Appearance Content Here"
 }

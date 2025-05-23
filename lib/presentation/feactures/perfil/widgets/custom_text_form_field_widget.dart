@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import '../utils/app_colors.dart';
-import '../utils/app_text_styles.dart';
+
+import '/presentation/resources/resources.dart';
 
 class CustomTextFormField extends StatelessWidget {
   final String name;

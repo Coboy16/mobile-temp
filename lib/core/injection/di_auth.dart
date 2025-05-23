@@ -102,6 +102,15 @@ Future<void> initServiceLocator() async {
       localUserDataBloc: sl<LocalUserDataBloc>(),
     ),
   );
+  sl.registerFactory(
+    () => UpdateUserBloc(
+      updateUserDetailsUseCase: sl<UpdateUserDetailsUseCase>(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => DeleteUserBloc(deleteUserUseCase: sl<DeleteUserUseCase>()),
+  );
 
   sl.registerFactory(
     () => CheckLockStatusBloc(

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '/presentation/feactures/perfil/utils/user_temp.dart';
-import '/presentation/feactures/perfil/utils/app_colors.dart';
-import '/presentation/feactures/perfil/utils/app_text_styles.dart';
+import 'package:fe_core_vips/domain/domain.dart';
+import '/presentation/resources/resources.dart';
 
 import 'initials_avatar_widget.dart';
 
 class ProfileHeader extends StatelessWidget {
-  final UserProfileData userData;
+  final UserDetailsEntity userData;
   final bool isMobile;
 
   const ProfileHeader({
@@ -35,14 +34,14 @@ class ProfileHeader extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           InitialsAvatar(
-            firstName: userData.firstName,
-            lastName: userData.paternalLastName,
+            firstName: userData.name,
+            lastName: userData.fatherLastname,
             radius: isMobile ? 45 : 50,
             fontSize: isMobile ? 28 : 32,
           ),
           const SizedBox(height: 12.0),
           Text(
-            '${userData.firstName} ${userData.paternalLastName}',
+            '${userData.name} ${userData.fatherLastname}',
             style: (isMobile
                     ? AppTextStyles.headline2
                     : AppTextStyles.headline1)
