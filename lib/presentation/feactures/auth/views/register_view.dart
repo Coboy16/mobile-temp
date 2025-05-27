@@ -19,7 +19,7 @@ class RegisterView extends StatelessWidget {
   }
 
   void _handleAuthSuccess(BuildContext context) {
-    context.goNamed(AppRoutes.home);
+    context.goNamed(AppRoutes.homeRequestName);
   }
 
   void _handleAuthLoginFailure(BuildContext context, AuthFailure state) {

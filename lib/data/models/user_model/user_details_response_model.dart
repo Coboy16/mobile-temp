@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'user_data_model.dart';
 
@@ -27,6 +28,9 @@ class UserDetailsResponseModel {
       try {
         return UserDataModel.fromJson(data as Map<String, dynamic>);
       } catch (e) {
+        debugPrint(
+          'UserDetailsResponseModel - Error en UserDataModel.fromJson: $e',
+        );
         return null;
       }
     }

@@ -25,15 +25,21 @@ class DeleteUserBloc extends Bloc<DeleteUserEvent, DeleteUserState> {
     final result = await _deleteUserUseCase(userId: event.userId);
 
     result.fold((failure) {
-      String message = "Error al eliminar el usuario.";
-      int? statusCode;
-      if (failure is ServerFailure) {
-        message = failure.message;
-        statusCode = failure.statusCode;
-      } else if (failure is NetworkFailure) {
-        message = failure.message;
+      if (failure is SessionExpiredFailure) {
+        emit(DeleteUserSessionExpired(message: failure.message));
+      } else {
+        String message = "Error al eliminar el usuario.";
+        int? statusCode;
+        if (failure is ServerFailure) {
+          message = failure.message;
+          statusCode = failure.statusCode;
+        } else if (failure is NetworkFailure) {
+          message = failure.message;
+        } else if (failure.message.isNotEmpty) {
+          message = failure.message;
+        }
+        emit(DeleteUserFailure(message: message, statusCode: statusCode));
       }
-      emit(DeleteUserFailure(message: message, statusCode: statusCode));
     }, (_) => emit(const DeleteUserSuccess()));
   }
 

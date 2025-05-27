@@ -21,7 +21,7 @@ abstract class AuthRepository {
 
   Future<Either<Failure, void>> logout({required String email});
 
-  Future<Either<Failure, GoogleUserEntity>> loginWithGoogle({
+  Future<Either<Failure, UserEntity>> loginWithGoogle({
     required String idToken,
     required String email,
   });
@@ -29,5 +29,9 @@ abstract class AuthRepository {
   Future<Either<Failure, void>> changePassword({
     required String email,
     required String newPassword,
+  });
+
+  Future<Either<Failure, SessionStatusEntity>> checkSessionStatus({
+    required String email,
   });
 }

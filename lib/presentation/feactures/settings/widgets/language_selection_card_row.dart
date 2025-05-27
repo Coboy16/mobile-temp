@@ -1,10 +1,11 @@
-// lib/widgets/language_selection_card_row.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import '/presentation/bloc/locale_bloc/locale_bloc.dart'; // Ajusta esta ruta
+
+import 'package:fe_core_vips/core/l10n/app_localizations.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import '/presentation/bloc/locale_bloc/locale_bloc.dart';
 
 class LanguageSelectionCardRow extends StatelessWidget {
   const LanguageSelectionCardRow({super.key});
@@ -25,29 +26,51 @@ class LanguageSelectionCardRow extends StatelessWidget {
     }
   }
 
-  IconData _getLanguageIcon(Locale locale) {
+  String _getLanguageFlag(Locale locale) {
     switch (locale.languageCode) {
       case 'en':
-        return LucideIcons.messageSquare;
+        return 'assets/flags/usa.svg';
       case 'es':
-        return LucideIcons.languages;
+        return 'assets/flags/spain.svg';
       case 'fr':
-        return LucideIcons.globe;
+        return 'assets/flags/france.svg';
       default:
-        return LucideIcons.flag;
+        return 'assets/flags/usa.svg'; // Fallback
     }
+  }
+
+  /// Determina el idioma actual basándose en el contexto y el bloc
+  Locale _getCurrentLocale(BuildContext context) {
+    // 1. Intentar obtener del bloc
+    final localeFromBloc = context.read<LocaleBloc>().state.locale;
+    if (localeFromBloc != null) {
+      return localeFromBloc;
+    }
+
+    // 2. Fallback al locale del sistema si está soportado
+    final systemLocale = Localizations.localeOf(context);
+    final supportedLocales = AppLocalizations.supportedLocales;
+
+    // Verificar si el idioma del sistema está soportado
+    final matchingLocale = supportedLocales.firstWhere(
+      (supportedLocale) =>
+          supportedLocale.languageCode == systemLocale.languageCode,
+      orElse:
+          () => supportedLocales.first, // Fallback al primer idioma soportado
+    );
+
+    return matchingLocale;
   }
 
   Widget _buildLanguageOptionCardWrapper({
     required BuildContext context,
-    required IconData icon,
+    required String flagAssetPath,
     required Locale locale,
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
     const Color primaryColor = Color(0xFF007AFF);
-    final Color unselectedIconColor = Colors.grey.shade600;
     final Color unselectedTextColor = Colors.grey.shade700;
     final Color selectedTextColor = primaryColor;
     final Color borderColor = Colors.grey.shade300;
@@ -73,18 +96,49 @@ class LanguageSelectionCardRow extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: 26.0,
-                color: isSelected ? primaryColor : unselectedIconColor,
+              // SVG Flag Icon
+              Container(
+                width: 32,
+                height: 24,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(2.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 2,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(2.0),
+                  child: SvgPicture.asset(
+                    flagAssetPath,
+                    width: 32,
+                    height: 24,
+                    fit: BoxFit.cover,
+                    // Fallback en caso de error
+                    placeholderBuilder:
+                        (context) => Container(
+                          width: 32,
+                          height: 24,
+                          color: Colors.grey.shade300,
+                          child: Icon(
+                            Icons.flag,
+                            size: 16,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                  ),
+                ),
               ),
-              const SizedBox(height: 6.0),
+              const SizedBox(height: 8.0),
               AutoSizeText(
                 label,
                 style: TextStyle(
                   fontSize: 13,
                   color: isSelected ? selectedTextColor : unselectedTextColor,
-                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
@@ -100,54 +154,54 @@ class LanguageSelectionCardRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localeBloc = BlocProvider.of<LocaleBloc>(context, listen: false);
-    final currentLocale =
-        context.watch<LocaleBloc>().state.locale ??
-        AppLocalizations.supportedLocales.first;
-    final List<Locale> supportedLocales = AppLocalizations.supportedLocales;
+    return BlocBuilder<LocaleBloc, LocaleState>(
+      builder: (context, state) {
+        final localeBloc = BlocProvider.of<LocaleBloc>(context, listen: false);
+        final currentLocale = _getCurrentLocale(context);
+        final List<Locale> supportedLocales = AppLocalizations.supportedLocales;
 
-    if (supportedLocales.isEmpty) {
-      return const SizedBox.shrink();
-    }
+        if (supportedLocales.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
-    List<Widget> languageCards =
-        supportedLocales.map((locale) {
-          final isSelected = locale == currentLocale;
-          return _buildLanguageOptionCardWrapper(
-            context: context,
-            icon: _getLanguageIcon(locale),
-            locale: locale,
-            label: _getLanguageName(context, locale),
-            isSelected: isSelected,
-            onTap: () {
-              if (!isSelected) {
-                localeBloc.add(ChangeLocale(locale));
-              }
-            },
-          );
-        }).toList();
+        List<Widget> languageCards =
+            supportedLocales.map((locale) {
+              final isSelected =
+                  locale.languageCode == currentLocale.languageCode;
+              return _buildLanguageOptionCardWrapper(
+                context: context,
+                flagAssetPath: _getLanguageFlag(locale),
+                locale: locale,
+                label: _getLanguageName(context, locale),
+                isSelected: isSelected,
+                onTap: () {
+                  if (!isSelected) {
+                    localeBloc.add(ChangeLocale(locale));
+                  }
+                },
+              );
+            }).toList();
 
-    List<Widget> rowChildren = [];
-    for (int i = 0; i < languageCards.length; i++) {
-      rowChildren.add(languageCards[i]);
-      if (i < languageCards.length - 1) {
-        rowChildren.add(const SizedBox(width: 12.0));
-      }
-    }
+        List<Widget> rowChildren = [];
+        for (int i = 0; i < languageCards.length; i++) {
+          rowChildren.add(languageCards[i]);
+          if (i < languageCards.length - 1) {
+            rowChildren.add(const SizedBox(width: 12.0));
+          }
+        }
 
-    return Row(
-      mainAxisAlignment:
-          MainAxisAlignment
-              .spaceBetween, // O MainAxisAlignment.start si son pocos
-      children: rowChildren,
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: rowChildren,
+        );
+      },
     );
   }
 }
 
 class _LanguageCardRenderWidget extends StatelessWidget {
   final Widget child;
-  final Locale
-  locale; // Aunque no se use directamente, es para la extensión (si la necesitaras)
+  final Locale locale;
 
   const _LanguageCardRenderWidget({required this.child, required this.locale});
 

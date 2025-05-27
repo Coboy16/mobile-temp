@@ -1,36 +1,162 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:adaptive_dialog/adaptive_dialog.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-
+import 'package:fe_core_vips/presentation/bloc/blocs.dart';
+import '/presentation/routes/app_router.dart';
 import '/presentation/resources/resources.dart';
 
-class ProfileActions extends StatelessWidget {
-  final VoidCallback onDeleteAccount;
+class ProfileActions extends StatefulWidget {
+  final String? currentUserId;
   final bool isMobile;
 
   const ProfileActions({
     super.key,
-    required this.onDeleteAccount,
+    required this.currentUserId,
     required this.isMobile,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        icon: const Icon(LucideIcons.x, size: 18),
-        label: const Text('Eliminar Cuenta'),
-        onPressed: onDeleteAccount,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.deleteButtonText,
-          foregroundColor: AppColors.onPrimary,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          textStyle: AppTextStyles.button.copyWith(fontWeight: FontWeight.bold),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+  State<ProfileActions> createState() => _ProfileActionsState();
+}
+
+class _ProfileActionsState extends State<ProfileActions> {
+  late DeleteUserBloc _deleteUserBloc;
+  late AuthBloc _authBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _deleteUserBloc = BlocProvider.of<DeleteUserBloc>(context);
+    _authBloc = BlocProvider.of<AuthBloc>(context);
+  }
+
+  void _handleSessionExpired(String message) {
+    if (!mounted) return;
+    _showSnackBar(message, isError: true);
+    _authBloc.add(AuthLogoutRequested());
+    context.pushReplacementNamed(AppRoutes.auth);
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: AppTextStyles.bodyText2.copyWith(
+            color: isError ? AppColors.onError : AppColors.onPrimary,
           ),
         ),
+        backgroundColor: isError ? AppColors.error : AppColors.primaryVariant,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  Future<void> _onDeleteAccount() async {
+    if (widget.currentUserId == null) {
+      _showSnackBar(
+        'ID de usuario no disponible para eliminar la cuenta.',
+        isError: true,
+      );
+      return;
+    }
+
+    final result = await showOkCancelAlertDialog(
+      context: context,
+      title: 'Eliminar Cuenta',
+      message:
+          '¿Estás seguro? Esta acción es irreversible y todos tus datos serán eliminados permanentemente.',
+      okLabel: 'Sí, Eliminar',
+      cancelLabel: 'Cancelar',
+      isDestructiveAction: true,
+      builder:
+          (context, child) => Theme(
+            data: ThemeData(
+              textButtonTheme: TextButtonThemeData(
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  textStyle: AppTextStyles.button.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            child: child,
+          ),
+    );
+
+    if (result == OkCancelResult.ok) {
+      _deleteUserBloc.add(DeleteUserRequested(userId: widget.currentUserId!));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<DeleteUserBloc, DeleteUserState>(
+      bloc: _deleteUserBloc,
+      listener: (context, state) {
+        if (state is DeleteUserSuccess) {
+          _authBloc.add(AuthLogoutRequested());
+          _showSnackBar(state.message);
+          context.pushReplacementNamed(AppRoutes.auth);
+          debugPrint(
+            "CUENTA ELIMINADA: Implementar logout y navegación a login",
+          );
+        } else if (state is DeleteUserFailure) {
+          _showSnackBar(
+            'Error al eliminar cuenta: ${state.message}',
+            isError: true,
+          );
+        } else if (state is DeleteUserSessionExpired) {
+          _handleSessionExpired(state.message);
+        }
+      },
+      child: BlocBuilder<DeleteUserBloc, DeleteUserState>(
+        bloc: _deleteUserBloc,
+        builder: (context, state) {
+          final isLoading = state is DeleteUserLoading;
+
+          return SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon:
+                  isLoading
+                      ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.onPrimary,
+                          ),
+                        ),
+                      )
+                      : const Icon(LucideIcons.x, size: 18),
+              label: Text(isLoading ? 'Eliminando...' : 'Eliminar Cuenta'),
+              onPressed: isLoading ? null : _onDeleteAccount,
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    isLoading
+                        ? AppColors.deleteButtonText.withOpacity(0.6)
+                        : AppColors.deleteButtonText,
+                foregroundColor: AppColors.onPrimary,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                textStyle: AppTextStyles.button.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -12,4 +12,5 @@ class ApiEndpoints {
   static const String getUserDetails = '/auth/user/{id}';
   static const String updateUserDetails = '/auth/user/{id}';
   static const String deleteUser = '/auth/user/{id}';
+  static const String checkSessionStatus = '/auth/session/{email}';
 }

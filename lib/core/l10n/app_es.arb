@@ -179,5 +179,10 @@
   "appearanceTab": "Apariencia",
   "userInfoTitle": "Información de Usuario",
   "userInfoSubtitle": "Información básica sobre tu cuenta y preferencias de usuario",
-  "appearanceContentPlaceholder": "Contenido de Apariencia Aquí"
+  "appearanceContentPlaceholder": "Contenido de Apariencia Aquí",
+  "activeSessionDialogTitle": "Sesión Activa Detectada",
+  "activeSessionDialogMessage": "Ya tienes una sesión activa en otro dispositivo o navegador. ¿Deseas cerrar la sesión anterior y continuar con el inicio de sesión actual?",
+  "keepSessionButtonLabel": "Mantener Sesión",
+  "closeSessionButtonLabel": "Cerrar Sesión Anterior",
+  "invalidOtpMessage": "El código que ingresaste no es válido. Por favor, revisa e intenta nuevamente."
 }

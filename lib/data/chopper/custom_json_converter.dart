@@ -109,6 +109,9 @@ class CustomJsonConverter extends JsonConverter {
       } else if (BodyType == GeneralResponseModel) {
         final model = GeneralResponseModel.fromJson(body);
         return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
+      } else if (BodyType == SessionStatusResponseModel) {
+        final model = SessionStatusResponseModel.fromJson(body);
+        return dynamicResponse.copyWith<BodyType>(body: model as BodyType);
       }
 
       debugPrint(

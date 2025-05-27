@@ -30,15 +30,22 @@ class UpdateUserBloc extends Bloc<UpdateUserEvent, UpdateUserState> {
     );
 
     result.fold((failure) {
-      String message = "Error al actualizar los datos.";
-      int? statusCode;
-      if (failure is ServerFailure) {
-        message = failure.message;
-        statusCode = failure.statusCode;
-      } else if (failure is NetworkFailure) {
-        message = failure.message;
+      // AQUÍ LA MODIFICACIÓN
+      if (failure is SessionExpiredFailure) {
+        emit(UpdateUserSessionExpired(message: failure.message));
+      } else {
+        String message = "Error al actualizar los datos.";
+        int? statusCode;
+        if (failure is ServerFailure) {
+          message = failure.message;
+          statusCode = failure.statusCode;
+        } else if (failure is NetworkFailure) {
+          message = failure.message;
+        } else if (failure.message.isNotEmpty) {
+          message = failure.message;
+        }
+        emit(UpdateUserFailure(message: message, statusCode: statusCode));
       }
-      emit(UpdateUserFailure(message: message, statusCode: statusCode));
     }, (_) => emit(const UpdateUserSuccess()));
   }
 

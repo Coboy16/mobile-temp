@@ -74,7 +74,7 @@ class ProfileDetailsList extends StatelessWidget {
         ),
         ProfileDetailCard(
           title: 'Apellido Paterno',
-          currentValue: userDataFromEntity!.fatherLastname,
+          currentValue: userDataFromEntity!.fatherLastname ?? '',
           formFieldName: 'fatherLastname',
           displayIcon: LucideIcons.user,
           validators: [
@@ -86,10 +86,18 @@ class ProfileDetailsList extends StatelessWidget {
         ),
         ProfileDetailCard(
           title: 'Apellido Materno',
-          currentValue: userDataFromEntity!.motherLastname,
+          currentValue: userDataFromEntity!.motherLastname ?? '',
           formFieldName: 'motherLastname',
           displayIcon: LucideIcons.user,
           onSave: (newValue) => onUpdateField('motherLastname', newValue),
+        ),
+        ProfileDetailCard(
+          title: 'Correo Electrónico (No editable)',
+          currentValue: userDataFromEntity!.email,
+          formFieldName: 'motherLastname',
+          displayIcon: LucideIcons.mail,
+          readOnly: true,
+          onSave: (dummyValue) {},
         ),
       ],
     );

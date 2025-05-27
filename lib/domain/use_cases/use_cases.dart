@@ -11,6 +11,7 @@ export 'auth_usecases/register_with_google_usecase.dart';
 export 'auth_usecases/request_otp_usecase.dart';
 export 'auth_usecases/verify_otp_usecase.dart';
 export 'auth_usecases/change_password_usecase.dart';
+export 'auth_usecases/check_session_status_usecase.dart';
 
 //user_usecases
 export 'user_usecases/get_user_details_usecase.dart';

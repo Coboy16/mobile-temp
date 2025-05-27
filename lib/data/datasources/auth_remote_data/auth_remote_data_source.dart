@@ -21,6 +21,9 @@ abstract class AuthRemoteDataSource {
     required String email,
     required String newPassword,
   });
+  Future<SessionStatusResponseModel> checkSessionStatus({
+    required String email,
+  });
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -34,33 +37,40 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final response = await chopperCall;
 
-      // Verificar si la respuesta es exitosa y tiene un cuerpo
       if (response.isSuccessful && response.body != null) {
         return response.body!;
       } else {
-        // Manejar errores
         String errorMessage = "Error del servidor";
         int? statusCode = response.statusCode;
+        dynamic errorBody = response.error;
 
-        // Intentar extraer el mensaje de error
-        if (response.error != null) {
-          if (response.error is Map<String, dynamic>) {
-            final errorMap = response.error as Map<String, dynamic>;
-            if (errorMap.containsKey('message')) {
-              errorMessage = errorMap['message'].toString();
+        if (errorBody != null) {
+          if (errorBody is Map<String, dynamic>) {
+            if (errorBody.containsKey('message')) {
+              errorMessage = errorBody['message'].toString();
             }
-          } else if (response.error is String) {
-            errorMessage = response.error.toString();
+          } else if (errorBody is String) {
+            errorMessage = errorBody;
           }
         } else if (response.base.reasonPhrase != null &&
             response.base.reasonPhrase!.isNotEmpty) {
           errorMessage = response.base.reasonPhrase!;
         }
 
+        if (statusCode == 401 &&
+            errorMessage.toLowerCase().contains("User not found")) {
+          throw UnauthorizedException(
+            message: errorMessage,
+            statusCode: statusCode,
+          );
+        }
         throw ServerException(message: errorMessage, statusCode: statusCode);
       }
+    } on UnauthorizedException {
+      rethrow;
+    } on ServerException {
+      rethrow;
     } catch (e) {
-      if (e is ServerException) rethrow;
       throw ServerException(
         message: 'Error de red o comunicación: ${e.toString()}',
       );
@@ -273,6 +283,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
     return _handleChopperResponse(
       chopperService.changePassword(body: requestModel),
+    );
+  }
+
+  @override
+  Future<SessionStatusResponseModel> checkSessionStatus({
+    required String email,
+  }) async {
+    return _handleChopperResponse<SessionStatusResponseModel>(
+      chopperService.checkSessionStatus(email: email),
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:fe_core_vips/core/l10n/app_localizations.dart';
 
 import '/presentation/feactures/auth/bloc/blocs.dart';
 import '/presentation/feactures/auth/views/auth_layout.dart';

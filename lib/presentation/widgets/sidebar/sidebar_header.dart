@@ -1,5 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import '/presentation/resources/resources.dart';
 import '/presentation/widgets/widgets.dart';
 
@@ -18,9 +23,9 @@ class SidebarHeaderWithToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color headerBg = AppColors.primaryBlue;
-    final Color logoText = AppColors.primaryPurple;
     final Color headerText = AppColors.sidebarText;
     final Color iconColor = AppColors.sidebarIcon.withOpacity(0.7);
+    bool isMobilePlatform = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
     return Container(
       height: logoHeight,
@@ -33,8 +38,7 @@ class SidebarHeaderWithToggle extends StatelessWidget {
                 2 *
                 ((widthAnimation.value - collapsedSidebarWidth) /
                         (sidebarWidth - collapsedSidebarWidth))
-                    .clamp(0.0, 1.0) // Ensure value is between 0 and 1
-                    ),
+                    .clamp(0.0, 1.0)),
       ),
       child: ClipRect(
         child: AnimatedSwitcher(
@@ -57,23 +61,9 @@ class SidebarHeaderWithToggle extends StatelessWidget {
                   ? Row(
                     key: const ValueKey('expanded_header'),
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 6,
-                        ),
-                        child: Text(
-                          'HT',
-                          style: TextStyle(
-                            color: logoText,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
+                      GestureDetector(
+                        onTap: isMobilePlatform ? onToggle : () {},
+                        child: _buildLogo(),
                       ),
                       const SizedBox(width: 12),
                       Flexible(
@@ -88,17 +78,19 @@ class SidebarHeaderWithToggle extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      IconButton(
-                        icon: Icon(
-                          LucideIcons.chevronLeft,
-                          color: iconColor,
-                          size: 20,
-                        ),
-                        onPressed: onToggle,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        tooltip: 'Collapse Sidebar',
-                      ),
+                      isMobilePlatform
+                          ? SizedBox.shrink()
+                          : IconButton(
+                            icon: Icon(
+                              LucideIcons.chevronLeft,
+                              color: iconColor,
+                              size: 20,
+                            ),
+                            onPressed: onToggle,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            tooltip: 'Collapse Sidebar',
+                          ),
                     ],
                   )
                   : Container(
@@ -107,18 +99,29 @@ class SidebarHeaderWithToggle extends StatelessWidget {
                     width:
                         collapsedSidebarWidth -
                         (parentHorizontalPadding), // Ensure enough space
-                    child: IconButton(
-                      icon: Icon(
-                        LucideIcons.chevronRight,
-                        color: iconColor,
-                        size: 20,
-                      ),
-                      onPressed: onToggle,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      tooltip: 'Expand Sidebar',
+                    child: GestureDetector(
+                      onTap: onToggle,
+                      child: _buildLogo(),
                     ),
                   ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogo() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: Text(
+        'HT',
+        style: TextStyle(
+          color: AppColors.primaryPurple,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
         ),
       ),
     );

@@ -39,6 +39,9 @@ class GoogleIdTokenBloc extends Bloc<GoogleIdTokenEvent, GoogleIdTokenState> {
         );
         idToken = await userCredential.user?.getIdToken();
         email = userCredential.user?.email;
+        debugPrint('-----WEB--');
+        debugPrint('GoogleIdTokenBloc - idToken: $idToken');
+        debugPrint('GoogleIdTokenBloc - email: $email');
       } else {
         final GoogleSignIn googleSignIn = GoogleSignIn();
         final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
@@ -63,8 +66,8 @@ class GoogleIdTokenBloc extends Bloc<GoogleIdTokenEvent, GoogleIdTokenState> {
         name = userCredential.user?.displayName;
       }
 
-      if (idToken != null && email != null && name != null) {
-        debugPrint('');
+      if (idToken != null && email != null) {
+        debugPrint('-------');
         debugPrint('GoogleIdTokenBloc - idToken: $idToken');
         debugPrint('GoogleIdTokenBloc - name: $name');
         debugPrint('GoogleIdTokenBloc - email: $email');
@@ -75,12 +78,12 @@ class GoogleIdTokenBloc extends Bloc<GoogleIdTokenEvent, GoogleIdTokenState> {
         );
         result.fold(
           (failure) {
-            if (idToken != null && email != null && name != null) {
+            if (idToken != null && email != null) {
               emit(
                 GoogleIdTokenSuccess(
                   idToken: idToken,
                   email: email,
-                  name: name,
+                  name: name ?? '',
                 ),
               );
             }

@@ -215,5 +215,10 @@
   "appearanceTab": "Appearance",
   "userInfoTitle": "User Information",
   "userInfoSubtitle": "Basic information about your account and user preferences",
-  "appearanceContentPlaceholder": "Appearance Content Here"
+  "appearanceContentPlaceholder": "Appearance Content Here",
+  "activeSessionDialogTitle": "Active Session Detected",
+  "activeSessionDialogMessage": "You already have an active session on another device or browser. Do you want to close the previous session and continue with the current login?",
+  "keepSessionButtonLabel": "Keep Session",
+  "closeSessionButtonLabel": "Close Previous Session",
+  "invalidOtpMessage": "The code you entered is not valid. Please check it and try again."
 }

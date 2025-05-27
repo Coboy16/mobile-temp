@@ -28,3 +28,10 @@ final class DeleteUserFailure extends DeleteUserState {
   @override
   List<Object?> get props => [message, statusCode];
 }
+
+final class DeleteUserSessionExpired extends DeleteUserState {
+  final String message;
+  const DeleteUserSessionExpired({required this.message});
+  @override
+  List<Object?> get props => [message];
+}

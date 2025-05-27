@@ -16,6 +16,7 @@ class CheckLockStatusBloc
   }) : _checkUserLockStatusUseCase = checkUserLockStatusUseCase,
        super(CheckLockStatusInitial()) {
     on<CheckUserLockStatusRequested>(_onCheckUserLockStatusRequested);
+    on<ResetCheckLockStatus>(_onResetCheckLockStatus);
   }
 
   Future<void> _onCheckUserLockStatusRequested(
@@ -43,5 +44,12 @@ class CheckLockStatusBloc
         emit(CheckLockStatusSuccess(validationInfo: validationInfo));
       },
     );
+  }
+
+  void _onResetCheckLockStatus(
+    ResetCheckLockStatus event,
+    Emitter<CheckLockStatusState> emit,
+  ) {
+    emit(CheckLockStatusInitial());
   }
 }

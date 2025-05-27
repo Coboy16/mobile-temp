@@ -1,14 +1,15 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 
-import '/presentation/widgets/widgets.dart';
+import '/presentation/widgets/widgets.dart'; // Para AppSidebarMenuRoutes
 
 part 'sidebar_event.dart';
 part 'sidebar_state.dart';
 
 class SidebarBloc extends Bloc<SidebarEvent, SidebarState> {
   SidebarBloc({
-    String initialRoute = 'Solicitudes',
+    String initialRoute = AppSidebarMenuRoutes.solicitudes,
     String? initialParentRoute,
     bool initialIsSmallScreen = false,
   }) : super(
@@ -43,18 +44,10 @@ class SidebarBloc extends Bloc<SidebarEvent, SidebarState> {
       newExpandedParentRoutes.add(event.parentRouteName!);
     }
 
-    bool sidebarShouldBeExpanded = state.isSidebarExpanded;
-    if (state.isSmallScreenLayout &&
-        state.isSidebarExpanded &&
-        !event.isParentItem) {
-      sidebarShouldBeExpanded = false;
-    }
-
     emit(
       state.copyWith(
         currentSelectedRoute: event.routeName,
         expandedParentRoutes: newExpandedParentRoutes,
-        isSidebarExpanded: sidebarShouldBeExpanded,
       ),
     );
   }
@@ -89,7 +82,14 @@ class SidebarBloc extends Bloc<SidebarEvent, SidebarState> {
     SidebarLayoutChanged event,
     Emitter<SidebarState> emit,
   ) {
+    debugPrint(
+      "[SidebarBloc] Layout changed - isSmallScreen: ${event.isSmallScreen}, current state: ${state.isSmallScreenLayout}",
+    );
+
     if (event.isSmallScreen != state.isSmallScreenLayout) {
+      debugPrint(
+        "[SidebarBloc] Updating layout - new isSmallScreenLayout: ${event.isSmallScreen}",
+      );
       emit(
         state.copyWith(
           isSmallScreenLayout: event.isSmallScreen,

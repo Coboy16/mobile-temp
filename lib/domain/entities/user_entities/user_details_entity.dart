@@ -4,15 +4,15 @@ class UserDetailsEntity extends Equatable {
   final String userId;
   final String email;
   final String name;
-  final String fatherLastname;
-  final String motherLastname;
+  final String? fatherLastname;
+  final String? motherLastname;
 
   const UserDetailsEntity({
     required this.userId,
     required this.email,
     required this.name,
-    required this.fatherLastname,
-    required this.motherLastname,
+    this.fatherLastname,
+    this.motherLastname,
   });
 
   @override
@@ -24,6 +24,8 @@ class UserDetailsEntity extends Equatable {
     motherLastname,
   ];
 
-  // Opcional: un método para obtener el nombre completo
-  String get fullName => '$name $fatherLastname $motherLastname'.trim();
+  String get fullName {
+    final parts = [name, fatherLastname, motherLastname];
+    return parts.where((s) => s != null && s.isNotEmpty).join(' ').trim();
+  }
 }

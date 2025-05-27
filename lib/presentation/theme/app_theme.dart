@@ -88,7 +88,7 @@ class AppTheme {
           minimumSize: const Size(0, 50),
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 5,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.0),
@@ -229,7 +229,7 @@ class AppTheme {
           minimumSize: const Size(0, 50),
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation:
             3, // Slightly reduce elevation visibility in dark mode if desired
         shape: RoundedRectangleBorder(

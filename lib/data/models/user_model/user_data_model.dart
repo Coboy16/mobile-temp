@@ -10,16 +10,16 @@ class UserDataModel {
   final String email;
   final String name;
   @JsonKey(name: 'father_lastname')
-  final String fatherLastname;
+  final String? fatherLastname;
   @JsonKey(name: 'mother_lastname')
-  final String motherLastname;
+  final String? motherLastname;
 
   const UserDataModel({
     required this.userId,
     required this.email,
     required this.name,
-    required this.fatherLastname,
-    required this.motherLastname,
+    this.fatherLastname,
+    this.motherLastname,
   });
 
   factory UserDataModel.fromJson(Map<String, dynamic> json) =>
@@ -27,14 +27,13 @@ class UserDataModel {
 
   Map<String, dynamic> toJson() => _$UserDataModelToJson(this);
 
-  // Método para convertir a entidad del dominio
   UserDetailsEntity toEntity() {
     return UserDetailsEntity(
       userId: userId,
       email: email,
       name: name,
-      fatherLastname: fatherLastname,
-      motherLastname: motherLastname,
+      fatherLastname: fatherLastname ?? "",
+      motherLastname: motherLastname ?? "",
     );
   }
 }

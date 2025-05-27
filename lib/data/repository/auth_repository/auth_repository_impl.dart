@@ -149,7 +149,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, GoogleUserEntity>> loginWithGoogle({
+  Future<Either<Failure, UserEntity>> loginWithGoogle({
     required String idToken,
     required String email,
   }) async {
@@ -158,18 +158,13 @@ class AuthRepositoryImpl implements AuthRepository {
         final response = await remoteDataSource.loginWithGoogle(
           idToken: idToken,
           email: email,
-        );
+        ); // response es LoginResponseModel
 
-        final entity = GoogleUserEntity(
-          name: response.user.name,
-          email: response.user.email,
-        );
-
-        // Guarda token y usuario localmente si aplica
+        //Guarda de token y usuario en caché
         await localDataSource.saveToken(response.token);
         await localDataSource.saveUser(response.user);
 
-        return Right(entity);
+        return Right(response.user);
       } on ServerException catch (e) {
         return Left(
           ServerFailure(
@@ -241,6 +236,40 @@ class AuthRepositoryImpl implements AuthRepository {
           ServerFailure(
             message:
                 e.message ?? "Error del servidor al cambiar la contraseña.",
+            statusCode: e.statusCode,
+          ),
+        );
+      }
+    } else {
+      return Left(NetworkFailure(message: "No hay conexión a internet"));
+    }
+  }
+
+  @override
+  Future<Either<Failure, SessionStatusEntity>> checkSessionStatus({
+    required String email,
+  }) async {
+    if (await networkInfo.isConnected) {
+      try {
+        final responseModel = await remoteDataSource.checkSessionStatus(
+          email: email,
+        );
+        final entity = SessionStatusEntity(
+          hasActiveSession: responseModel.data.session,
+        );
+        return Right(entity);
+      } on UnauthorizedException catch (e) {
+        try {
+          await localDataSource.clearToken();
+          await localDataSource.clearUser();
+        } catch (_) {}
+        return Left(
+          SessionExpiredFailure(message: e.message ?? "Tu sesión ha expirado."),
+        );
+      } on ServerException catch (e) {
+        return Left(
+          ServerFailure(
+            message: e.message ?? "Error del servidor al verificar la sesión.",
             statusCode: e.statusCode,
           ),
         );

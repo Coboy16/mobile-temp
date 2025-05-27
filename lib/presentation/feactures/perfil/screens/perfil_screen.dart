@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:go_router/go_router.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:fe_core_vips/presentation/widgets/widgets.dart';
 import '/presentation/feactures/perfil/widgets/widgets.dart';
 import 'package:fe_core_vips/presentation/bloc/blocs.dart';
 import 'package:fe_core_vips/domain/domain.dart';
+import '/presentation/routes/app_router.dart';
 import '/presentation/resources/resources.dart';
 
 class PerfilScreen extends StatefulWidget {
@@ -25,8 +26,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
   late LocalUserDataBloc _localUserDataBloc;
   late UserDetailsBloc _userDetailsBloc;
   late UpdateUserBloc _updateUserBloc;
-  late DeleteUserBloc _deleteUserBloc;
   late ForgotPasswordBloc _forgotPasswordBloc;
+  late AuthBloc _authBloc;
 
   bool _isLoadingInitialData = true;
   bool _isChangingPassword = false;
@@ -37,10 +38,20 @@ class _PerfilScreenState extends State<PerfilScreen> {
     _localUserDataBloc = BlocProvider.of<LocalUserDataBloc>(context);
     _userDetailsBloc = BlocProvider.of<UserDetailsBloc>(context);
     _updateUserBloc = BlocProvider.of<UpdateUserBloc>(context);
-    _deleteUserBloc = BlocProvider.of<DeleteUserBloc>(context);
     _forgotPasswordBloc = BlocProvider.of<ForgotPasswordBloc>(context);
+    _authBloc = BlocProvider.of<AuthBloc>(context);
 
     _localUserDataBloc.add(const LoadLocalUserData());
+  }
+
+  void _handleSessionExpired(String message) {
+    if (!mounted) return;
+    debugPrint("__________________________");
+    debugPrint("Session expired: $message");
+    debugPrint("__________________________");
+    _showSnackBar('Session expired', isError: true);
+    _authBloc.add(AuthLogoutRequested());
+    context.pushReplacementNamed(AppRoutes.auth);
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
@@ -71,8 +82,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
     }
 
     String updatedName = _currentUserDetails!.name;
-    String updatedFatherLastname = _currentUserDetails!.fatherLastname;
-    String updatedMotherLastname = _currentUserDetails!.motherLastname;
+    String updatedFatherLastname = _currentUserDetails!.fatherLastname ?? '';
+    String updatedMotherLastname = _currentUserDetails!.motherLastname ?? '';
 
     if (fieldName == 'name') {
       updatedName = newValue;
@@ -130,42 +141,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
     }
   }
 
-  Future<void> _onDeleteAccount() async {
-    if (_currentUserId == null) {
-      _showSnackBar(
-        'ID de usuario no disponible para eliminar la cuenta.',
-        isError: true,
-      );
-      return;
-    }
-    final result = await showOkCancelAlertDialog(
-      context: context,
-      title: 'Eliminar Cuenta',
-      message:
-          '¿Estás seguro? Esta acción es irreversible y todos tus datos serán eliminados permanentemente.',
-      okLabel: 'Sí, Eliminar',
-      cancelLabel: 'Cancelar',
-      isDestructiveAction: true,
-      builder:
-          (context, child) => Theme(
-            data: ThemeData(
-              textButtonTheme: TextButtonThemeData(
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  textStyle: AppTextStyles.button.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            child: child,
-          ),
-    );
-    if (result == OkCancelResult.ok) {
-      _deleteUserBloc.add(DeleteUserRequested(userId: _currentUserId!));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isMobile = ResponsiveBreakpoints.of(context).smallerOrEqualTo(MOBILE);
@@ -179,6 +154,12 @@ class _PerfilScreenState extends State<PerfilScreen> {
           bloc: _localUserDataBloc,
           listener: (context, state) {
             if (state is LocalUserDataLoaded) {
+              print(
+                'PERFIL SCREEN - LocalUserDataLoaded: User ID: ${state.user.id}, Token: ${state.token}',
+              ); // LOG ESTO
+              print(
+                'PERFIL SCREEN - LocalUserDataLoaded: User Type: ${state.user.runtimeType}',
+              ); // ¿Es UserEntity?
               if (_currentUserId != state.user.id ||
                   _userDetailsBloc.state is UserDetailsInitial) {
                 _currentUserId = state.user.id;
@@ -219,10 +200,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
               _updateUserBloc.add(const ResetUpdateUserState());
             } else if (state is UserDetailsFailure) {
               if (mounted) setState(() => _isLoadingInitialData = false);
-              _showSnackBar(
-                'Error al cargar detalles del perfil: ${state.message}',
-                isError: true,
-              );
+              _handleSessionExpired(state.message);
+            } else if (state is UserDetailsSessionExpired) {
+              if (mounted) setState(() => _isLoadingInitialData = false);
+              _handleSessionExpired(state.message);
             } else if (state is UserDetailsLoading) {
               if (_currentUserDetails == null && mounted) {
                 setState(() => _isLoadingInitialData = true);
@@ -253,22 +234,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 'Error del servidor al actualizar: ${state.message}',
                 isError: true,
               );
-            }
-          },
-        ),
-        BlocListener<DeleteUserBloc, DeleteUserState>(
-          bloc: _deleteUserBloc,
-          listener: (context, state) {
-            if (state is DeleteUserSuccess) {
-              _showSnackBar(state.message);
-              debugPrint(
-                "CUENTA ELIMINADA: Implementar logout y navegación a login",
-              );
-            } else if (state is DeleteUserFailure) {
-              _showSnackBar(
-                'Error al eliminar cuenta: ${state.message}',
-                isError: true,
-              );
+            } else if (state is UpdateUserSessionExpired) {
+              _handleSessionExpired(state.message);
             }
           },
         ),
@@ -348,23 +315,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
               return const SizedBox.shrink();
             },
           ),
-          BlocBuilder<DeleteUserBloc, DeleteUserState>(
-            bloc: _deleteUserBloc,
-            builder: (context, state) {
-              if (state is DeleteUserLoading) {
-                return Container(
-                  color: Colors.white,
-                  width: MediaQuery.of(context).size.width * 0.8,
-                  height: MediaQuery.of(context).size.height * 0.4,
-                  child: const CustomLoadingHotech(
-                    overlay: false,
-                    message: "Eliminando cuenta...",
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
           BlocBuilder<UserDetailsBloc, UserDetailsState>(
             bloc: _userDetailsBloc,
             builder: (context, state) {
@@ -381,7 +331,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
           ),
           if (_isChangingPassword &&
               _updateUserBloc.state is! UpdateUserLoading &&
-              _deleteUserBloc.state is! DeleteUserLoading &&
               !(_userDetailsBloc.state is UserDetailsLoading &&
                   _currentUserDetails == null) &&
               !_isLoadingInitialData)

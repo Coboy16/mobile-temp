@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '/presentation/routes/app_router.dart';
 import '/presentation/widgets/widgets.dart';
@@ -69,15 +72,33 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     debugPrint(
       "[HomeScreen Shell initState] (Instance: $hashCode) Key: ${widget.key}",
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkScreenSize();
       _syncSidebarWithGoRouterState();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkScreenSize();
     });
   }
 
@@ -90,12 +111,38 @@ class _HomeScreenState extends State<HomeScreen> {
     if (widget.key != oldWidget.key ||
         widget.child.key != oldWidget.child.key) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkScreenSize();
         _syncSidebarWithGoRouterState();
       });
     }
   }
 
+  void _checkScreenSize() {
+    if (!mounted) return;
+
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+    final isSmallScreen =
+        screenWidth < 768; // Breakpoint para pantallas pequeñas
+
+    final sidebarBloc = context.read<SidebarBloc>();
+    final currentIsSmallScreen = sidebarBloc.state.isSmallScreenLayout;
+
+    debugPrint(
+      "[HomeScreen Shell _checkScreenSize] Screen width: $screenWidth, isSmallScreen: $isSmallScreen, currentBlocState: $currentIsSmallScreen",
+    );
+
+    if (currentIsSmallScreen != isSmallScreen) {
+      debugPrint(
+        "[HomeScreen Shell _checkScreenSize] Updating screen layout: $isSmallScreen",
+      );
+      sidebarBloc.add(SidebarLayoutChanged(isSmallScreen));
+    }
+  }
+
   void _syncSidebarWithGoRouterState() {
+    if (!mounted) return;
+
     final GoRouterState goState = GoRouterState.of(context);
     final String currentRouteNameFromRouter =
         goState.name ?? ''; // Nombre de la ruta hija actual
@@ -196,18 +243,74 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
       },
-      child: Scaffold(
-        body: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SidebarWidget(),
-            Expanded(
-              child: Column(
-                children: [const HeaderWidget(), Expanded(child: widget.child)],
-              ),
-            ),
-          ],
+      child: BlocBuilder<SidebarBloc, SidebarState>(
+        buildWhen:
+            (previous, current) =>
+                previous.isSmallScreenLayout != current.isSmallScreenLayout ||
+                previous.isSidebarExpanded != current.isSidebarExpanded,
+        builder: (context, sidebarState) {
+          final bool isMobilePlatform =
+              !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
+          // Lógica corregida para determinar si usar drawer
+          final bool useDrawerLayout =
+              isMobilePlatform || sidebarState.isSmallScreenLayout;
+
+          debugPrint(
+            "[HomeScreen Shell build] isMobilePlatform: $isMobilePlatform, isSmallScreenLayout: ${sidebarState.isSmallScreenLayout}, useDrawerLayout: $useDrawerLayout",
+          );
+
+          return Scaffold(
+            key: _scaffoldKey,
+            drawer: useDrawerLayout ? const SidebarWidget() : null,
+            drawerScrimColor: Colors.black.withOpacity(0.5),
+            onDrawerChanged: (isOpened) {
+              debugPrint(
+                "[HomeScreen Shell] Drawer changed: isOpened=$isOpened",
+              );
+              final sidebarBloc = context.read<SidebarBloc>();
+              if (!isOpened &&
+                  sidebarBloc.state.isSidebarExpanded &&
+                  useDrawerLayout) {
+                sidebarBloc.add(
+                  const SidebarVisibilityToggled(forceState: false),
+                );
+              }
+            },
+            body:
+                useDrawerLayout
+                    ? _buildMobileLayout(context, sidebarState)
+                    : _buildWebLayout(context, sidebarState),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildWebLayout(BuildContext context, SidebarState sidebarState) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SidebarWidget(),
+        Expanded(
+          child: Column(
+            children: [
+              HeaderWidget(scaffoldKey: _scaffoldKey),
+              Expanded(child: widget.child),
+            ],
+          ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context, SidebarState sidebarState) {
+    return SafeArea(
+      child: Column(
+        children: [
+          HeaderWidget(scaffoldKey: _scaffoldKey),
+          Expanded(child: widget.child),
+        ],
       ),
     );
   }

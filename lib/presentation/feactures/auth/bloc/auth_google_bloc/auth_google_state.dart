@@ -13,7 +13,7 @@ class AuthGoogleLoading extends AuthGoogleState {}
 
 class AuthGoogleAuthenticated extends AuthGoogleState {
   final String idToken;
-  final GoogleUserEntity googleUser;
+  final UserEntity googleUser;
 
   const AuthGoogleAuthenticated({
     required this.idToken,

@@ -32,3 +32,10 @@ final class UserDetailsFailure extends UserDetailsState {
   @override
   List<Object> get props => [message, statusCode ?? 0];
 }
+
+final class UserDetailsSessionExpired extends UserDetailsState {
+  final String message;
+  const UserDetailsSessionExpired({required this.message});
+  @override
+  List<Object> get props => [message];
+}

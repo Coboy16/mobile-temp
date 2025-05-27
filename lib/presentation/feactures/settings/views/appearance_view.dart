@@ -1,20 +1,18 @@
-import 'package:fe_core_vips/presentation/feactures/settings/widgets/widget.dart';
-import 'package:fe_core_vips/presentation/resources/resources.dart';
+// import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
+
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+// import 'package:flutter/foundation.dart' show kIsWeb;
 
-enum ThemeSetting { light, dark, system }
+import '/presentation/feactures/settings/widgets/widget.dart';
+import '/presentation/resources/resources.dart';
+import '/presentation/bloc/blocs.dart';
 
-class AppearanceView extends StatefulWidget {
+class AppearanceView extends StatelessWidget {
   const AppearanceView({super.key});
-
-  @override
-  State<AppearanceView> createState() => _AppearanceViewState();
-}
-
-class _AppearanceViewState extends State<AppearanceView> {
-  ThemeSetting _selectedTheme = ThemeSetting.light;
 
   Widget _buildThemeOptionCard({
     required IconData icon,
@@ -74,18 +72,10 @@ class _AppearanceViewState extends State<AppearanceView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context); // Puedes usarlo para estilos si prefieres
+    // bool isMobilePlatform = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
-    TextStyle titleStyle = (theme.textTheme.bodyMedium ?? const TextStyle())
-        .copyWith(
-          fontWeight: FontWeight.w800,
-          fontSize: 25,
-          color: Colors.black,
-        );
-    const TextStyle subtitleStyle = TextStyle(
-      fontSize: 16,
-      color: Color(0xFF6C757D),
-    );
+    final theme = Theme.of(context);
+
     const TextStyle sectionLabelStyle = TextStyle(
       fontSize: 15,
       fontWeight: FontWeight.w500,
@@ -97,7 +87,7 @@ class _AppearanceViewState extends State<AppearanceView> {
       child: Container(
         padding: const EdgeInsets.all(20.0),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.scaffoldBackgroundColor,
           borderRadius: BorderRadius.circular(8.0),
           boxShadow: [
             BoxShadow(
@@ -124,11 +114,22 @@ class _AppearanceViewState extends State<AppearanceView> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Apariencia", style: titleStyle),
-                    SizedBox(height: 2),
-                    Text(
-                      "Personaliza la apariencia visual del sistema",
-                      style: subtitleStyle,
+                    AutoSizeText(
+                      "Apariencia",
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 25,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      maxLines: 1,
+                    ),
+                    const SizedBox(height: 2),
+                    AutoSizeText(
+                      'Personaliza la apariencia visual del sistema',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey[800],
+                      ),
+                      maxLines: 2,
                     ),
                   ],
                 ),
@@ -137,49 +138,53 @@ class _AppearanceViewState extends State<AppearanceView> {
             const SizedBox(height: 24.0),
             const Text("Tema", style: sectionLabelStyle),
             const SizedBox(height: 12.0),
-            Row(
-              children: [
-                _buildThemeOptionCard(
-                  icon: LucideIcons.sun,
-                  label: "Claro",
-                  isSelected: _selectedTheme == ThemeSetting.light,
-                  onTap: () {
-                    setState(() {
-                      _selectedTheme = ThemeSetting.light;
-                    });
-                    // TODO: Implementar la lógica para cambiar el tema de la app
-                  },
-                ),
-                const SizedBox(width: 12.0),
-                _buildThemeOptionCard(
-                  icon: LucideIcons.moon,
-                  label: "Oscuro",
-                  isSelected: _selectedTheme == ThemeSetting.dark,
-                  onTap: () {
-                    setState(() {
-                      _selectedTheme = ThemeSetting.dark;
-                    });
-                    // TODO: Implementar la lógica para cambiar el tema de la app
-                  },
-                ),
-                const SizedBox(width: 12.0),
-                _buildThemeOptionCard(
-                  icon: LucideIcons.settings,
-                  label: "Sistema",
-                  isSelected: _selectedTheme == ThemeSetting.system,
-                  onTap: () {
-                    setState(() {
-                      _selectedTheme = ThemeSetting.system;
-                    });
-                    // TODO: Implementar la lógica para cambiar el tema de la app
-                  },
-                ),
-              ],
+
+            // BlocBuilder para reaccionar a cambios de tema
+            BlocBuilder<ThemeBloc, ThemeState>(
+              builder: (context, state) {
+                final themeBloc = BlocProvider.of<ThemeBloc>(
+                  context,
+                  listen: false,
+                );
+                final currentTheme = state.themeSetting;
+
+                return Row(
+                  children: [
+                    _buildThemeOptionCard(
+                      icon: LucideIcons.sun,
+                      label: "Claro",
+                      isSelected: currentTheme == ThemeSetting.light,
+                      onTap: () {
+                        themeBloc.add(const ChangeTheme(ThemeSetting.light));
+                      },
+                    ),
+                    const SizedBox(width: 12.0),
+                    _buildThemeOptionCard(
+                      icon: LucideIcons.moon,
+                      label: "Oscuro",
+                      isSelected: currentTheme == ThemeSetting.dark,
+                      onTap: () {
+                        themeBloc.add(const ChangeTheme(ThemeSetting.dark));
+                      },
+                    ),
+                    const SizedBox(width: 12.0),
+                    _buildThemeOptionCard(
+                      icon: LucideIcons.settings,
+                      label: "Sistema",
+                      isSelected: currentTheme == ThemeSetting.system,
+                      onTap: () {
+                        themeBloc.add(const ChangeTheme(ThemeSetting.system));
+                      },
+                    ),
+                  ],
+                );
+              },
             ),
+
             const SizedBox(height: 24.0),
             const Text("Idioma", style: sectionLabelStyle),
             const SizedBox(height: 12.0),
-            const LanguageSelectionCardRow(),
+            LanguageSelectionCardRow(),
           ],
         ),
       ),

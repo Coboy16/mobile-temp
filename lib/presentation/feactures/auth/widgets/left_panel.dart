@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:fe_core_vips/core/l10n/app_localizations.dart';
 
 import '/presentation/feactures/auth/widgets/widgets.dart';
 import '/presentation/resources/resources.dart';

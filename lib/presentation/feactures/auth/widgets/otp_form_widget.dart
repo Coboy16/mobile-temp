@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:fe_core_vips/core/l10n/app_localizations.dart';
 import 'package:pinput/pinput.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
@@ -13,6 +13,7 @@ class OtpFormWidget extends StatefulWidget {
   final String? descriptionText;
   final String? buttonText;
   final String? resendOtpButtonText;
+  final VoidCallback? onError; // Callback opcional para manejar errores
 
   const OtpFormWidget({
     super.key,
@@ -23,13 +24,14 @@ class OtpFormWidget extends StatefulWidget {
     this.descriptionText,
     this.buttonText,
     this.resendOtpButtonText,
+    this.onError, // Nuevo parámetro opcional
   });
 
   @override
-  State<OtpFormWidget> createState() => _OtpFormWidgetState();
+  State<OtpFormWidget> createState() => OtpFormWidgetState();
 }
 
-class _OtpFormWidgetState extends State<OtpFormWidget> {
+class OtpFormWidgetState extends State<OtpFormWidget> {
   final TextEditingController _otpController = TextEditingController();
   final FocusNode _otpFocusNode = FocusNode();
   final _formKey = GlobalKey<FormState>();
@@ -39,6 +41,25 @@ class _OtpFormWidgetState extends State<OtpFormWidget> {
     _otpController.dispose();
     _otpFocusNode.dispose();
     super.dispose();
+  }
+
+  void clearOtpField() {
+    if (mounted) {
+      setState(() {
+        _otpController.clear();
+      });
+      _otpFocusNode.requestFocus();
+    }
+  }
+
+  String get currentOtpValue => _otpController.text;
+
+  void setOtpValue(String value) {
+    if (mounted) {
+      setState(() {
+        _otpController.text = value;
+      });
+    }
   }
 
   void _submitOtp() {

@@ -2,7 +2,6 @@ import 'package:fe_core_vips/presentation/resources/resources.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '/presentation/widgets/widgets.dart';
-import 'sidebar_menu_constants.dart';
 
 typedef NavigateToRouteCallback =
     void Function(String routeName, {String? parentRouteName});
@@ -59,12 +58,12 @@ class CollapsedSidebarContent extends StatelessWidget {
           ),
           AppSidebarMenuRoutes.portalCandidato,
         ),
-        _buildCollapsedItem(
-          LucideIcons.userCog,
-          currentRoute == AppSidebarMenuRoutes.perfilUsuarioSistema,
-          () => onNavigateToRoute(AppSidebarMenuRoutes.perfilUsuarioSistema),
-          AppSidebarMenuRoutes.perfilUsuarioSistema,
-        ),
+        // _buildCollapsedItem(
+        //   LucideIcons.userCog,
+        //   currentRoute == AppSidebarMenuRoutes.perfilUsuarioSistema,
+        //   () => onNavigateToRoute(AppSidebarMenuRoutes.perfilUsuarioSistema),
+        //   AppSidebarMenuRoutes.perfilUsuarioSistema,
+        // ),
         _buildCollapsedItem(
           LucideIcons.chartLine,
           currentRoute == AppSidebarMenuRoutes.evaluacionDesempeno,

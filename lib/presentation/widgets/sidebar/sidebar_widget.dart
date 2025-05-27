@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:fe_core_vips/core/l10n/app_localizations.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
 import '/presentation/resources/resources.dart';
@@ -139,11 +142,16 @@ class _SidebarWidgetState extends State<SidebarWidget>
               return AnimatedBuilder(
                 animation: _widthAnimation,
                 builder: (context, child) {
+                  bool isMobilePlatform =
+                      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
                   return Container(
                     width: _widthAnimation.value,
                     color: AppColors.primaryBlue,
                     child: Column(
                       children: [
+                        isMobilePlatform
+                            ? const SizedBox(height: 30)
+                            : const SizedBox.shrink(),
                         SidebarHeaderWithToggle(
                           isExpanded: sidebarState.isSidebarExpanded,
                           onToggle:

@@ -10,6 +10,8 @@ import '/core/core.dart';
 List<SingleChildWidget> getListBloc() {
   return [
     BlocProvider(create: (context) => LocaleBloc()),
+    BlocProvider(create: (context) => ThemeBloc()),
+    BlocProvider(create: (context) => sl<CheckSessionStatusBloc>()),
     BlocProvider(
       create:
           (context) => AuthBloc(
@@ -45,5 +47,7 @@ List<SingleChildWidget> getListBloc() {
     BlocProvider(create: (context) => sl<DeleteUserBloc>()),
     BlocProvider(create: (context) => NavegationBarBloc()),
     BlocProvider(create: (context) => SettingsBloc()),
+    BlocProvider(create: (context) => EmployeeSearchBloc()),
+    BlocProvider(create: (context) => RequestFilterBloc()),
   ];
 }

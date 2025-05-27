@@ -20,9 +20,13 @@ Future<void> initServiceLocator() async {
   // Connectivity
   sl.registerLazySingleton(() => Connectivity());
 
+  sl.registerLazySingleton<AuthLocalDataSource>(
+    () => AuthLocalDataSourceImpl(sharedPreferences: sl()),
+  );
   // Chopper Service
-  // AuthChopperService.create() ya instancia el ChopperClient con la baseUrl de AppConfig
-  sl.registerLazySingleton(() => AuthChopperService.create());
+  sl.registerLazySingleton<AuthChopperService>(
+    () => AuthChopperService.create(sl<AuthLocalDataSource>()),
+  );
 
   // --- Core ---
   // NetworkInfo
@@ -34,12 +38,13 @@ Future<void> initServiceLocator() async {
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(chopperService: sl()),
   );
-  sl.registerLazySingleton<AuthLocalDataSource>(
-    () => AuthLocalDataSourceImpl(sharedPreferences: sl()),
-  );
 
   sl.registerLazySingleton<UserRemoteDataSource>(
     () => UserRemoteDataSourceImpl(chopperService: sl()),
+  );
+
+  sl.registerFactory(
+    () => LocalUserDataBloc(authLocalDataSource: sl<AuthLocalDataSource>()),
   );
 
   // Repository
@@ -51,7 +56,11 @@ Future<void> initServiceLocator() async {
     ),
   );
   sl.registerLazySingleton<UserRepository>(
-    () => UserRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+    () => UserRepositoryImpl(
+      remoteDataSource: sl(),
+      networkInfo: sl(),
+      localDataSource: sl<AuthLocalDataSource>(),
+    ),
   );
 
   // Use cases
@@ -67,6 +76,7 @@ Future<void> initServiceLocator() async {
   // validate user
   sl.registerLazySingleton(() => CheckUserLockStatusUseCase(sl()));
   sl.registerLazySingleton(() => ChangePasswordUseCase(sl()));
+  sl.registerLazySingleton(() => CheckSessionStatusUseCase(sl()));
 
   // User Details
   sl.registerLazySingleton(() => GetUserDetailsUseCase(sl()));
@@ -92,7 +102,7 @@ Future<void> initServiceLocator() async {
   );
 
   sl.registerFactory(
-    () => LocalUserDataBloc(authLocalDataSource: sl<AuthLocalDataSource>()),
+    () => CheckSessionStatusBloc(checkSessionStatusUseCase: sl()),
   );
 
   // BLoC para UserDetails

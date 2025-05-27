@@ -28,3 +28,10 @@ final class UpdateUserFailure extends UpdateUserState {
   @override
   List<Object?> get props => [message, statusCode];
 }
+
+final class UpdateUserSessionExpired extends UpdateUserState {
+  final String message;
+  const UpdateUserSessionExpired({required this.message});
+  @override
+  List<Object?> get props => [message];
+}

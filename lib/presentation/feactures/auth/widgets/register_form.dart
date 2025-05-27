@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:fe_core_vips/core/l10n/app_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_framework/responsive_framework.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '/presentation/resources/resources.dart';
 import '/presentation/bloc/blocs.dart';
@@ -34,53 +38,17 @@ class _RegisterFormState extends State<RegisterForm> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   RegistrationStep _currentStep = RegistrationStep.initial;
+  bool isMobilePlatform = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
   // Variables para Google
   String? _pendingGoogleIdToken;
   String? _pendingGoogleEmail;
   String? _pendingGoogleName;
 
-  // Método para extraer apellidos paterno y materno del campo unificado
-  Map<String, String> _extractLastNames(String fullLastNames) {
-    final List<String> parts = fullLastNames.trim().split(' ');
-    String paternalLastName = '';
-    String maternalLastName = '';
-
-    if (parts.isNotEmpty) {
-      paternalLastName = parts[0];
-
-      if (parts.length > 1) {
-        // Combina el resto de palabras como apellido materno
-        maternalLastName = parts.sublist(1).join(' ');
-      }
-    }
-
-    return {
-      'paternalLastName': paternalLastName,
-      'maternalLastName': maternalLastName,
-    };
-  }
-
   void _initiateRegistrationProcess() {
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       final values = _formKey.currentState!.value;
       final email = (values['email'] as String).trim();
-
-      // Extraer apellidos del campo unificado
-      final String fullLastNames = (values['lastNames'] as String).trim();
-      final extractedLastNames = _extractLastNames(fullLastNames);
-
-      // NO modificamos el mapa de valores directamente, solo actualizamos los campos del formulario
-      _formKey.currentState!.fields['paternalLastName']?.didChange(
-        extractedLastNames['paternalLastName'],
-      );
-      _formKey.currentState!.fields['maternalLastName']?.didChange(
-        extractedLastNames['maternalLastName'],
-      );
-      _formKey.currentState!.save();
-
-      debugPrint("Apellido paterno: ${extractedLastNames['paternalLastName']}");
-      debugPrint("Apellido materno: ${extractedLastNames['maternalLastName']}");
 
       setState(() {
         _currentStep = RegistrationStep.preVerifyingEmail;
@@ -92,6 +60,7 @@ class _RegisterFormState extends State<RegisterForm> {
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          backgroundColor: Colors.red,
           content: Text(
             AppLocalizations.of(context)!.formValidationCompleteCorrectly,
           ),
@@ -175,29 +144,14 @@ class _RegisterFormState extends State<RegisterForm> {
           otpState.email == emailFromForm &&
           otpState.wasOnlyRequest == true) {
         if (values != null) {
-          // Obtenemos los valores actualizados del formulario después de haber hecho didChange y save
+          // Obtenemos los apellidos directamente de los campos del formulario
           final paternalLastName =
-              _formKey.currentState?.fields['paternalLastName']?.value
-                  as String? ??
-              '';
+              (values['paternalLastName'] as String).trim();
           final maternalLastName =
-              _formKey.currentState?.fields['maternalLastName']?.value
-                  as String? ??
-              '';
-
-          // Verificación de seguridad: si los campos están vacíos, volvemos a extraer de lastNames
-          String finalPaternal = paternalLastName;
-          String finalMaternal = maternalLastName;
-
-          if (finalPaternal.isEmpty || finalMaternal.isEmpty) {
-            final String fullLastNames = (values['lastNames'] as String).trim();
-            final extractedLastNames = _extractLastNames(fullLastNames);
-            finalPaternal = extractedLastNames['paternalLastName'] ?? '';
-            finalMaternal = extractedLastNames['maternalLastName'] ?? '';
-          }
+              (values['maternalLastName'] as String).trim();
 
           debugPrint(
-            "Enviando al OTP - Paterno: $finalPaternal, Materno: $finalMaternal",
+            "Enviando al OTP - Paterno: $paternalLastName, Materno: $maternalLastName",
           );
 
           context.read<OtpVerificationBloc>().add(OtpVerificationReset());
@@ -206,8 +160,8 @@ class _RegisterFormState extends State<RegisterForm> {
             extra: RegisterOtpViewArguments(
               email: otpState.email,
               name: values['firstName'] as String,
-              fatherLastname: finalPaternal,
-              motherLastname: finalMaternal,
+              fatherLastname: paternalLastName,
+              motherLastname: maternalLastName,
               password: values['password'] as String,
             ),
           );
@@ -251,7 +205,7 @@ class _RegisterFormState extends State<RegisterForm> {
       context.read<RegisterBloc>().add(
         RegisterWithGoogleSubmitted(
           email: googleState.email,
-          idToken: googleState.name,
+          idToken: isMobilePlatform ? googleState.name : googleState.idToken,
         ),
       );
     } else if (googleState is GoogleIdTokenFailure) {
@@ -385,41 +339,41 @@ class _RegisterFormState extends State<RegisterForm> {
               textInputAction: TextInputAction.next,
             ),
             SizedBox(height: formFieldSpacing),
-            // Campo unificado de apellidos
+
+            // Campo para apellido paterno
             FormBuilderTextField(
-              name: 'lastNames',
+              name: 'paternalLastName',
               decoration: baseDecoration.copyWith(
-                labelText: 'Apellidos',
-                hintText: 'Ingrese sus apellidos',
+                labelText: 'Apellido Paterno',
+                hintText: 'Ingrese su apellido paterno',
                 prefixIcon: const Icon(LucideIcons.userCheck),
               ),
               validator: FormBuilderValidators.compose([
                 FormBuilderValidators.required(
-                  errorText: 'Los apellidos son requeridos',
+                  errorText: 'El apellido paterno es requerido',
                 ),
               ]),
               textInputAction: TextInputAction.next,
             ),
-
-            // Campos ocultos para mantener la compatibilidad
-            SizedBox(
-              height: 0,
-              child: FormBuilderTextField(
-                name: 'paternalLastName',
-                initialValue: '',
-                enabled: true,
-              ),
-            ),
-            SizedBox(
-              height: 0,
-              child: FormBuilderTextField(
-                name: 'maternalLastName',
-                initialValue: '',
-                enabled: true,
-              ),
-            ),
-
             SizedBox(height: formFieldSpacing),
+
+            // Campo para apellido materno
+            FormBuilderTextField(
+              name: 'maternalLastName',
+              decoration: baseDecoration.copyWith(
+                labelText: 'Apellido Materno',
+                hintText: 'Ingrese su apellido materno',
+                prefixIcon: const Icon(LucideIcons.userCheck),
+              ),
+              validator: FormBuilderValidators.compose([
+                FormBuilderValidators.required(
+                  errorText: 'El apellido materno es requerido',
+                ),
+              ]),
+              textInputAction: TextInputAction.next,
+            ),
+            SizedBox(height: formFieldSpacing),
+
             FormBuilderTextField(
               name: 'email',
               decoration: baseDecoration.copyWith(

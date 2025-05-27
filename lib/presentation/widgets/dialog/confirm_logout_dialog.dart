@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:fe_core_vips/core/l10n/app_localizations.dart';
 
 class ConfirmLogoutDialog extends StatelessWidget {
   const ConfirmLogoutDialog({super.key});

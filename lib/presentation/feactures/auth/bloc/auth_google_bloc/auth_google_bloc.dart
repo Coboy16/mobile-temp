@@ -77,15 +77,20 @@ class AuthGoogleBloc extends Bloc<AuthGoogleEvent, AuthGoogleState> {
         final UserCredential userCredential = await auth.signInWithCredential(
           credential,
         );
-        idToken = await userCredential.user?.getIdToken();
+
+        idToken = " ";
         email = userCredential.user?.email;
+        debugPrint(':::::::::BLOC:::::::::');
+        debugPrint('idToken: $idToken');
+        debugPrint('email: $email');
       }
 
       if (idToken != null && email != null) {
         final failureOrUser = await _loginWithGoogleUseCase(
           idToken: idToken,
-          email: email, // Usar el email obtenido de Google
+          email: email,
         );
+
         failureOrUser.fold(
           (failure) => emit(
             AuthGoogleError(

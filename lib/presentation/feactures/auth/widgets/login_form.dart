@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:fe_core_vips/core/l10n/app_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_framework/responsive_framework.dart';
@@ -32,14 +32,61 @@ class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormBuilderState>();
   bool _isPasswordVisible = false;
 
+  // Estados para coordinar ambos checks
+  bool _lockCheckCompleted = false;
+  bool _sessionCheckCompleted = false;
+  bool _canProceedWithLogin = false;
+  bool _isCheckingStatus = false;
+
   void _onLoginAttempt() {
     if (_formKey.currentState?.saveAndValidate() ?? false) {
+      // Reset de estados
+      _lockCheckCompleted = false;
+      _sessionCheckCompleted = false;
+      _canProceedWithLogin = false;
+      _isCheckingStatus = true;
+
       final username =
           _formKey.currentState?.fields['username']?.value as String;
+
+      // Disparar ambos eventos
       context.read<CheckLockStatusBloc>().add(
         CheckUserLockStatusRequested(email: username.trim()),
       );
+      context.read<CheckSessionStatusBloc>().add(
+        CheckSessionStatusRequested(email: username.trim()),
+      );
     }
+  }
+
+  void _proceedWithLogin() {
+    if (_canProceedWithLogin && _lockCheckCompleted && _sessionCheckCompleted) {
+      final username =
+          _formKey.currentState?.fields['username']?.value as String;
+      final password =
+          _formKey.currentState?.fields['password']?.value as String;
+      widget.onLogin?.call(username.trim(), password);
+    }
+  }
+
+  void _checkIfCanProceed() {
+    if (_lockCheckCompleted && _sessionCheckCompleted && _canProceedWithLogin) {
+      _proceedWithLogin();
+    }
+  }
+
+  void _resetChecks() {
+    setState(() {
+      _lockCheckCompleted = false;
+      _sessionCheckCompleted = false;
+      _canProceedWithLogin = false;
+      _isCheckingStatus = false;
+    });
+
+    _formKey.currentState?.reset();
+    // Reset de los blocs
+    context.read<CheckLockStatusBloc>().add(ResetCheckLockStatus());
+    context.read<CheckSessionStatusBloc>().add(ResetCheckSessionStatus());
   }
 
   @override
@@ -47,33 +94,95 @@ class _LoginFormState extends State<LoginForm> {
     final l10n = AppLocalizations.of(context)!;
     final responsive = ResponsiveBreakpoints.of(context);
 
-    return BlocListener<CheckLockStatusBloc, CheckLockStatusState>(
-      listener: (context, state) {
-        if (state is CheckLockStatusSuccess) {
-          if (state.validationInfo.isBlocked) {
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder:
-                  (_) => UserBlockedDialog(
-                    minutesBlocked: state.validationInfo.minutesBlocked,
-                  ),
-            );
-          } else {
-            final username =
-                _formKey.currentState?.fields['username']?.value as String;
-            final password =
-                _formKey.currentState?.fields['password']?.value as String;
-            widget.onLogin?.call(username.trim(), password);
-          }
-        } else if (state is CheckLockStatusFailure) {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (_) => UserBlockedDialog(errorMessage: state.message),
-          );
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<CheckLockStatusBloc, CheckLockStatusState>(
+          listener: (context, state) {
+            if (state is CheckLockStatusSuccess) {
+              setState(() {
+                _lockCheckCompleted = true;
+              });
+
+              if (state.validationInfo.isBlocked) {
+                // Usuario bloqueado - mostrar modal y detener flujo
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder:
+                      (_) => UserBlockedDialog(
+                        minutesBlocked: state.validationInfo.minutesBlocked,
+                      ),
+                ).then((_) {
+                  _resetChecks();
+                });
+              } else {
+                // Usuario no bloqueado - marcar como OK para continuar
+                setState(() {
+                  _canProceedWithLogin = true;
+                });
+                _checkIfCanProceed();
+              }
+            } else if (state is CheckLockStatusFailure) {
+              setState(() {
+                _lockCheckCompleted = true;
+              });
+
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => UserBlockedDialog(errorMessage: state.message),
+              ).then((_) {
+                _resetChecks();
+              });
+            }
+          },
+        ),
+        BlocListener<CheckSessionStatusBloc, CheckSessionStatusState>(
+          listener: (context, state) {
+            if (state is CheckSessionStatusLoaded) {
+              setState(() {
+                _sessionCheckCompleted = true;
+              });
+
+              if (state.hasActiveSession) {
+                // Hay sesión activa - mostrar modal y esperar decisión
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder:
+                      (_) => WillPopScope(
+                        onWillPop: () async => false,
+                        child: ActiveSessionDialog(
+                          onCloseSession: () {
+                            setState(() {
+                              _canProceedWithLogin = true;
+                            });
+                            _checkIfCanProceed();
+                          },
+                          onKeepSession: () {
+                            _resetChecks();
+                          },
+                        ),
+                      ),
+                );
+              } else {
+                // No hay sesión activa - OK para continuar
+                setState(() {
+                  _canProceedWithLogin = true;
+                });
+                _checkIfCanProceed();
+              }
+            } else if (state is CheckSessionStatusFailure) {
+              setState(() {
+                _sessionCheckCompleted = true;
+                _canProceedWithLogin =
+                    true; // En caso de error, permitir continuar
+              });
+              _checkIfCanProceed();
+            }
+          },
+        ),
+      ],
       child: FormBuilder(
         key: _formKey,
         child: Column(
@@ -93,12 +202,13 @@ class _LoginFormState extends State<LoginForm> {
                 ),
               ]),
               textInputAction: TextInputAction.next,
+              enabled: !_isCheckingStatus, // Deshabilitar durante checks
             ),
             SizedBox(
               height:
                   ResponsiveValue<double>(
                     context,
-                    defaultValue: AppDimensions.itemSpacing, // Desktop
+                    defaultValue: AppDimensions.itemSpacing,
                     conditionalValues: [
                       Condition.equals(name: MOBILE, value: 14.0),
                     ],
@@ -133,13 +243,14 @@ class _LoginFormState extends State<LoginForm> {
                 ),
               ]),
               textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _onLoginAttempt(),
+              onSubmitted: (_) => !_isCheckingStatus ? _onLoginAttempt() : null,
+              enabled: !_isCheckingStatus, // Deshabilitar durante checks
             ),
             SizedBox(
               height:
                   ResponsiveValue<double>(
                     context,
-                    defaultValue: AppDimensions.itemSpacing / 2, // Desktop
+                    defaultValue: AppDimensions.itemSpacing / 2,
                     conditionalValues: [
                       Condition.equals(name: MOBILE, value: 0),
                     ],
@@ -156,7 +267,8 @@ class _LoginFormState extends State<LoginForm> {
                   overlayColor: Colors.transparent,
                   shadowColor: Colors.transparent,
                 ),
-                onPressed: widget.onGoToForgotPassword,
+                onPressed:
+                    !_isCheckingStatus ? widget.onGoToForgotPassword : null,
                 child: Text(l10n.loginFormForgotPasswordButton),
               ),
             ),
@@ -164,21 +276,33 @@ class _LoginFormState extends State<LoginForm> {
               height:
                   ResponsiveValue<double>(
                     context,
-                    defaultValue: AppDimensions.largeSpacing, // Desktop
+                    defaultValue: AppDimensions.largeSpacing,
                     conditionalValues: [
                       Condition.equals(name: MOBILE, value: 4.0),
                     ],
                   ).value,
             ),
             ElevatedButton(
-              onPressed: _onLoginAttempt,
-              child: Text(l10n.loginFormLoginButton),
+              onPressed: !_isCheckingStatus ? _onLoginAttempt : null,
+              child:
+                  _isCheckingStatus
+                      ? SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                      )
+                      : Text(l10n.loginFormLoginButton),
             ),
             SizedBox(
               height:
                   ResponsiveValue<double>(
                     context,
-                    defaultValue: AppDimensions.itemSpacing, // Desktop
+                    defaultValue: AppDimensions.itemSpacing,
                     conditionalValues: [
                       Condition.equals(name: MOBILE, value: 8.0),
                     ],
@@ -199,7 +323,7 @@ class _LoginFormState extends State<LoginForm> {
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
-                onPressed: widget.onGoogleLogin,
+                onPressed: !_isCheckingStatus ? widget.onGoogleLogin : null,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.darkTextColor,
                   side: BorderSide(color: AppColors.borderColor),
@@ -209,7 +333,7 @@ class _LoginFormState extends State<LoginForm> {
               height:
                   ResponsiveValue<double>(
                     context,
-                    defaultValue: AppDimensions.itemSpacing / 2, // Desktop
+                    defaultValue: AppDimensions.itemSpacing / 2,
                     conditionalValues: [
                       Condition.equals(name: MOBILE, value: 10.0),
                     ],
@@ -236,7 +360,7 @@ class _LoginFormState extends State<LoginForm> {
                     overlayColor: Colors.transparent,
                     shadowColor: Colors.transparent,
                   ),
-                  onPressed: widget.onGoToRegister,
+                  onPressed: !_isCheckingStatus ? widget.onGoToRegister : null,
                   child: Text(l10n.loginFormCreateAccountButton),
                 ),
               ],

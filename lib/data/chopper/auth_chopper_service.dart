@@ -1,4 +1,7 @@
 import 'package:chopper/chopper.dart';
+import 'package:fe_core_vips/data/chopper/functional_request_interceptor.dart';
+
+import '/data/chopper/token_inteceptor.dart';
 import '/core/config/app_config.dart';
 import '/data/data.dart';
 import 'custom_json_converter.dart';
@@ -7,15 +10,23 @@ part 'auth_chopper_service.chopper.dart';
 
 @ChopperApi(baseUrl: '')
 abstract class AuthChopperService extends ChopperService {
-  static AuthChopperService create([ChopperClient? client]) {
+  static AuthChopperService create(
+    AuthLocalDataSource localDataSource, [
+    ChopperClient? client,
+  ]) {
     final defaultClient =
         client ??
         ChopperClient(
           baseUrl: Uri.parse(AppConfig.baseUrl),
           services: [_$AuthChopperService()],
           converter: CustomJsonConverter(),
-          errorConverter: JsonConverter(),
-          interceptors: [HttpLoggingInterceptor()],
+          errorConverter: JsonConverter(), // O tu CustomJsonConverter
+          interceptors: [
+            FunctionalAsBaseInterceptor(
+              getTokenLogicInterceptor(localDataSource),
+            ),
+            HttpLoggingInterceptor(),
+          ],
         );
     return _$AuthChopperService(defaultClient);
   }
@@ -84,5 +95,10 @@ abstract class AuthChopperService extends ChopperService {
   @DELETE(path: ApiEndpoints.deleteUser)
   Future<Response<GeneralResponseModel>> deleteUser({
     @Path('id') required String userId,
+  });
+
+  @GET(path: ApiEndpoints.checkSessionStatus)
+  Future<Response<SessionStatusResponseModel>> checkSessionStatus({
+    @Path('email') required String email,
   });
 }

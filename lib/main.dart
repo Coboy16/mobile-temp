@@ -5,7 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:fe_core_vips/core/l10n/app_localizations.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
 import '/presentation/routes/app_router.dart';
@@ -35,6 +35,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentLocale = context.watch<LocaleBloc>().state.locale;
+    final themeBloc = context.watch<ThemeBloc>();
+
     return MaterialApp.router(
       builder:
           (context, child) => ResponsiveBreakpoints.builder(
@@ -58,7 +60,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme(),
       darkTheme: AppTheme.darkTheme(),
-      themeMode: ThemeMode.system,
+      themeMode: themeBloc.themeMode,
     );
   }
 }

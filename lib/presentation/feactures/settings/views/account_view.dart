@@ -1,24 +1,29 @@
-import 'package:fe_core_vips/presentation/resources/colors.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:fe_core_vips/core/l10n/app_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '/presentation/feactures/perfil/perfil.dart';
+import '/presentation/resources/colors.dart';
 
 class AccountView extends StatelessWidget {
   const AccountView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    bool isMobilePlatform = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
     final localizations = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.all(20.0),
+      padding: EdgeInsets.all(isMobilePlatform ? 10.0 : 20.0),
       child: Container(
-        padding: const EdgeInsets.all(20.0),
+        padding: EdgeInsets.all(isMobilePlatform ? 10.0 : 20.0),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8.0),

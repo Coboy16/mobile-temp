@@ -157,4 +157,15 @@ final class _$AuthChopperService extends AuthChopperService {
     final Request $request = Request('DELETE', $url, client.baseUrl);
     return client.send<GeneralResponseModel, GeneralResponseModel>($request);
   }
+
+  @override
+  Future<Response<SessionStatusResponseModel>> checkSessionStatus({
+    required String email,
+  }) {
+    final Uri $url = Uri.parse('/auth/session/${email}');
+    final Request $request = Request('GET', $url, client.baseUrl);
+    return client.send<SessionStatusResponseModel, SessionStatusResponseModel>(
+      $request,
+    );
+  }
 }

@@ -1,5 +1,6 @@
 export './fcm_bloc/fcm_bloc.dart';
 export './locale_bloc/locale_bloc.dart';
+export './theme_bloc/theme_bloc.dart';
 
 //bloc - feactures
 export '../feactures/auth/bloc/blocs.dart';
@@ -16,3 +17,6 @@ export '../feactures/perfil/bloc/blocs.dart';
 
 //settings
 export '/presentation/feactures/settings/bloc/bloc.dart';
+
+//request
+export '../feactures/request/bloc/bloc.dart';

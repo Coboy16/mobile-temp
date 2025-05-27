@@ -8,7 +8,7 @@ class LoginWithGoogleUseCase {
 
   LoginWithGoogleUseCase(this.repository);
 
-  Future<Either<Failure, GoogleUserEntity>> call({
+  Future<Either<Failure, UserEntity>> call({
     required String idToken,
     required String email,
   }) async {

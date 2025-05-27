@@ -17,3 +17,12 @@ class ChangeLocale extends LocaleEvent {
 }
 
 class ClearLocale extends LocaleEvent {}
+
+class InitializeLocaleFromSystem extends LocaleEvent {
+  final Locale systemLocale;
+
+  const InitializeLocaleFromSystem(this.systemLocale);
+
+  @override
+  List<Object> get props => [systemLocale];
+}

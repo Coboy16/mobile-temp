@@ -15,3 +15,5 @@ class CheckUserLockStatusRequested extends CheckLockStatusEvent {
   @override
   List<Object> get props => [email];
 }
+
+class ResetCheckLockStatus extends CheckLockStatusEvent {}
