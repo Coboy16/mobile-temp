@@ -191,7 +191,8 @@ class AppRouter {
             name: AppRoutes.homeRequestName,
             pageBuilder:
                 (context, state) => NoTransitionPage(
-                  child: const RequestScreen(
+                  child: const SolicitudScreen(
+                    // child: const RequestScreen(
                     key: ValueKey(AppSidebarMenuRoutes.solicitudes),
                   ),
                   key: state.pageKey,

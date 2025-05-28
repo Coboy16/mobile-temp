@@ -14,7 +14,7 @@ class CalculatedEndDateDisplay extends StatelessWidget {
       final month = DateFormat('MMMM', 'es').format(endDate!);
       final year = endDate!.year.toString().substring(2);
 
-      displayText = '$day de $month del $year';
+      displayText = '$day de $month del 20$year';
     } else {
       displayText = 'Pendiente de cálculo';
     }

@@ -59,4 +59,21 @@ class AppColors {
 
   static const Color deleteButtonText = Color.fromARGB(255, 234, 25, 46);
   static const Color deleteButtonBorder = Color.fromARGB(255, 214, 30, 49);
+
+  //solcitudes colors
+  static const Color pageBackgroundColor = Color(0xFFF5F7FA);
+  static const Color cardBackgroundColor = Colors.white;
+  static const Color primaryTextColor = Color(0xFF333333);
+  static const Color secondaryTextColor = Color(0xFF757575);
+  static const Color accentPurpleColor = Color(0xFF673AB7);
+  static const Color statusPendienteTagBgColor = Color(0xFFFFF9C4);
+  static const Color statusPendienteTagTextColor = Color(0xFFF57F17);
+  static const Color nivelTagBgColor = Color(0xFFEEEEEE);
+  static const Color nivelTagTextColor = Color(0xFF616161);
+  static const Color appGreenColor = Color(0xFF4CAF50);
+  static const Color appRedColor = Color(0xFFF44336);
+  static const Color appBlueColor = Color(0xFF2196F3);
+  static const Color appYellowColor = Color(0xFFFFC107);
+  static const Color appGrayColor = Color(0xFFBDBDBD);
+  static const Color lightGrayBorderColor = Color(0xFFE0E0E0);
 }

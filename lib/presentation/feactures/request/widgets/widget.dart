@@ -20,3 +20,14 @@ export './request/table/filters/tab_filters_widgets.dart';
 export './request/table/pagination_controls_widget.dart';
 export './request/table/request_card_widget.dart';
 export './request/table/request_table_widget.dart';
+
+//solicitude
+export './solicitude/acciones_card.dart';
+export './solicitude/card_wrapper.dart';
+export './solicitude/indicadores_card.dart';
+export './solicitude/informacion_adicional_card.dart';
+export './solicitude/left_column_content.dart';
+export './solicitude/right_column_content.dart';
+export './solicitude/seguimiento_card.dart';
+export './solicitude/solicitud_info_card.dart';
+export './solicitude/timeline_event_widget.dart';
