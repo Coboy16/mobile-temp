@@ -11,14 +11,15 @@ class AccionesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CardWrapper(
+      padding: const EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Acciones',
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
               color: AppColors.primaryTextColor,
             ),
           ),
@@ -26,32 +27,32 @@ class AccionesCard extends StatelessWidget {
           _buildActionButton(
             context,
             text: 'Aprobar Solicitud',
-            icon: LucideIcons.check,
-            color: AppColors.appGreenColor,
+            icon: LucideIcons.circleCheck,
+            color: const Color.fromARGB(255, 45, 162, 86),
             isFilled: true,
             onPressed: () {},
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           _buildActionButton(
             context,
             text: 'Rechazar Solicitud',
-            icon: LucideIcons.x,
+            icon: LucideIcons.circleX,
             color: AppColors.appRedColor,
             onPressed: () {},
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           _buildActionButton(
             context,
             text: 'Editar Solicitud',
-            icon: LucideIcons.pencil,
+            icon: LucideIcons.squarePen,
             color: AppColors.primaryTextColor,
             onPressed: () {},
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           _buildActionButton(
             context,
             text: 'Eliminar',
-            icon: LucideIcons.trash2,
+            icon: LucideIcons.trash,
             color: AppColors.appRedColor,
             onPressed: () {},
           ),
@@ -73,31 +74,32 @@ class AccionesCard extends StatelessWidget {
       child:
           isFilled
               ? ElevatedButton.icon(
-                icon: Icon(icon, size: 18),
+                icon: Icon(icon, size: 16),
                 label: Text(
                   text,
                   style: const TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: color,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                   ),
+                  elevation: 0,
                 ),
                 onPressed: onPressed,
               )
               : OutlinedButton.icon(
-                icon: Icon(icon, size: 18, color: color),
+                icon: Icon(icon, size: 16, color: color),
                 label: Text(
                   text,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     color:
                         color == AppColors.appRedColor
                             ? color
@@ -110,11 +112,13 @@ class AccionesCard extends StatelessWidget {
                         color == AppColors.appRedColor
                             ? color
                             : AppColors.lightGrayBorderColor,
+                    width: 1,
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                   ),
+                  backgroundColor: Colors.transparent,
                 ),
                 onPressed: onPressed,
               ),

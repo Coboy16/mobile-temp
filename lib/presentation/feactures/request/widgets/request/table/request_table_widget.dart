@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:data_table_2/data_table_2.dart';
 
@@ -126,84 +127,161 @@ class _RequestsTableAreaState extends State<RequestsTableArea> {
       Radius.circular(borderRadiusValue),
     );
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: borderRadius,
-        border: Border.all(color: Colors.grey.shade200, width: 1),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isMobile = constraints.maxWidth < 600;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: borderRadius,
+            border: Border.all(color: Colors.grey.shade200, width: 1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Encabezado y filtros (siempre visibles)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Listado de Solicitudes',
+                      style: AppTextStyles.titleSolicitudes,
+                    ),
+                    const SizedBox(height: 16),
+                    // Filtros y cambio de vista
+                    FilterHeaderWidget(
+                      initialTabIndex: _selectedTabIndex,
+                      initialListView: _isListView,
+                      onTabChanged: (index) {
+                        setState(() {
+                          _selectedTabIndex = index;
+                        });
+                        context.read<RequestFilterBloc>().add(
+                          StatusTabChanged(index),
+                        );
+                      },
+                      onViewChanged: (isListView) {
+                        setState(() {
+                          _isListView = isListView;
+                        });
+                      },
+                      onFilterByDate: () {
+                        _showDateRangePicker(context);
+                      },
+                      onDownload: () {},
+                    ),
+                  ],
+                ),
+              ),
+
+              // Contenido principal
+              BlocBuilder<RequestFilterBloc, RequestFilterState>(
+                builder: (context, state) {
+                  // Inicializar _sortedRequests si está vacío
+                  if (_sortedRequests.isEmpty &&
+                      state.filteredRequests.isNotEmpty) {
+                    _sortedRequests = List.from(state.filteredRequests);
+                  }
+
+                  if (isMobile) {
+                    return _buildMobileView(state.filteredRequests);
+                  } else {
+                    return _buildDesktopView(state.filteredRequests);
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Vista desktop (sin cambios)
+  Widget _buildDesktopView(List<RequestData> requests) {
+    const double borderRadiusValue = 8.0;
+
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(borderRadiusValue),
+        bottomRight: Radius.circular(borderRadiusValue),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Encabezado y filtros (siempre visibles)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Listado de Solicitudes',
-                  style: AppTextStyles.titleSolicitudes,
-                ),
-                const SizedBox(height: 16),
-                // Filtros y cambio de vista
-                FilterHeaderWidget(
-                  initialTabIndex: _selectedTabIndex,
-                  initialListView: _isListView,
-                  onTabChanged: (index) {
-                    setState(() {
-                      _selectedTabIndex = index;
-                    });
-                    context.read<RequestFilterBloc>().add(
-                      StatusTabChanged(index),
-                    );
-                  },
-                  onViewChanged: (isListView) {
-                    setState(() {
-                      _isListView = isListView;
-                    });
-                  },
-                  onFilterByDate: () {
-                    _showDateRangePicker(context);
-                  },
-                  onDownload: () {},
-                ),
-              ],
-            ),
-          ),
-
-          // Usamos BlocBuilder para reconstruir esta parte cuando cambia el estado del filtro
-          // Usamos BlocBuilder para reconstruir esta parte cuando cambia el estado del filtro
-          BlocBuilder<RequestFilterBloc, RequestFilterState>(
-            builder: (context, state) {
-              // Inicializar _sortedRequests si está vacío
-              if (_sortedRequests.isEmpty &&
-                  state.filteredRequests.isNotEmpty) {
-                _sortedRequests = List.from(state.filteredRequests);
-              }
-
-              return ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(borderRadiusValue),
-                  bottomRight: Radius.circular(borderRadiusValue),
-                ),
-                child: Container(
-                  height: 600, // Altura fija para evitar problemas de layout
-                  padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0),
-                  child:
-                      _isListView
-                          ? _buildDataTable2View(state.filteredRequests)
-                          : _buildCardsView(state.filteredRequests),
-                ),
-              );
-            },
-          ),
-        ],
+      child: Container(
+        height: 600, // Altura fija para evitar problemas de layout
+        padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 16.0),
+        child:
+            _isListView
+                ? _buildDataTable2View(requests)
+                : _buildCardsView(requests),
       ),
     );
   }
 
-  // --- Vista de Tabla con DataTable2 ---
+  // Vista móvil sin paginación interna
+  Widget _buildMobileView(List<RequestData> requests) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 400, maxHeight: 600),
+      padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
+      child:
+          requests.isEmpty
+              ? _buildEmptyState()
+              : ListView.builder(
+                shrinkWrap: true,
+                itemCount: requests.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      bottom: index == requests.length - 1 ? 0 : 16.0,
+                    ),
+                    child: RequestCard(
+                      request: requests[index],
+                      onViewDetails: () {
+                        context.go('/home/request/${requests[index].code}');
+                      },
+                      onActionSelected: (action) {
+                        /* TODO */
+                      },
+                    ),
+                  );
+                },
+              ),
+    );
+  }
+
+  // Estado vacío
+  Widget _buildEmptyState() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(LucideIcons.inbox, size: 48, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              'No hay solicitudes para mostrar',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Intenta ajustar los filtros o crear una nueva solicitud',
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- Vista de Tabla con DataTable2 (sin cambios) ---
   Widget _buildDataTable2View(List<RequestData> requests) {
     // Usar requests ordenadas si existen, sino usar las originales
     final displayRequests =
@@ -373,7 +451,9 @@ class _RequestsTableAreaState extends State<RequestsTableArea> {
                     itemBuilder: (context, index) {
                       return RequestCard(
                         request: requests[index],
-                        onViewDetails: () {},
+                        onViewDetails: () {
+                          context.go('/home/request/${requests[index].code}');
+                        },
                         onActionSelected: (action) {},
                       );
                     },
@@ -390,7 +470,7 @@ class _RequestsTableAreaState extends State<RequestsTableArea> {
                         child: RequestCard(
                           request: requests[index],
                           onViewDetails: () {
-                            /* TODO */
+                            context.go('/home/request/${requests[index].code}');
                           },
                           onActionSelected: (action) {
                             /* TODO */
@@ -404,7 +484,7 @@ class _RequestsTableAreaState extends State<RequestsTableArea> {
     );
   }
 
-  // DataRow2 con mejor configuración
+  // DataRow2 con mejor configuración (sin cambios)
   DataRow2 _buildDataRow2(RequestData request) {
     return DataRow2(
       decoration: BoxDecoration(
@@ -456,7 +536,7 @@ class _RequestsTableAreaState extends State<RequestsTableArea> {
     );
   }
 
-  // Resto de métodos helper con estilos mejorados
+  // Resto de métodos helper sin cambios...
   Widget _buildTypeCell(IconData icon, String type, String date) {
     return Row(
       children: [
@@ -552,7 +632,7 @@ class _RequestsTableAreaState extends State<RequestsTableArea> {
       children: [
         InkWell(
           onTap: () {
-            /* TODO: Ver detalles */
+            context.go('/home/request/${request.code}');
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),

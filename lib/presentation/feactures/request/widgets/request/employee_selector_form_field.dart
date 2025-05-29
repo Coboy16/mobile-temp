@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 
@@ -27,7 +26,12 @@ class EmployeeSelectorFormField extends StatefulWidget {
       _EmployeeSelectorFormFieldState();
 }
 
-class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
+class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField>
+    with AutomaticKeepAliveClientMixin {
+  // AutomaticKeepAliveClientMixin ayuda a mantener el estado
+  @override
+  bool get wantKeepAlive => true;
+
   final TextEditingController _textController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   final GlobalKey _fieldKey = GlobalKey();
@@ -36,8 +40,8 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
   bool _isDropdownOpen = false;
   Employee? _selectedEmployee;
   FormFieldState<Employee>? _fieldState;
-  bool _isSearching = false;
   bool _isProcessingTap = false;
+  bool _hasStartedTyping = false;
 
   @override
   void initState() {
@@ -67,9 +71,9 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
   }
 
   void _updateDisplayText() {
-    if (_selectedEmployee != null && !_isSearching) {
+    if (_selectedEmployee != null && !_hasStartedTyping) {
       final newText =
-          'Código ${_selectedEmployee!.id} | ${_selectedEmployee!.role}';
+          '${_selectedEmployee!.name}\nCódigo ${_selectedEmployee!.id} | ${_selectedEmployee!.role}';
       debugPrint('🔄 EmployeeSelector: Updating display text to: $newText');
       _textController.text = newText;
     }
@@ -77,14 +81,13 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
 
   void _onFocusChange() {
     debugPrint(
-      '👁️ EmployeeSelector: Focus changed - hasFocus: ${_focusNode.hasFocus}, isSearching: $_isSearching, selectedEmployee: ${_selectedEmployee?.name}',
+      '👁️ EmployeeSelector: Focus changed - hasFocus: ${_focusNode.hasFocus}, hasStartedTyping: $_hasStartedTyping, selectedEmployee: ${_selectedEmployee?.name}',
     );
 
     if (_focusNode.hasFocus) {
       debugPrint('🎯 EmployeeSelector: Field gained focus');
 
-      // Solo permitir abrir si no hay empleado seleccionado O estamos en modo búsqueda
-      if (_selectedEmployee == null || _isSearching) {
+      if (_selectedEmployee == null || _hasStartedTyping) {
         debugPrint('✅ EmployeeSelector: Conditions met to show dropdown');
         if (!_isDropdownOpen) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -94,18 +97,16 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
             _showOverlay();
           });
 
-          // Si estamos buscando, no limpiar la búsqueda anterior
-          if (!_isSearching) {
+          if (!_hasStartedTyping) {
             _bloc.add(const SearchEmployees(''));
           }
         }
       } else {
         debugPrint(
-          '❌ EmployeeSelector: Employee selected and not searching - preventing dropdown',
+          '❌ EmployeeSelector: Employee selected and not typing - preventing dropdown',
         );
-        // Si hay empleado seleccionado y no estamos buscando, quitar el foco inmediatamente
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_focusNode.hasFocus && !_isSearching) {
+          if (_focusNode.hasFocus && !_hasStartedTyping) {
             debugPrint('🚫 EmployeeSelector: Removing focus from field');
             _focusNode.unfocus();
           }
@@ -115,16 +116,12 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
       debugPrint('😴 EmployeeSelector: Field lost focus');
 
       if (_isDropdownOpen) {
-        // Si pierde el foco sin seleccionar y estaba buscando, restaurar el texto
-        if (_selectedEmployee != null && _isSearching) {
+        if (_selectedEmployee != null && _hasStartedTyping) {
           debugPrint('🔙 EmployeeSelector: Restoring text after lost focus');
-          setState(() {
-            _isSearching = false;
-          });
+          _hasStartedTyping = false;
           _updateDisplayText();
         }
 
-        // Delay para permitir la selección antes de cerrar
         Future.delayed(const Duration(milliseconds: 200), () {
           if (!_focusNode.hasFocus) {
             debugPrint('⏰ EmployeeSelector: Delayed removal of overlay');
@@ -137,35 +134,17 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
 
   void _onTextChanged(String value) {
     debugPrint(
-      '📝 EmployeeSelector: Text changed to: "$value", isSearching: $_isSearching, isDropdownOpen: $_isDropdownOpen',
+      '📝 EmployeeSelector: Text changed to: "$value", hasStartedTyping: $_hasStartedTyping, isDropdownOpen: $_isDropdownOpen',
     );
 
-    // IMPORTANTE: Si no estamos buscando pero el texto cambió, significa que el usuario empezó a escribir
-    if (!_isSearching && value.isNotEmpty && _selectedEmployee == null) {
+    if (!_hasStartedTyping && value.isNotEmpty && _selectedEmployee == null) {
       debugPrint(
         '🔍 EmployeeSelector: User started typing, enabling search mode',
       );
-
-      // Usar setState pero mantener el foco
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {
-            _isSearching = true;
-          });
-
-          // Asegurar que el foco se mantiene después del rebuild
-          if (!_focusNode.hasFocus) {
-            debugPrint(
-              '🎯 EmployeeSelector: Restoring focus after search mode activation',
-            );
-            _focusNode.requestFocus();
-          }
-        }
-      });
+      _hasStartedTyping = true;
     }
 
-    // Buscar si estamos en modo búsqueda
-    if (_isSearching && _isDropdownOpen) {
+    if (_isDropdownOpen) {
       debugPrint('🔍 EmployeeSelector: Searching for: "$value"');
       _bloc.add(SearchEmployees(value));
     }
@@ -173,12 +152,12 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
 
   void _startSearching() {
     debugPrint('🔍 EmployeeSelector: Starting search mode');
-    setState(() {
-      _isSearching = true;
-    });
+
+    _hasStartedTyping = true;
     _textController.clear();
 
-    // Usar addPostFrameCallback para asegurar que el estado se actualice antes de enfocar
+    setState(() {});
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         debugPrint('🎯 EmployeeSelector: Requesting focus for search');
@@ -189,13 +168,14 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
 
   void _onEmployeeSelected(Employee employee) {
     debugPrint('✅ EmployeeSelector: Employee selected: ${employee.name}');
+
+    _hasStartedTyping = false;
+
     setState(() {
       _selectedEmployee = employee;
-      _isSearching = false;
     });
     _updateDisplayText();
 
-    // Actualizar el FormField
     if (_fieldState != null) {
       _fieldState!.didChange(employee);
     }
@@ -207,9 +187,11 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
 
   void _clearSelection() {
     debugPrint('🗑️ EmployeeSelector: Clearing selection');
+
+    _hasStartedTyping = false;
+
     setState(() {
       _selectedEmployee = null;
-      _isSearching = false;
     });
     _textController.clear();
 
@@ -223,22 +205,19 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
 
   void _onFieldTapped() {
     debugPrint(
-      '👆 EmployeeSelector: Field tapped - selectedEmployee: ${_selectedEmployee?.name}, isSearching: $_isSearching, isProcessingTap: $_isProcessingTap',
+      '👆 EmployeeSelector: Field tapped - selectedEmployee: ${_selectedEmployee?.name}, hasStartedTyping: $_hasStartedTyping, isProcessingTap: $_isProcessingTap',
     );
 
-    // Evitar múltiples taps
     if (_isProcessingTap) {
       debugPrint('🚫 EmployeeSelector: Tap already being processed, ignoring');
       return;
     }
 
-    // Si hay un empleado seleccionado y no estamos buscando, iniciar búsqueda
-    if (_selectedEmployee != null && !_isSearching) {
+    if (_selectedEmployee != null && !_hasStartedTyping) {
       debugPrint('🔄 EmployeeSelector: Switching to search mode');
       _isProcessingTap = true;
       _startSearching();
 
-      // Reset processing flag después de un breve delay
       Future.delayed(const Duration(milliseconds: 300), () {
         _isProcessingTap = false;
       });
@@ -289,83 +268,11 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: Colors.grey[300]!),
                       ),
-                      child: BlocBuilder<
-                        EmployeeSearchBloc,
-                        EmployeeSearchState
-                      >(
-                        bloc: _bloc,
-                        builder: (context, state) {
-                          debugPrint(
-                            '🏗️ EmployeeSelector: Building dropdown content - state: ${state.runtimeType}',
-                          );
-
-                          if (state is EmployeeSearchLoading) {
-                            return const SizedBox(
-                              height: 100,
-                              child: Center(
-                                child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }
-
-                          if (state is EmployeeSearchLoaded) {
-                            debugPrint(
-                              '📋 EmployeeSelector: Showing ${state.employees.length} employees',
-                            );
-
-                            if (state.employees.isEmpty) {
-                              return Container(
-                                padding: const EdgeInsets.all(20),
-                                child: Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        LucideIcons.userX,
-                                        color: Colors.grey[400],
-                                        size: 48,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        'No se encontraron empleados',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }
-
-                            return ListView.builder(
-                              padding: EdgeInsets.zero,
-                              shrinkWrap: true,
-                              itemCount: state.employees.length,
-                              itemBuilder: (context, index) {
-                                final employee = state.employees[index];
-                                return _EmployeeListItem(
-                                  employee: employee,
-                                  onTap: () {
-                                    debugPrint(
-                                      '👆 EmployeeSelector: Employee item tapped: ${employee.name}',
-                                    );
-                                    _onEmployeeSelected(employee);
-                                  },
-                                );
-                              },
-                            );
-                          }
-
-                          return const SizedBox.shrink();
-                        },
+                      child: BlocProvider.value(
+                        value: _bloc,
+                        child: _DropdownContent(
+                          onEmployeeSelected: _onEmployeeSelected,
+                        ),
                       ),
                     ),
                   ),
@@ -377,10 +284,8 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
 
     if (mounted) {
       Overlay.of(context).insert(_overlayEntry!);
-      setState(() {
-        _isDropdownOpen = true;
-      });
-      debugPrint('✅ EmployeeSelector: Overlay inserted and state updated');
+      _isDropdownOpen = true;
+      debugPrint('✅ EmployeeSelector: Overlay inserted');
     }
   }
 
@@ -389,33 +294,33 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
     _overlayEntry?.remove();
     _overlayEntry = null;
     if (mounted) {
-      setState(() {
-        _isDropdownOpen = false;
-      });
-      debugPrint('✅ EmployeeSelector: Overlay removed and state updated');
+      _isDropdownOpen = false;
+      debugPrint('✅ EmployeeSelector: Overlay removed');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(
+      context,
+    ); // IMPORTANTE: Llamar super.build para AutomaticKeepAliveClientMixin
+
     debugPrint(
-      '🏗️ EmployeeSelector: Building widget - selectedEmployee: ${_selectedEmployee?.name}, isSearching: $_isSearching',
+      '🏗️ EmployeeSelector: Building widget - selectedEmployee: ${_selectedEmployee?.name}, hasStartedTyping: $_hasStartedTyping',
     );
 
-    return BlocProvider(
-      create: (context) => _bloc,
-      child: FormBuilderField<Employee>(
-        name: widget.name,
-        initialValue: widget.initialValue,
-        validator: widget.validator,
-        builder: (FormFieldState<Employee> field) {
-          // Guardar referencia al FormFieldState
-          _fieldState = field;
+    return FormBuilderField<Employee>(
+      name: widget.name,
+      initialValue: widget.initialValue,
+      validator: widget.validator,
+      builder: (FormFieldState<Employee> field) {
+        _fieldState = field;
 
-          final isFieldDisabled = _selectedEmployee != null && !_isSearching;
-          debugPrint('🔒 EmployeeSelector: Field disabled: $isFieldDisabled');
+        final isFieldDisabled = _selectedEmployee != null && !_hasStartedTyping;
+        debugPrint('🔒 EmployeeSelector: Field disabled: $isFieldDisabled');
 
-          return Column(
+        return RepaintBoundary(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Stack(
@@ -426,80 +331,87 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
                       onTap: isFieldDisabled ? _onFieldTapped : null,
                       child: IgnorePointer(
                         ignoring: isFieldDisabled,
-                        child: TextFormField(
-                          key: const ValueKey('employee_search_field'),
-                          controller: _textController,
-                          focusNode: _focusNode,
-                          onChanged: _onTextChanged,
-                          decoration: InputDecoration(
-                            hintText:
-                                isFieldDisabled
-                                    ? null
-                                    : 'Buscar empleado por nombre o código',
-                            hintStyle: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 14,
-                            ),
-                            prefixIcon: Icon(
-                              LucideIcons.search,
-                              color: Colors.grey[600],
-                              size: 20,
-                            ),
-                            // NO ponemos suffixIcon aquí porque IgnorePointer lo bloquearía
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Colors.grey[300]!,
-                                width: 1,
+                        child: Focus(
+                          skipTraversal: isFieldDisabled,
+                          child: TextFormField(
+                            // CLAVE: Key que no cambie con rebuilds del padre
+                            key: ValueKey('employee_field_${widget.name}'),
+                            controller: _textController,
+                            maxLines: isFieldDisabled ? 2 : 1,
+                            minLines: 1,
+                            focusNode: _focusNode,
+                            onChanged: _onTextChanged,
+                            // Evitar que pierda foco en rebuilds del padre
+                            enableInteractiveSelection: true,
+                            decoration: InputDecoration(
+                              hintText:
+                                  isFieldDisabled
+                                      ? null
+                                      : 'Buscar empleado por nombre o código',
+                              hintStyle: TextStyle(
+                                fontSize: 14,
+                                height: isFieldDisabled ? 1.3 : 1.0,
+                                color: isFieldDisabled ? Colors.black87 : null,
                               ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Colors.grey[300]!,
-                                width: 1,
+                              prefixIcon: Icon(
+                                LucideIcons.search,
+                                color: Colors.grey[600],
+                                size: 20,
                               ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Theme.of(context).primaryColor,
-                                width: 2,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: isFieldDisabled ? 8 : 12,
                               ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Colors.red,
-                                width: 1,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                  width: 1,
+                                ),
                               ),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Colors.red,
-                                width: 2,
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                  width: 1,
+                                ),
                               ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                  color: Theme.of(context).primaryColor,
+                                  width: 2,
+                                ),
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: Colors.red,
+                                  width: 1,
+                                ),
+                              ),
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: Colors.red,
+                                  width: 2,
+                                ),
+                              ),
+                              filled: true,
+                              fillColor:
+                                  isFieldDisabled
+                                      ? Colors.grey[50]
+                                      : Colors.white,
+                              errorText: field.errorText,
                             ),
-                            filled: true,
-                            fillColor:
-                                isFieldDisabled
-                                    ? Colors.grey[50]
-                                    : Colors.white,
-                            errorText: field.errorText,
-                          ),
-                          style: TextStyle(
-                            color: isFieldDisabled ? Colors.black87 : null,
+                            style: TextStyle(
+                              color: isFieldDisabled ? Colors.black87 : null,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  // Botón X posicionado FUERA del IgnorePointer
                   if (_selectedEmployee != null)
                     Positioned(
                       right: 8,
@@ -522,7 +434,6 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
                         ),
                       ),
                     ),
-                  // Icono de chevron cuando no hay empleado seleccionado
                   if (_selectedEmployee == null)
                     Positioned(
                       right: 12,
@@ -541,9 +452,84 @@ class _EmployeeSelectorFormFieldState extends State<EmployeeSelectorFormField> {
                 ],
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DropdownContent extends StatelessWidget {
+  final Function(Employee) onEmployeeSelected;
+
+  const _DropdownContent({required this.onEmployeeSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<EmployeeSearchBloc, EmployeeSearchState>(
+      builder: (context, state) {
+        debugPrint(
+          '🏗️ DropdownContent: Building content - state: ${state.runtimeType}',
+        );
+
+        if (state is EmployeeSearchLoading) {
+          return const SizedBox(
+            height: 100,
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
           );
-        },
-      ),
+        }
+
+        if (state is EmployeeSearchLoaded) {
+          debugPrint(
+            '📋 DropdownContent: Showing ${state.employees.length} employees',
+          );
+
+          if (state.employees.isEmpty) {
+            return Container(
+              padding: const EdgeInsets.all(20),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(LucideIcons.userX, color: Colors.grey[400], size: 48),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No se encontraron empleados',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            itemCount: state.employees.length,
+            itemBuilder: (context, index) {
+              final employee = state.employees[index];
+              return _EmployeeListItem(
+                employee: employee,
+                onTap: () {
+                  debugPrint(
+                    '👆 DropdownContent: Employee item tapped: ${employee.name}',
+                  );
+                  onEmployeeSelected(employee);
+                },
+              );
+            },
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
     );
   }
 }

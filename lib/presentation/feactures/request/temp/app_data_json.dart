@@ -60,7 +60,7 @@ const String solicitudDataJsonString = '''
     ]
   },
   "informacionAdicional": {
-    "idSolicitud": "SOL-000001",
+    "idSolicitud": "REQ-001",
     "creadaPor": "María Rodríguez",
     "departamento": "Recepción"
   },

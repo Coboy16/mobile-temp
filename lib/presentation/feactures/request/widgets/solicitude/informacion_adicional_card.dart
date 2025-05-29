@@ -11,22 +11,23 @@ class InformacionAdicionalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CardWrapper(
+      padding: const EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Información Adicional',
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
               color: AppColors.primaryTextColor,
             ),
           ),
           const SizedBox(height: 16),
           _buildInfoItem('ID de Solicitud', info.idSolicitud),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
           _buildInfoItem('Creada por', info.creadaPor),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
           _buildInfoItem('Departamento', info.departamento),
         ],
       ),
@@ -39,14 +40,18 @@ class InformacionAdicionalCard extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 13, color: AppColors.secondaryTextColor),
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppColors.secondaryTextColor,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
         Text(
           value,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
             color: AppColors.primaryTextColor,
           ),
         ),

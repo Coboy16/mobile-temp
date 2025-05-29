@@ -11,14 +11,15 @@ class IndicadoresCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CardWrapper(
+      padding: const EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Indicadores',
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
               color: AppColors.primaryTextColor,
             ),
           ),
@@ -28,7 +29,7 @@ class IndicadoresCard extends StatelessWidget {
             indicadores.tiempoAtencion,
             '(promedio: ${indicadores.promedioTiempoAtencion})',
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           _buildIndicadorItem(
             'Cantidad de Solicitudes',
             '${indicadores.cantidadSolicitudesMes} en el último mes',
@@ -45,24 +46,28 @@ class IndicadoresCard extends StatelessWidget {
       children: [
         Text(
           title,
-          style: TextStyle(fontSize: 13, color: AppColors.secondaryTextColor),
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppColors.secondaryTextColor,
+            fontWeight: FontWeight.w500,
+          ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
         Row(
           children: [
             Text(
               value,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
                 color: AppColors.primaryTextColor,
               ),
             ),
             const SizedBox(width: 4),
             Text(
               subValue,
-              style: TextStyle(
-                fontSize: 13,
+              style: const TextStyle(
+                fontSize: 12,
                 color: AppColors.secondaryTextColor,
               ),
             ),

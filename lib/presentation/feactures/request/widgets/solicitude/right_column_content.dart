@@ -16,9 +16,9 @@ class RightColumnContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const AccionesCard(),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
         IndicadoresCard(indicadores: appData.indicadores),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
         InformacionAdicionalCard(info: appData.informacionAdicional),
       ],
     );

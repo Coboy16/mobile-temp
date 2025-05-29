@@ -79,45 +79,46 @@ class RequestScreen extends StatelessWidget {
     AppLocalizations localizations,
     ThemeData theme,
   ) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SizedBox(height: 10),
+        // Título y subtítulo
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AutoSizeText(
-                  'Solicitudes',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  maxLines: 1,
-                ),
-                const SizedBox(height: 4),
-                AutoSizeText(
-                  'Gestiona todas tus solicitudes desde aquí',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: Color(0xFF64748B),
-                    fontSize: 14,
-                  ),
-                  maxLines: 2,
-                ),
-              ],
+            AutoSizeText(
+              'Solicitudes',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
+              maxLines: 1,
+            ),
+            const SizedBox(height: 4),
+            AutoSizeText(
+              'Gestiona todas tus solicitudes desde aquí',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: Color(0xFF64748B),
+                fontSize: 14,
+              ),
+              maxLines: 2,
             ),
           ],
         ),
-
-        const Spacer(),
+        const SizedBox(height: 20),
+        // Botón de Nueva Solicitud
         Padding(
-          padding: const EdgeInsets.only(right: 10),
+          padding: const EdgeInsets.only(right: 20),
           child: SizedBox(
-            width: 50,
+            width: double.infinity,
             child: ElevatedButton.icon(
-              label: const Icon(LucideIcons.plus, size: 18),
+              icon: const Icon(LucideIcons.plus, size: 18),
+              label: const Text(
+                'Nueva Solicitud',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
               onPressed: () async {
                 await showSelectRequestTypeDialog(context);
               },
@@ -126,7 +127,7 @@ class RequestScreen extends StatelessWidget {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 12,
+                  vertical: 14,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.0),

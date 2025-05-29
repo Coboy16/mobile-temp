@@ -33,7 +33,7 @@ class RequestData {
 
 final List<RequestData> dummyRequests = [
   const RequestData(
-    code: '000001',
+    code: 'REQ-001',
     type: 'Vacaciones',
     typeDate: '15/03/2025',
     typeIcon: LucideIcons.umbrella,
@@ -47,7 +47,7 @@ final List<RequestData> dummyRequests = [
     status: 'Pendiente',
   ),
   const RequestData(
-    code: '000002',
+    code: 'REQ-002',
     type: 'Cambio Alojamiento',
     typeDate: '10/03/2025',
     typeIcon: LucideIcons.bomb,
@@ -61,7 +61,7 @@ final List<RequestData> dummyRequests = [
     status: 'Aprobada',
   ),
   const RequestData(
-    code: '000003',
+    code: 'REQ-003',
     type: 'Uniformes',
     typeDate: '14/03/2025',
     typeIcon: LucideIcons.shirt,
@@ -75,7 +75,7 @@ final List<RequestData> dummyRequests = [
     status: 'Rechazada',
   ),
   const RequestData(
-    code: '000004',
+    code: 'REQ-004',
     type: 'Permiso',
     typeDate: '13/03/2025',
     typeIcon: LucideIcons.calendarClock,
@@ -89,7 +89,7 @@ final List<RequestData> dummyRequests = [
     status: 'Pendiente',
   ),
   const RequestData(
-    code: '000005',
+    code: 'REQ-005',
     type: 'Licencia Médica',
     typeDate: '16/03/2025',
     typeIcon: LucideIcons.activity,
@@ -103,7 +103,7 @@ final List<RequestData> dummyRequests = [
     status: 'Aprobada',
   ),
   const RequestData(
-    code: '000006',
+    code: 'REQ-006',
     type: 'Vacaciones',
     typeDate: '12/03/2025',
     typeIcon: LucideIcons.umbrella,
@@ -117,7 +117,7 @@ final List<RequestData> dummyRequests = [
     status: 'Rechazada',
   ),
   const RequestData(
-    code: '000007',
+    code: 'REQ-007',
     type: 'Permiso',
     typeDate: '08/03/2025',
     typeIcon: LucideIcons.calendarClock,
@@ -131,7 +131,7 @@ final List<RequestData> dummyRequests = [
     status: 'Pendiente',
   ),
   const RequestData(
-    code: '000008',
+    code: 'REQ-008',
     type: 'Vacaciones',
     typeDate: '05/03/2025',
     typeIcon: LucideIcons.umbrella,
@@ -145,7 +145,7 @@ final List<RequestData> dummyRequests = [
     status: 'Aprobada',
   ),
   const RequestData(
-    code: '000009',
+    code: 'REQ-009',
     type: 'Licencia Médica',
     typeDate: '18/03/2025',
     typeIcon: LucideIcons.activity,
@@ -159,7 +159,7 @@ final List<RequestData> dummyRequests = [
     status: 'Rechazada',
   ),
   const RequestData(
-    code: '000010',
+    code: 'REQ-010',
     type: 'Uniformes',
     typeDate: '20/03/2025',
     typeIcon: LucideIcons.shirt,

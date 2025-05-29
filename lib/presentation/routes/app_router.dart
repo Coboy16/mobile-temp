@@ -69,6 +69,12 @@ class AppRoutes {
   static const String homeProfileUserSystemName = 'homeProfileUserSystem';
   static const String homeAyudaSoporteName = 'homeAyudaSoporte';
   static const String homeConfiguracionName = 'homeConfiguracion';
+
+  static const String homeSubRequestDetail = 'request-detail';
+  static const String homeRequestDetailName = 'homeRequestDetail';
+  static String getRequestDetailPath(String requestId) {
+    return '${AppRoutes.home}/${AppRoutes.homeSubRequest}/$requestId';
+  }
 }
 
 class AppRouter {
@@ -191,13 +197,27 @@ class AppRouter {
             name: AppRoutes.homeRequestName,
             pageBuilder:
                 (context, state) => NoTransitionPage(
-                  child: const SolicitudScreen(
-                    // child: const RequestScreen(
+                  child: const RequestScreen(
                     key: ValueKey(AppSidebarMenuRoutes.solicitudes),
                   ),
                   key: state.pageKey,
                   name: state.name,
                 ),
+          ),
+          GoRoute(
+            path: '${AppRoutes.home}/${AppRoutes.homeSubRequest}/:requestId',
+            name: AppRoutes.homeRequestDetailName,
+            pageBuilder: (context, state) {
+              final requestId = state.pathParameters['requestId'] ?? '';
+              return NoTransitionPage(
+                child: SolicitudScreen(
+                  key: ValueKey('solicitud-$requestId'),
+                  requestId: requestId,
+                ),
+                key: state.pageKey,
+                name: state.name,
+              );
+            },
           ),
           GoRoute(
             path: '${AppRoutes.home}/${AppRoutes.homeSubCheckPayment}',

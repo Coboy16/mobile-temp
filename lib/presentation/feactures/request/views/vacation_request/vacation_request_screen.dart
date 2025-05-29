@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
+import '/data/data.dart';
 import '/presentation/feactures/request/widgets/widget.dart';
 
 class VacationRequestModal extends StatefulWidget {
@@ -16,6 +18,14 @@ class VacationRequestModal extends StatefulWidget {
 class _VacationRequestModalState extends State<VacationRequestModal> {
   final _formKey = GlobalKey<FormBuilderState>();
   DateTime? _calculatedEndDate;
+
+  // Nueva variable para manejar el empleado seleccionado fuera del FormBuilder
+  Employee? _selectedEmployee;
+  String? _employeeError;
+
+  // Variables para validación manual de fecha de inicio y cantidad de días
+  String? _startDateError;
+  String? _numberOfDaysError;
 
   @override
   void initState() {
@@ -31,33 +41,121 @@ class _VacationRequestModalState extends State<VacationRequestModal> {
         _formKey.currentState?.fields['number_of_days']?.value as int?;
 
     if (startDate != null && numberOfDays != null && numberOfDays > 0) {
-      setState(() {
-        _calculatedEndDate = startDate.add(Duration(days: numberOfDays - 1));
-      });
+      final newEndDate = startDate.add(Duration(days: numberOfDays - 1));
+      if (_calculatedEndDate != newEndDate) {
+        setState(() {
+          _calculatedEndDate = newEndDate;
+        });
+      }
     } else {
-      setState(() {
-        _calculatedEndDate = null;
-      });
+      if (_calculatedEndDate != null) {
+        setState(() {
+          _calculatedEndDate = null;
+        });
+      }
     }
   }
 
+  void _onDateOrDaysChanged() {
+    _formKey.currentState?.save();
+    _updateCalculatedEndDate();
+
+    // Limpiar errores cuando el usuario cambie los valores
+    setState(() {
+      _startDateError = null;
+      _numberOfDaysError = null;
+    });
+  }
+
+  void _onEmployeeChanged(Employee? employee) {
+    debugPrint('📝 VacationModal: Employee changed to: ${employee?.name}');
+    setState(() {
+      _selectedEmployee = employee;
+      _employeeError = null; // Limpiar error cuando se selecciona empleado
+    });
+  }
+
+  bool _validateEmployee() {
+    if (_selectedEmployee == null) {
+      setState(() {
+        _employeeError = 'Debe seleccionar un empleado';
+      });
+      return false;
+    }
+    setState(() {
+      _employeeError = null;
+    });
+    return true;
+  }
+
+  bool _validateDateAndDays() {
+    final now = DateTime.now();
+    final todayMidnight = DateTime(now.year, now.month, now.day);
+    final fifteenDaysFromToday = todayMidnight.add(const Duration(days: 15));
+
+    final startDate =
+        _formKey.currentState?.fields['start_date']?.value as DateTime?;
+    final numberOfDays =
+        _formKey.currentState?.fields['number_of_days']?.value as int?;
+
+    bool isValid = true;
+
+    // Validar fecha de inicio
+    if (startDate == null) {
+      setState(() {
+        _startDateError = '- La fecha de inicio es obligatoria';
+      });
+      isValid = false;
+    } else if (startDate.isBefore(fifteenDaysFromToday)) {
+      setState(() {
+        _startDateError =
+            'La solicitud debe ser con al menos 15 días de anticipación';
+      });
+      isValid = false;
+    } else {
+      setState(() {
+        _startDateError = null;
+      });
+    }
+
+    // Validar cantidad de días
+    if (numberOfDays == null) {
+      setState(() {
+        _numberOfDaysError = '- Debe seleccionar la cantidad de días';
+      });
+      isValid = false;
+    } else {
+      setState(() {
+        _numberOfDaysError = null;
+      });
+    }
+
+    return isValid;
+  }
+
   void _submitForm() {
-    if (_formKey.currentState?.saveAndValidate() ?? false) {
-      final formData = _formKey.currentState?.value;
+    // Validar empleado primero
+    final isEmployeeValid = _validateEmployee();
+
+    // Validar fecha y días
+    final isDateAndDaysValid = _validateDateAndDays();
+
+    // Luego validar el formulario (solo el campo de motivo se validará automáticamente)
+    final isFormValid = _formKey.currentState?.saveAndValidate() ?? false;
+
+    if (isEmployeeValid && isDateAndDaysValid && isFormValid) {
+      // Combinar datos del formulario con el empleado seleccionado
+      final formData = _formKey.currentState?.value ?? {};
+      final completeData = {...formData, 'employee': _selectedEmployee};
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Solicitud enviada (simulación): ${formData.toString()}',
+            'Solicitud enviada (simulación): ${completeData.toString()}',
           ),
         ),
       );
-      Navigator.of(context).pop(formData);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor, corrija los errores del formulario.'),
-        ),
-      );
+      Navigator.of(context).pop(completeData);
     }
   }
 
@@ -122,79 +220,164 @@ class _VacationRequestModalState extends State<VacationRequestModal> {
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                  child: FormBuilder(
-                    key: _formKey,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                    onChanged: () {
-                      _formKey.currentState?.save();
-                      _updateCalculatedEndDate();
-                    },
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 5),
-                        const FormSectionHeader(
-                          title: 'Seleccionar Empleado',
-                          isRequired: true,
-                        ),
-                        SizedBox(
-                          width: double.infinity,
-                          child: EmployeeSelectorFormField(name: 'employee'),
-                        ),
-                        const SizedBox(height: 10),
-                        _validation(fifteenDaysFromToday, daysOptions),
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0, left: 0.0),
-                          child: Text(
-                            'La fecha de fin se calcula automáticamente basada en la fecha de inicio y la cantidad de días.',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: Colors.grey[600]),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        const FormSectionHeader(
-                          title: 'Motivo de la solicitud',
-                          isRequired: true,
-                        ),
-                        SizedBox(
-                          height: 110,
-                          child: FormBuilderTextField(
-                            name: 'reason',
-                            maxLines: 4,
-                            decoration: InputDecoration(
-                              hintText: 'Describa el motivo de su solicitud',
-                              alignLabelWithHint: true,
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: Colors.grey.shade300,
-                                  width: 0.4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 5),
+
+                      // EMPLEADO SELECTOR FUERA DEL FORMBUILDER
+                      const FormSectionHeader(
+                        title: 'Seleccionar Empleado',
+                        isRequired: true,
+                      ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            EmployeeSelectorFormField(
+                              name:
+                                  'employee_standalone', // Nombre diferente ya que está fuera del form
+                              onChanged: _onEmployeeChanged,
+                              validator: (employee) {
+                                if (employee == null) {
+                                  return 'Debe seleccionar un empleado';
+                                }
+                                return null;
+                              },
+                            ),
+                            // Mostrar error manualmente
+                            if (_employeeError != null)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 12.0,
+                                  top: 8.0,
                                 ),
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(8.0),
+                                child: Text(
+                                  _employeeError!,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                    fontSize: 12,
+                                  ),
                                 ),
+                              ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // RESTO DEL FORMULARIO DENTRO DEL FORMBUILDER
+                      FormBuilder(
+                        key: _formKey,
+                        // QUITAR autovalidateMode para evitar validación automática
+                        // autovalidateMode: AutovalidateMode.onUserInteraction,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _validation(fifteenDaysFromToday, daysOptions),
+                            const SizedBox(height: 8),
+
+                            // Mostrar errores de validación manual ENCIMA del texto informativo
+                            if (_startDateError != null ||
+                                _numberOfDaysError != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (_startDateError != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 4.0,
+                                        ),
+                                        child: Text(
+                                          _startDateError!,
+                                          style: TextStyle(
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.error,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    if (_numberOfDaysError != null)
+                                      Text(
+                                        _numberOfDaysError!,
+                                        style: TextStyle(
+                                          color:
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.error,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                top: 4.0,
+                                left: 0.0,
+                              ),
+                              child: Text(
+                                'La fecha de fin se calcula automáticamente basada en la fecha de inicio y la cantidad de días.',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: Colors.grey[600]),
                               ),
                             ),
-                            validator: FormBuilderValidators.compose([
-                              FormBuilderValidators.required(
-                                errorText: 'El motivo es obligatorio.',
+                            const SizedBox(height: 16),
+                            const FormSectionHeader(
+                              title: 'Motivo de la solicitud',
+                              isRequired: true,
+                            ),
+                            SizedBox(
+                              height: 110,
+                              child: FormBuilderTextField(
+                                name: 'reason',
+                                maxLines: 4,
+                                decoration: InputDecoration(
+                                  hintText:
+                                      'Describa el motivo de su solicitud',
+                                  alignLabelWithHint: true,
+                                  border: OutlineInputBorder(
+                                    borderSide: BorderSide(
+                                      color: Colors.grey.shade300,
+                                      width: 0.4,
+                                    ),
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(8.0),
+                                    ),
+                                  ),
+                                ),
+                                validator: FormBuilderValidators.compose([
+                                  FormBuilderValidators.required(
+                                    errorText: 'El motivo es obligatorio.',
+                                  ),
+                                  FormBuilderValidators.minLength(
+                                    10,
+                                    errorText:
+                                        'El motivo debe tener al menos 10 caracteres.',
+                                  ),
+                                ]),
+                                maxLength: 500,
+                                // Remover onChanged para que no se valide automáticamente
+                                // onChanged: (value) {
+                                //   _formKey.currentState?.save();
+                                // },
                               ),
-                              FormBuilderValidators.minLength(
-                                10,
-                                errorText:
-                                    'El motivo debe tener al menos 10 caracteres.',
-                              ),
-                            ]),
-                            maxLength: 500,
-                          ),
+                            ),
+                            const FormSectionHeader(title: 'Adjunto documento'),
+                            const DocumentUploaderPlaceholder(),
+                            const SizedBox(height: 20),
+                            const ImportantInfoBanner(),
+                            const SizedBox(height: 2),
+                          ],
                         ),
-                        const FormSectionHeader(title: 'Adjunto documento'),
-                        const DocumentUploaderPlaceholder(),
-                        const SizedBox(height: 20),
-                        const ImportantInfoBanner(),
-                        const SizedBox(height: 2),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -222,7 +405,7 @@ class _VacationRequestModalState extends State<VacationRequestModal> {
                         ),
                       ),
                       child: const Text(
-                        'Canelar',
+                        'Cancelar',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.black87,
@@ -230,7 +413,6 @@ class _VacationRequestModalState extends State<VacationRequestModal> {
                         ),
                       ),
                     ),
-
                     const SizedBox(width: 12),
                     ElevatedButton(
                       onPressed: _submitForm,
@@ -244,7 +426,6 @@ class _VacationRequestModalState extends State<VacationRequestModal> {
                         'Enviar solicitud',
                         style: TextStyle(
                           fontSize: 14,
-
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
                         ),
@@ -274,32 +455,19 @@ class _VacationRequestModalState extends State<VacationRequestModal> {
                 title: 'Fecha de inicio',
                 isRequired: true,
               ),
-              // --- NUEVO WIDGET DE FECHA INLINE ---
               InlineDatePickerField(
                 name: 'start_date',
                 hintText: 'Seleccionar fecha',
                 calendarWidth: 240,
                 firstDate: fifteenDaysFromToday,
                 lastDate: DateTime(DateTime.now().year + 5),
-                validators: [
-                  FormBuilderValidators.required(
-                    errorText: 'La fecha de inicio es obligatoria.',
-                  ),
-                  (DateTime? val) {
-                    if (val == null) {
-                      return 'La fecha de inicio es obligatoria.';
-                    }
-                    if (val.isBefore(fifteenDaysFromToday)) {
-                      return 'La solicitud debe ser con al menos 15 días de anticipación.';
-                    }
-                    return null;
-                  },
-                ],
+                // QUITAR validators para evitar validación automática
+                validators:
+                    [], // Lista vacía en lugar de null para evitar errores
                 onChanged: (value) {
-                  _updateCalculatedEndDate();
+                  _onDateOrDaysChanged();
                 },
               ),
-              // --- FIN NUEVO WIDGET DE FECHA INLINE ---
             ],
           ),
         ),
@@ -310,7 +478,6 @@ class _VacationRequestModalState extends State<VacationRequestModal> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const FormSectionHeader(title: 'Cant. días', isRequired: true),
-              // --- NUEVO DROPDOWN PERSONALIZADO ---
               CustomDropdownField<int>(
                 name: 'number_of_days',
                 hintText: 'Seleccione',
@@ -325,22 +492,18 @@ class _VacationRequestModalState extends State<VacationRequestModal> {
                           ),
                         )
                         .toList(),
-                validators: [
-                  FormBuilderValidators.required(
-                    errorText: 'Debe seleccionar la cantidad de días.',
-                  ),
-                ],
+                // QUITAR validators para evitar validación automática
+                validators: [], // Lista vacía en lugar de null
                 onChanged: (value) {
-                  _updateCalculatedEndDate();
+                  _onDateOrDaysChanged();
                 },
               ),
-              // --- FIN NUEVO DROPDOWN PERSONALIZADO ---
             ],
           ),
         ),
         const SizedBox(width: 16),
         SizedBox(
-          width: 185, // Define el ancho específico para fecha calculada
+          width: 185,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -354,7 +517,6 @@ class _VacationRequestModalState extends State<VacationRequestModal> {
   }
 }
 
-// Función helper para mostrar el modal (remains the same)
 class VacationRequestHelper {
   static Future<Map<String, dynamic>?> showVacationRequestModal(
     BuildContext context,

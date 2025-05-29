@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class PaginationControls extends StatelessWidget {
@@ -7,95 +6,121 @@ class PaginationControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: isMobile ? SizedBox.shrink() : _buildDesktopPagination(context),
+    );
+  }
+
+  Widget _buildDesktopPagination(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Info Mostrando
+        // Info
         Text(
-          'Mostrando 1-10 de 17 resultados', // TODO: Usar datos reales
+          'Mostrando 1-10 de 17 resultados',
           style: textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
         ),
 
-        // Controles
         Row(
           children: [
             Text(
-              'Filas por página:', // TODO: Usar datos reales
+              'Filas por página:',
               style: textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
             ),
             const SizedBox(width: 8),
-            // Dropdown Filas por página (Placeholder)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: 10, // TODO: Usar valor real
-                  items:
-                      [10, 25, 50].map((int value) {
-                        return DropdownMenuItem<int>(
-                          value: value,
-                          child: Text(
-                            '$value',
-                            style: const TextStyle(fontSize: 13),
-                          ),
-                        );
-                      }).toList(),
-                  onChanged: (int? newValue) {
-                    // TODO: Cambiar filas por página
-                  },
-                  isDense: true, // Compacto
-                  style: TextStyle(fontSize: 13, color: Colors.black87),
-                  icon: const Icon(LucideIcons.chevronDown, size: 16),
-                ),
-              ),
-            ),
+            _buildPageSizeDropdown(),
             const SizedBox(width: 24),
-
-            // Botones de Paginación
             _buildPaginationButton(
               context,
               LucideIcons.chevronsLeft,
-              onPressed: () {
-                /* TODO: Primera página */
-              },
-              tooltip: 'Primera página',
+              tooltip: 'Primera',
             ),
             const SizedBox(width: 4),
             _buildPaginationButton(
               context,
               LucideIcons.chevronLeft,
-              onPressed: () {
-                /* TODO: Página anterior */
-              },
-              tooltip: 'Página anterior',
+              tooltip: 'Anterior',
             ),
+            const SizedBox(width: 4),
+            _buildPageNumber(1, isActive: true),
+            const SizedBox(width: 4),
+            _buildPageNumber(2),
             const SizedBox(width: 4),
             _buildPaginationButton(
               context,
               LucideIcons.chevronRight,
-              onPressed: () {
-                /* TODO: Página siguiente */
-              },
-              tooltip: 'Página siguiente',
+              tooltip: 'Siguiente',
             ),
             const SizedBox(width: 4),
             _buildPaginationButton(
               context,
               LucideIcons.chevronsRight,
-              onPressed: () {
-                /* TODO: Última página */
-              },
-              tooltip: 'Última página',
+              tooltip: 'Última',
             ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildMobilePagination(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              _buildPaginationButton(context, LucideIcons.chevronsLeft),
+              const SizedBox(width: 4),
+              _buildPaginationButton(context, LucideIcons.chevronLeft),
+              const SizedBox(width: 4),
+              _buildPageNumber(1, isActive: true),
+              const SizedBox(width: 4),
+              _buildPageNumber(2),
+              const SizedBox(width: 4),
+              _buildPaginationButton(context, LucideIcons.chevronRight),
+              const SizedBox(width: 4),
+              _buildPaginationButton(context, LucideIcons.chevronsRight),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPageSizeDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: 10,
+          items:
+              [10, 25, 50].map((int value) {
+                return DropdownMenuItem<int>(
+                  value: value,
+                  child: Text('$value', style: const TextStyle(fontSize: 13)),
+                );
+              }).toList(),
+          onChanged: (int? newValue) {
+            // TODO: cambiar filas por página
+          },
+          isDense: true,
+          style: const TextStyle(fontSize: 13, color: Colors.black87),
+          icon: const Icon(LucideIcons.chevronDown, size: 16),
+        ),
+      ),
     );
   }
 
@@ -105,23 +130,43 @@ class PaginationControls extends StatelessWidget {
     VoidCallback? onPressed,
     String? tooltip,
   }) {
-    // TODO: Deshabilitar botones si es necesario (primera/última página)
-    final bool disabled = onPressed == null;
-    final Color iconColor =
-        disabled ? Colors.grey.shade400 : Colors.grey.shade700;
+    return Tooltip(
+      message: tooltip ?? '',
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9FAFB),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: IconButton(
+          icon: Icon(icon, size: 16),
+          padding: const EdgeInsets.all(8),
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          splashRadius: 20,
+          onPressed: onPressed ?? () {},
+        ),
+      ),
+    );
+  }
 
-    return IconButton(
-      icon: Icon(icon, size: 18),
-      color: iconColor,
-      onPressed: onPressed,
-      tooltip: tooltip,
-      splashRadius: 18,
-      constraints: const BoxConstraints(
-        minWidth: 30,
-        minHeight: 30,
-      ), // Tamaño consistente
-      padding: EdgeInsets.zero,
-      visualDensity: VisualDensity.compact,
+  Widget _buildPageNumber(int page, {bool isActive = false}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isActive ? const Color(0xFF6366F1) : const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Text(
+          '$page',
+          style: TextStyle(
+            fontSize: 13,
+            color: isActive ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
     );
   }
 }

@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import '/presentation/feactures/request/widgets/widget.dart';
 import '/presentation/feactures/request/temp/mock_data.dart';
@@ -19,6 +22,8 @@ class RequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isMobilePlatform =
+        !kIsWeb && (Platform.isAndroid || Platform.isIOS);
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -98,7 +103,8 @@ class RequestCard extends StatelessWidget {
 
                 const SizedBox(height: 16),
                 Divider(color: Colors.grey.shade300, thickness: 1),
-                // Botones de acción - LAYOUT CORREGIDO
+
+                //TODO:
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -217,6 +223,10 @@ class RequestCard extends StatelessWidget {
                     ),
                   ],
                 ),
+
+                isMobilePlatform
+                    ? const SizedBox(height: 12)
+                    : const SizedBox(),
               ],
             ),
           ),

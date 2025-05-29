@@ -15,7 +15,7 @@ class LeftColumnContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SolicitudInfoCard(solicitud: appData.solicitud),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
         SeguimientoCard(seguimiento: appData.seguimiento),
       ],
     );
