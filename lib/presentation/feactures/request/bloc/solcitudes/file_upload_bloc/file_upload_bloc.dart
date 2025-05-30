@@ -3,7 +3,10 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
 import '/data/data.dart';
-import '/presentation/feactures/request/bloc/services/services.dart';
+import '/presentation/feactures/request/services/services.dart';
+
+import '/presentation/feactures/request/services/file_service_web_stub.dart'
+    if (dart.library.html) '/presentation/feactures/request/services/web_file_service.dart';
 
 part 'file_upload_event.dart';
 part 'file_upload_state.dart';
@@ -18,13 +21,40 @@ class FileUploadBloc extends Bloc<FileUploadEvent, FileUploadState> {
     required this.allowedExtensions,
     required this.maxFileSizeMB,
     required this.maxFiles,
-  }) : _fileService = FileService(),
+    FileService? fileService,
+  }) : _fileService = fileService ?? _createCorrectService(),
        super(FileUploadInitial()) {
+    debugPrint(
+      '🏭 FileUploadBloc created with service: ${_fileService.runtimeType}',
+    );
+
     on<TriggerFilePickerEvent>(_onTriggerFilePicker);
     on<ProcessDroppedFilesEvent>(_onProcessDroppedFiles);
     on<AddFilesEvent>(_onAddFiles);
     on<RemoveFileEvent>(_onRemoveFile);
     on<ClearFilesEvent>(_onClearFiles);
+  }
+
+  // NUEVO: Función para crear el servicio correcto
+  static FileService _createCorrectService() {
+    debugPrint('🏭 _createCorrectService - kIsWeb: $kIsWeb');
+    if (kIsWeb) {
+      // En web, crear WebFileService directamente
+      try {
+        final service = WebFileService();
+        debugPrint('🌐 DIRECT WebFileService created: ${service.runtimeType}');
+        return service;
+      } catch (e) {
+        debugPrint('❌ Error creating WebFileService: $e');
+        final fallback = MobileFileService();
+        debugPrint('📱 Fallback to MobileFileService');
+        return fallback;
+      }
+    } else {
+      final service = MobileFileService();
+      debugPrint('📱 Created MobileFileService for mobile');
+      return service;
+    }
   }
 
   List<UploadedFile> get _currentFiles {
@@ -43,12 +73,16 @@ class FileUploadBloc extends Bloc<FileUploadEvent, FileUploadState> {
     try {
       emit(const FileUploadLoading());
 
+      debugPrint(
+        '🎯 FileUploadBloc: Using ${_fileService.runtimeType} for file picking',
+      );
+
       final files = await _fileService.pickFiles(
         allowedExtensions: allowedExtensions,
         maxFiles: maxFiles == 1 ? 1 : maxFiles - _currentFiles.length,
       );
 
-      // SOLUCIÓN: Si no se seleccionaron archivos, volver al estado anterior
+      // Si no se seleccionaron archivos, volver al estado anterior
       if (files.isEmpty) {
         emit(FileUploadSuccess(files: _currentFiles));
         debugPrint('📁 No files selected, returning to previous state');
@@ -70,7 +104,7 @@ class FileUploadBloc extends Bloc<FileUploadEvent, FileUploadState> {
           }
         }
 
-        // SOLUCIÓN: Si maxFiles = 1, reemplazar el archivo existente
+        // Si maxFiles = 1, reemplazar el archivo existente
         final allFiles =
             maxFiles == 1 ? validFiles : [..._currentFiles, ...validFiles];
 
@@ -105,6 +139,10 @@ class FileUploadBloc extends Bloc<FileUploadEvent, FileUploadState> {
   ) async {
     try {
       emit(const FileUploadLoading());
+
+      debugPrint(
+        '🎯 FileUploadBloc: Using ${_fileService.runtimeType} for dropped files',
+      );
 
       final files = await _fileService.processDroppedFiles(event.files);
 

@@ -1,26 +1,23 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotted/flutter_dotted.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-// Imports específicos para web
+// Solo importar dart:html en web
 import 'dart:html' as html;
 
-import '/presentation/feactures/request/widgets/widget.dart';
 import '/presentation/feactures/request/bloc/bloc.dart';
 import '/data/data.dart';
 
-class DocumentUploaderWidget extends StatefulWidget {
+class DocumentUploaderWeb extends StatefulWidget {
   final Function(List<UploadedFile>)? onFilesChanged;
   final List<String> allowedExtensions;
   final int maxFileSizeMB;
   final int maxFiles;
   final bool allowMultiple;
 
-  const DocumentUploaderWidget({
+  const DocumentUploaderWeb({
     super.key,
     this.onFilesChanged,
     this.allowedExtensions = const ['pdf', 'jpg', 'jpeg', 'png'],
@@ -30,85 +27,157 @@ class DocumentUploaderWidget extends StatefulWidget {
   });
 
   @override
-  State<DocumentUploaderWidget> createState() => _DocumentUploaderWidgetState();
+  State<DocumentUploaderWeb> createState() => _DocumentUploaderWebState();
 }
 
-class _DocumentUploaderWidgetState extends State<DocumentUploaderWidget> {
+class _DocumentUploaderWebState extends State<DocumentUploaderWeb> {
   bool _isHovering = false;
   bool _isDragOver = false;
-  StreamSubscription? _dragSubscription;
+  StreamSubscription? _dragOverSubscription;
+  StreamSubscription? _dropSubscription;
+  StreamSubscription? _dragLeaveSubscription;
 
   @override
   void initState() {
     super.initState();
-    if (kIsWeb) {
-      _setupWebDragAndDrop();
-    }
+    _setupWebDragAndDrop();
   }
 
   @override
   void dispose() {
-    _dragSubscription?.cancel();
+    _dragOverSubscription?.cancel();
+    _dropSubscription?.cancel();
+    _dragLeaveSubscription?.cancel();
     super.dispose();
   }
 
   void _setupWebDragAndDrop() {
-    // SOLUCIÓN: Configurar drag & drop mejorado
-    _dragSubscription = html.window.onDragOver.listen((event) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = 'copy';
-    });
+    try {
+      debugPrint('🌐 Setting up enhanced web drag and drop');
 
-    html.window.onDrop.listen((event) {
-      event.preventDefault();
-      if (event.dataTransfer.files?.isNotEmpty == true) {
-        debugPrint(
-          '🎯 Files dropped on window: ${event.dataTransfer.files!.length}',
-        );
-        final files = event.dataTransfer.files!.toList();
-        context.read<FileUploadBloc>().add(ProcessDroppedFilesEvent(files));
+      // Prevenir comportamiento por defecto y configurar feedback
+      _dragOverSubscription = html.document.onDragOver.listen((event) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+
+        // Solo activar drag over si realmente hay archivos
+        if (event.dataTransfer.files?.isNotEmpty == true ||
+            (event.dataTransfer.items?.length ?? 0) > 0) {
+          if (!_isDragOver) {
+            setState(() {
+              debugPrint('🎯 Drag over activated - files detected');
+              _isDragOver = true;
+            });
+          }
+        }
+      });
+
+      // Manejar el drop
+      _dropSubscription = html.document.onDrop.listen((event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        debugPrint('🎯 Drop event triggered');
+
+        // Resetear estado visual
+        setState(() => _isDragOver = false);
+
+        // Procesar archivos
+        if (event.dataTransfer.files?.isNotEmpty == true) {
+          final files = event.dataTransfer.files!;
+          debugPrint('🎯 Files dropped: ${files.length}');
+
+          final fileList = <html.File>[];
+          for (int i = 0; i < files.length; i++) {
+            fileList.add(files[i]);
+          }
+
+          _handleDroppedFiles(fileList);
+        } else {
+          debugPrint('⚠️ Drop event but no files found');
+        }
+      });
+
+      // Manejar drag leave
+      _dragLeaveSubscription = html.document.onDragLeave.listen((event) {
+        // Usar timer para evitar flicker cuando se mueve entre elementos
+        Timer(const Duration(milliseconds: 100), () {
+          if (mounted) {
+            setState(() {
+              debugPrint('🎯 Drag leave detected');
+              _isDragOver = false;
+            });
+          }
+        });
+      });
+    } catch (e) {
+      debugPrint('⚠️ Error setting up drag and drop: $e');
+    }
+  }
+
+  void _handleDroppedFiles(List<html.File> files) {
+    debugPrint('📁 Processing ${files.length} dropped files');
+
+    try {
+      // Verificar que el widget aún esté montado antes de usar el context
+      if (!mounted) {
+        debugPrint('⚠️ Widget not mounted, skipping file processing');
+        return;
       }
-    });
+
+      // Usar el BLoC para procesar los archivos
+      context.read<FileUploadBloc>().add(ProcessDroppedFilesEvent(files));
+
+      // Mostrar feedback inmediato solo si el widget está montado
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Procesando ${files.length} archivo(s)...'),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Colors.blue,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Error handling dropped files: $e');
+      // Solo mostrar error si el widget está montado
+      if (mounted) {
+        _showError('Error al procesar archivos arrastrados');
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create:
-          (context) => FileUploadBloc(
-            allowedExtensions: widget.allowedExtensions,
-            maxFileSizeMB: widget.maxFileSizeMB,
-            maxFiles: widget.maxFiles,
-          ),
-      child: BlocListener<FileUploadBloc, FileUploadState>(
-        listener: (context, state) {
-          if (state is FileUploadSuccess) {
-            widget.onFilesChanged?.call(state.files);
-            if (state.message != null) {
-              _showSuccess(state.message!);
-            }
-          } else if (state is FileUploadError) {
-            _showError(state.errorMessage);
+    return BlocListener<FileUploadBloc, FileUploadState>(
+      listener: (context, state) {
+        if (state is FileUploadSuccess) {
+          widget.onFilesChanged?.call(state.files);
+          if (state.message != null) {
+            _showSuccess(state.message!);
           }
+        } else if (state is FileUploadError) {
+          _showError(state.errorMessage);
+        }
+      },
+      child: BlocBuilder<FileUploadBloc, FileUploadState>(
+        builder: (context, state) {
+          final files = _getFilesFromState(state);
+          final isLoading = state is FileUploadLoading;
+          final hasFiles = files.isNotEmpty;
+
+          debugPrint(
+            '🎨 Widget rebuild - hasFiles: $hasFiles, files: ${files.length}, state: ${state.runtimeType}',
+          );
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!hasFiles) ...[_buildUploadArea(context, isLoading)],
+              if (hasFiles) ...[_buildFilesList(context, files)],
+            ],
+          );
         },
-        child: BlocBuilder<FileUploadBloc, FileUploadState>(
-          builder: (context, state) {
-            final files = _getFilesFromState(state);
-            final isLoading = state is FileUploadLoading;
-            final hasFiles = files.isNotEmpty;
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // SOLUCIÓN: Solo mostrar upload area si no hay archivos
-                if (!hasFiles) ...[_buildUploadArea(context, isLoading)],
-
-                // SOLUCIÓN: Siempre mostrar la lista si hay archivos
-                if (hasFiles) ...[_buildFilesList(context, files)],
-              ],
-            );
-          },
-        ),
       ),
     );
   }
@@ -129,40 +198,14 @@ class _DocumentUploaderWidgetState extends State<DocumentUploaderWidget> {
             isLoading
                 ? null
                 : () {
-                  debugPrint('📁 Upload area tapped');
+                  debugPrint('🌐 Web upload area tapped');
                   context.read<FileUploadBloc>().add(
                     const TriggerFilePickerEvent(),
                   );
                 },
-        child:
-            kIsWeb
-                ? _buildWebDropArea(context, isLoading)
-                : _buildMobileArea(context, isLoading),
+        child: _buildUploadUI(isLoading),
       ),
     );
-  }
-
-  Widget _buildWebDropArea(BuildContext context, bool isLoading) {
-    return WebDropTarget(
-      onDragEnter: () {
-        debugPrint('🎯 Drag enter detected');
-        setState(() => _isDragOver = true);
-      },
-      onDragLeave: () {
-        debugPrint('🎯 Drag leave detected');
-        setState(() => _isDragOver = false);
-      },
-      onFilesDropped: (files) {
-        debugPrint('🎯 Files dropped: ${files.length}');
-        setState(() => _isDragOver = false);
-        context.read<FileUploadBloc>().add(ProcessDroppedFilesEvent(files));
-      },
-      child: _buildUploadUI(isLoading),
-    );
-  }
-
-  Widget _buildMobileArea(BuildContext context, bool isLoading) {
-    return _buildUploadUI(isLoading);
   }
 
   Widget _buildUploadUI(bool isLoading) {
@@ -243,10 +286,8 @@ class _DocumentUploaderWidgetState extends State<DocumentUploaderWidget> {
           ),
           child: Text(
             _isDragOver
-                ? 'Suelte el archivo aquí'
-                : kIsWeb
-                ? 'Haga clic para subir o arrastre y suelte'
-                : 'Toque para seleccionar archivo',
+                ? '🎯 Suelte el archivo aquí'
+                : 'Haga clic para subir o arrastre y suelte',
           ),
         ),
         const SizedBox(height: 4),
@@ -282,14 +323,13 @@ class _DocumentUploaderWidgetState extends State<DocumentUploaderWidget> {
                 color: Colors.black87,
               ),
             ),
-            // NUEVO: Botón para cambiar archivo
             TextButton.icon(
               onPressed: () {
                 context.read<FileUploadBloc>().add(
                   const TriggerFilePickerEvent(),
                 );
               },
-              icon: Icon(LucideIcons.pencil, size: 16),
+              icon: const Icon(LucideIcons.pencil, size: 16),
               label: const Text('Cambiar'),
               style: TextButton.styleFrom(
                 foregroundColor: Colors.blue[600],

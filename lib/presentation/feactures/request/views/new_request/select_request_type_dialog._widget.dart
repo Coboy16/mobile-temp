@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:responsive_framework/responsive_framework.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 import '/presentation/feactures/request/temp/request_options.dart';
+import '/presentation/feactures/request/helpers/helpers.dart';
 import '/presentation/feactures/request/widgets/widget.dart';
 import '/presentation/resources/colors.dart';
 import '/presentation/bloc/blocs.dart';
@@ -11,6 +14,10 @@ class SelectRequestTypeDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isTabletOrDesktop = ResponsiveBreakpoints.of(
+      context,
+    ).largerThan(MOBILE);
+
     return MultiBlocListener(
       listeners: [
         // Listener para Vacaciones
@@ -108,77 +115,31 @@ class SelectRequestTypeDialog extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.0),
         ),
-        insetPadding: const EdgeInsets.all(24.0),
+        insetPadding: EdgeInsets.all(isTabletOrDesktop ? 24.0 : 16.0),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1000, maxHeight: 520),
+          constraints: BoxConstraints(
+            maxWidth: isTabletOrDesktop ? 1000 : double.infinity,
+            maxHeight:
+                isTabletOrDesktop
+                    ? 520
+                    : MediaQuery.of(context).size.height * 0.85,
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(32.0),
+            padding: EdgeInsets.all(isTabletOrDesktop ? 32.0 : 20.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header con título y botón cerrar
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Selecciona el tipo de solicitud',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade900,
-                            letterSpacing: -0.2,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Elige el tipo de solicitud que deseas crear',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.close,
-                        size: 20,
-                        color: Colors.grey.shade600,
-                      ),
-                      onPressed: () => Navigator.of(context).pop(),
-                      splashRadius: 16,
-                      padding: const EdgeInsets.all(6),
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
+                _buildHeader(context, isTabletOrDesktop),
+                SizedBox(height: isTabletOrDesktop ? 32 : 24),
 
-                // Grid de opciones
+                // Contenido responsive
                 Expanded(
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
-                          crossAxisSpacing: 16.0,
-                          mainAxisSpacing: 16.0,
-                          childAspectRatio: 2.0,
-                        ),
-                    itemCount: requestOptions.length,
-                    itemBuilder: (context, index) {
-                      return _buildOptionCard(context, requestOptions[index]);
-                    },
-                  ),
+                  child:
+                      isTabletOrDesktop
+                          ? _buildGridView(context)
+                          : _buildListView(context),
                 ),
               ],
             ),
@@ -188,12 +149,89 @@ class SelectRequestTypeDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildOptionCard(BuildContext context, RequestTypeOption option) {
-    return InkWell(
-      onTap: () {
-        print('Opción seleccionada: ${option.title} (ID: ${option.typeId})');
-        _handleRequestTypeSelection(context, option.typeId);
+  Widget _buildHeader(BuildContext context, bool isTabletOrDesktop) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AutoSizeText(
+                'Selecciona el tipo de solicitud',
+                style: TextStyle(
+                  fontSize: isTabletOrDesktop ? 20 : 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade900,
+                  letterSpacing: -0.2,
+                ),
+                maxLines: 1,
+                minFontSize: 16,
+              ),
+              const SizedBox(height: 6),
+              AutoSizeText(
+                'Elige el tipo de solicitud que deseas crear',
+                style: TextStyle(
+                  fontSize: isTabletOrDesktop ? 14 : 13,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w400,
+                ),
+                maxLines: 2,
+                minFontSize: 11,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        IconButton(
+          icon: Icon(
+            Icons.close,
+            size: isTabletOrDesktop ? 20 : 22,
+            color: Colors.grey.shade600,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+          splashRadius: 16,
+          padding: const EdgeInsets.all(6),
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        ),
+      ],
+    );
+  }
+
+  // Vista en Grid para tablet/desktop
+  Widget _buildGridView(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        crossAxisSpacing: 16.0,
+        mainAxisSpacing: 16.0,
+        childAspectRatio: 2.0,
+      ),
+      itemCount: requestOptions.length,
+      itemBuilder: (context, index) {
+        return _buildGridOptionCard(context, requestOptions[index]);
       },
+    );
+  }
+
+  // Vista en Lista para móvil
+  Widget _buildListView(BuildContext context) {
+    return ListView.separated(
+      shrinkWrap: true,
+      itemCount: requestOptions.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        return _buildListOptionCard(context, requestOptions[index]);
+      },
+    );
+  }
+
+  // Card para vista en Grid (tablet/desktop)
+  Widget _buildGridOptionCard(BuildContext context, RequestTypeOption option) {
+    return InkWell(
+      onTap: () => _handleRequestTypeSelection(context, option.typeId),
       borderRadius: BorderRadius.circular(8.0),
       child: Container(
         padding: const EdgeInsets.all(16.0),
@@ -232,7 +270,7 @@ class SelectRequestTypeDialog extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
+                  child: AutoSizeText(
                     option.title,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
@@ -240,6 +278,8 @@ class SelectRequestTypeDialog extends StatelessWidget {
                       color: Colors.grey.shade900,
                       letterSpacing: -0.1,
                     ),
+                    maxLines: 1,
+                    minFontSize: 12,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -247,7 +287,7 @@ class SelectRequestTypeDialog extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             // Descripción
-            Text(
+            AutoSizeText(
               option.description,
               style: TextStyle(
                 fontSize: 12,
@@ -256,7 +296,80 @@ class SelectRequestTypeDialog extends StatelessWidget {
                 fontWeight: FontWeight.w400,
               ),
               maxLines: 2,
+              minFontSize: 10,
               overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Card para vista en Lista (móvil)
+  Widget _buildListOptionCard(BuildContext context, RequestTypeOption option) {
+    return InkWell(
+      onTap: () => _handleRequestTypeSelection(context, option.typeId),
+      borderRadius: BorderRadius.circular(12.0),
+      child: Container(
+        padding: const EdgeInsets.all(16.0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.0),
+          border: Border.all(color: Colors.grey.shade200, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              spreadRadius: 0,
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Icono
+            CircleAvatar(
+              backgroundColor: Colors.blue.withOpacity(0.15),
+              radius: 22,
+              child: Icon(option.icon, size: 22, color: AppColors.primaryBlue),
+            ),
+            const SizedBox(width: 16),
+            // Contenido
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AutoSizeText(
+                    option.title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: Colors.grey.shade900,
+                      letterSpacing: -0.1,
+                    ),
+                    maxLines: 1,
+                    minFontSize: 14,
+                  ),
+                  const SizedBox(height: 4),
+                  AutoSizeText(
+                    option.description,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                      height: 1.3,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    maxLines: 2,
+                    minFontSize: 11,
+                  ),
+                ],
+              ),
+            ),
+            // Flecha indicadora
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.grey.shade400,
             ),
           ],
         ),
@@ -443,28 +556,122 @@ class SelectRequestTypeDialog extends StatelessWidget {
 
   // ========== MÉTODOS TEMPORALES PARA OTROS TIPOS ==========
 
-  void _openScheduleChangeRequest(BuildContext context) {
-    _showComingSoonDialog(context, 'Cambio de Horario');
+  void _openScheduleChangeRequest(BuildContext context) async {
+    final scheduleChangeBloc = context.read<ScheduleChangeBloc>();
+    final navigator = Navigator.of(context);
+
+    final result = await SimpleRequestHelper.showScheduleChangeModal(
+      context,
+      onSubmit: (requestData) {
+        debugPrint('✅ Procesando solicitud de cambio de horario');
+
+        navigator.pop(requestData.toMap());
+
+        scheduleChangeBloc.add(SubmitScheduleChangeRequest(requestData));
+
+        debugPrint('✅ Evento de cambio de horario enviado al BLoC');
+      },
+    );
+
+    if (result != null) {
+      debugPrint('✅ Resultado de solicitud de cambio de horario: $result');
+    }
   }
 
-  void _openPositionChangeRequest(BuildContext context) {
-    _showComingSoonDialog(context, 'Cambio de Posición');
+  void _openPositionChangeRequest(BuildContext context) async {
+    final positionChangeBloc = context.read<PositionChangeBloc>();
+    final navigator = Navigator.of(context);
+
+    final result = await SimpleRequestHelper.showPositionChangeModal(
+      context,
+      onSubmit: (requestData) {
+        debugPrint('✅ Procesando solicitud de cambio de posición');
+
+        navigator.pop(requestData.toMap());
+
+        // Enviar evento al BLoC usando la referencia guardada
+        positionChangeBloc.add(SubmitPositionChangeRequest(requestData));
+
+        debugPrint('✅ Evento de cambio de posición enviado al BLoC');
+      },
+    );
+
+    if (result != null) {
+      debugPrint('✅ Resultado de solicitud de cambio de posición: $result');
+    }
   }
 
-  void _openTipChangeRequest(BuildContext context) {
-    _showComingSoonDialog(context, 'Cambio de Propina');
+  void _openTipChangeRequest(BuildContext context) async {
+    final tipChangeBloc = context.read<TipChangeBloc>();
+    final navigator = Navigator.of(context);
+
+    final result = await SimpleRequestHelper.showTipChangeModal(
+      context,
+      onSubmit: (requestData) {
+        debugPrint('✅ Procesando solicitud de cambio de propina');
+
+        navigator.pop(requestData.toMap());
+
+        // Enviar evento al BLoC usando la referencia guardada
+        tipChangeBloc.add(SubmitTipChangeRequest(requestData));
+
+        debugPrint('✅ Evento de cambio de propina enviado al BLoC');
+      },
+    );
+
+    if (result != null) {
+      debugPrint('✅ Resultado de solicitud de cambio de propina: $result');
+    }
   }
 
-  void _openAdvanceRequest(BuildContext context) {
-    _showComingSoonDialog(context, 'Solicitud de Avance');
+  void _openAdvanceRequest(BuildContext context) async {
+    final advanceBloc = context.read<AdvanceRequestBloc>();
+    final navigator = Navigator.of(context);
+
+    final result = await SimpleRequestHelper.showAdvanceModal(
+      context,
+      onSubmit: (requestData) {
+        debugPrint('✅ Procesando solicitud de avance');
+
+        navigator.pop(requestData.toMap());
+
+        // Enviar evento al BLoC usando la referencia guardada
+        advanceBloc.add(SubmitAdvanceRequest(requestData));
+
+        debugPrint('✅ Evento de avance enviado al BLoC');
+      },
+    );
+
+    if (result != null) {
+      debugPrint('✅ Resultado de solicitud de avance: $result');
+    }
+  }
+
+  void _openUniformRequest(BuildContext context) async {
+    final uniformBloc = context.read<UniformRequestBloc>();
+    final navigator = Navigator.of(context);
+
+    final result = await SimpleRequestHelper.showUniformModal(
+      context,
+      onSubmit: (requestData) {
+        debugPrint('✅ Procesando solicitud de uniforme');
+
+        navigator.pop(requestData.toMap());
+
+        // Enviar evento al BLoC usando la referencia guardada
+        uniformBloc.add(SubmitUniformRequest(requestData));
+
+        debugPrint('✅ Evento de uniforme enviado al BLoC');
+      },
+    );
+
+    if (result != null) {
+      debugPrint('✅ Resultado de solicitud de uniforme: $result');
+    }
   }
 
   void _openLetterRequest(BuildContext context) {
     _showComingSoonDialog(context, 'Solicitud de Carta');
-  }
-
-  void _openUniformRequest(BuildContext context) {
-    _showComingSoonDialog(context, 'Solicitud de Uniforme');
   }
 
   void _openHousingChangeRequest(BuildContext context) {

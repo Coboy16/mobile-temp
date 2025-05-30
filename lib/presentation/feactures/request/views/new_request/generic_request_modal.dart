@@ -28,6 +28,7 @@ class _GenericRequestModalState extends State<GenericRequestModal>
   // Estado del formulario
   DateTime? _calculatedEndDate;
   Employee? _selectedEmployee;
+  List<UploadedFile> selectedFiles = [];
 
   // Errores de validación
   String? _employeeError;
@@ -200,20 +201,17 @@ class _GenericRequestModalState extends State<GenericRequestModal>
                             ),
                             const FormSectionHeader(title: 'Adjunto documento'),
 
-                            DocumentUploaderWidget(
-                              allowMultiple: false,
+                            DocumentUploaderUniversal(
                               onFilesChanged: (files) {
-                                debugPrint('📁 Files changed: ${files.length}');
-                                // Guardar archivos en tu estado/BLoC
+                                setState(() {
+                                  selectedFiles = files;
+                                });
+                                debugPrint('Files selected: ${files.length}');
                               },
-                              allowedExtensions: const [
-                                'pdf',
-                                'jpg',
-                                'jpeg',
-                                'png',
-                              ],
+                              allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
                               maxFileSizeMB: 5,
-                              maxFiles: 3,
+                              maxFiles: 1,
+                              allowMultiple: false,
                             ),
                             const SizedBox(height: 20),
                             const ImportantInfoBanner(),

@@ -63,5 +63,10 @@ List<SingleChildWidget> getListBloc() {
             maxFiles: 1,
           ),
     ),
+    BlocProvider<ScheduleChangeBloc>(create: (_) => ScheduleChangeBloc()),
+    BlocProvider<PositionChangeBloc>(create: (_) => PositionChangeBloc()),
+    BlocProvider<TipChangeBloc>(create: (_) => TipChangeBloc()),
+    BlocProvider<AdvanceRequestBloc>(create: (_) => AdvanceRequestBloc()),
+    BlocProvider<UniformRequestBloc>(create: (_) => UniformRequestBloc()),
   ];
 }

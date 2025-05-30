@@ -31,3 +31,4 @@ export 'auth_model/session_status_response_model.dart';
 export 'request_model/employee_model.dart';
 export 'request_model/request_form_data_model.dart';
 export 'request_model/uploaded_file_model.dart';
+export 'request_model/simple_request_data_model.dart';

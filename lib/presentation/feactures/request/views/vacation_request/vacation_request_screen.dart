@@ -370,19 +370,14 @@ class _VacationRequestModalState extends State<VacationRequestModal> {
                               ),
                             ),
                             const FormSectionHeader(title: 'Adjunto documento'),
-                            DocumentUploaderWidget(
+                            DocumentUploaderUniversal(
                               onFilesChanged: (files) {
-                                debugPrint('📁 Files changed: ${files.length}');
-                                // Guardar archivos en tu estado/BLoC
+                                debugPrint('Files selected: ${files.length}');
                               },
-                              allowedExtensions: const [
-                                'pdf',
-                                'jpg',
-                                'jpeg',
-                                'png',
-                              ],
+                              allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
                               maxFileSizeMB: 5,
-                              maxFiles: 3,
+                              maxFiles: 1,
+                              allowMultiple: false,
                             ),
                             const SizedBox(height: 20),
                             const ImportantInfoBanner(),
