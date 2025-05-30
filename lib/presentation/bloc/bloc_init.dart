@@ -49,5 +49,19 @@ List<SingleChildWidget> getListBloc() {
     BlocProvider(create: (context) => SettingsBloc()),
     BlocProvider(create: (context) => EmployeeSearchBloc()),
     BlocProvider(create: (context) => RequestFilterBloc()),
+    BlocProvider<VacationRequestBloc>(create: (_) => VacationRequestBloc()),
+    BlocProvider<PermissionRequestBloc>(create: (_) => PermissionRequestBloc()),
+    BlocProvider<MedicalLeaveRequestBloc>(
+      create: (_) => MedicalLeaveRequestBloc(),
+    ),
+    BlocProvider<SuspensionRequestBloc>(create: (_) => SuspensionRequestBloc()),
+    BlocProvider<FileUploadBloc>(
+      create:
+          (_) => FileUploadBloc(
+            allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+            maxFileSizeMB: 5,
+            maxFiles: 1,
+          ),
+    ),
   ];
 }

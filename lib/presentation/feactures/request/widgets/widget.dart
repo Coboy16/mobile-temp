@@ -7,14 +7,7 @@ export './header/sumary_card_widgets.dart';
 export './header/top_sections_widget.dart';
 
 //request
-export './request/employee_selector_form_field.dart';
-export './request/form_section_header.dart';
 export './request/responsive_centered_scrollable.dart';
-export './request/calculated_end_date_display.dart';
-export './request/document_uploader_placeholder.dart';
-export './request/important_info_banner.dart';
-export './request/in_line_date_picker_widget.dart';
-export './request/custom_drow_fiel_widget.dart';
 export './request/status_bage_widget.dart';
 export './request/table/filters/tab_filters_widgets.dart';
 export './request/table/pagination_controls_widget.dart';
@@ -31,3 +24,20 @@ export './solicitude/right_column_content.dart';
 export './solicitude/seguimiento_card.dart';
 export './solicitude/solicitud_info_card.dart';
 export './solicitude/timeline_event_widget.dart';
+
+//solicitude details
+export 'solicitude_modal_detail/calculated_end_date_display.dart';
+export 'solicitude_modal_detail/form_section_header.dart';
+export 'solicitude_modal_detail/employee_selector_form_field.dart';
+export 'solicitude_modal_detail/document_uploader_placeholder.dart';
+export 'solicitude_modal_detail/important_info_banner.dart';
+export 'solicitude_modal_detail/in_line_date_picker_widget.dart';
+export 'solicitude_modal_detail/custom_drow_fiel_widget.dart';
+export 'solicitude_modal_detail/request_modal_helper.dart';
+export 'solicitude_modal_detail/request_reason_section.dart';
+export 'solicitude_modal_detail/request_modal_footer.dart';
+export 'solicitude_modal_detail/request_modal_header.dart';
+export 'solicitude_modal_detail/request_employee_section.dart';
+export 'solicitude_modal_detail/request_dates_section.dart';
+export 'solicitude_modal_detail/medical_license_type_dropdown.dart';
+export 'solicitude_modal_detail/web_drop_target.dart';
