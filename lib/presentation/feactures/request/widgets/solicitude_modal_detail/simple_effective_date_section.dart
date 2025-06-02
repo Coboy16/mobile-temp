@@ -29,12 +29,11 @@ class SimpleEffectiveDateSection extends StatelessWidget {
           isRequired: true,
         ),
         SizedBox(
-          width: 300, // Ancho fijo como en la imagen
+          width: 260,
           child: InlineDatePickerField(
             name: 'effective_date',
             hintText: 'Seleccionar fecha',
-            calendarWidth: 240,
-            firstDate: tomorrow, // Desde mañana en adelante
+            firstDate: tomorrow,
             lastDate: DateTime(DateTime.now().year + 2),
             validators: [], // Sin validación automática
             onChanged: (value) => onDateChanged(),

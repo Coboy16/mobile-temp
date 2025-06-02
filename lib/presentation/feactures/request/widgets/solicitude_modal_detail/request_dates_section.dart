@@ -8,6 +8,7 @@ class RequestDatesSection extends StatelessWidget {
   final String? numberOfDaysError;
   final VoidCallback onDateOrDaysChanged;
   final bool showMedicalLicenseType;
+  final bool isMobile;
 
   const RequestDatesSection({
     super.key,
@@ -16,6 +17,7 @@ class RequestDatesSection extends StatelessWidget {
     this.numberOfDaysError,
     required this.onDateOrDaysChanged,
     this.showMedicalLicenseType = false,
+    this.isMobile = false,
   });
 
   @override
@@ -28,26 +30,107 @@ class RequestDatesSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _buildStartDateField(fifteenDaysFromToday),
-            const SizedBox(width: 16),
-            _buildNumberOfDaysField(daysOptions),
-            const SizedBox(width: 16),
-            _buildCalculatedEndDateField(),
-          ],
-        ),
+        // Layout responsive para las fechas
+        if (isMobile)
+          _buildMobileLayout(fifteenDaysFromToday, daysOptions)
+        else
+          _buildDesktopLayout(fifteenDaysFromToday, daysOptions),
+
         const SizedBox(height: 8),
         _buildValidationErrors(context),
         _buildInformativeText(context),
 
-        // NUEVO: Mostrar dropdown de tipo de licencia solo para licencia médica
+        // Mostrar dropdown de tipo de licencia solo para licencia médica
         if (showMedicalLicenseType) ...[
           const SizedBox(height: 16),
           const MedicalLicenseTypeDropdown(),
         ],
+      ],
+    );
+  }
+
+  // MÓVIL: Todo en columna vertical
+  Widget _buildMobileLayout(
+    DateTime fifteenDaysFromToday,
+    List<int> daysOptions,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. Fecha de inicio - fila completa
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const FormSectionHeader(title: 'Fecha de inicio', isRequired: true),
+            InlineDatePickerField(
+              name: 'start_date',
+              hintText: 'Seleccionar fecha',
+              calendarWidth: 200,
+              calendarHeight: 380,
+              firstDate: fifteenDaysFromToday,
+              lastDate: DateTime(DateTime.now().year + 5),
+              validators: [],
+              onChanged: (value) => onDateOrDaysChanged(),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // 2. Cantidad de días - fila completa
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const FormSectionHeader(
+              title: 'Cantidad de días',
+              isRequired: true,
+            ),
+            CustomDropdownField<int>(
+              name: 'number_of_days',
+              hintText: 'Seleccione',
+              dropdownWidth: double.infinity,
+              maxVisibleItems: 5,
+              items:
+                  daysOptions
+                      .map(
+                        (days) => DropdownMenuItem(
+                          value: days,
+                          child: Text('$days día${days > 1 ? 's' : ''}'),
+                        ),
+                      )
+                      .toList(),
+              validators: [],
+              onChanged: (value) => onDateOrDaysChanged(),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // 3. Fecha calculada - fila completa
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const FormSectionHeader(title: 'Fecha de fin calculada'),
+            CalculatedEndDateDisplay(endDate: calculatedEndDate),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // DESKTOP: Layout original en fila horizontal
+  Widget _buildDesktopLayout(
+    DateTime fifteenDaysFromToday,
+    List<int> daysOptions,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildStartDateField(fifteenDaysFromToday),
+        const SizedBox(width: 16),
+        _buildNumberOfDaysField(daysOptions),
+        const SizedBox(width: 16),
+        _buildCalculatedEndDateField(),
       ],
     );
   }

@@ -12,6 +12,7 @@ class InlineDatePickerField extends StatefulWidget {
   final DateTime? firstDate;
   final DateTime? lastDate;
   final double? calendarWidth;
+  final double? calendarHeight; // NUEVA PROPIEDAD
 
   const InlineDatePickerField({
     super.key,
@@ -23,6 +24,7 @@ class InlineDatePickerField extends StatefulWidget {
     this.firstDate,
     this.lastDate,
     this.calendarWidth,
+    this.calendarHeight, // NUEVA PROPIEDAD OPCIONAL
   });
 
   @override
@@ -81,6 +83,9 @@ class _InlineDatePickerFieldState extends State<InlineDatePickerField> {
     // Asegurar que el calendario no sea más pequeño que el campo
     calendarWidth = calendarWidth < size.width ? size.width : calendarWidth;
 
+    // NUEVA FUNCIONALIDAD: Usar altura personalizada o valor por defecto
+    double calendarHeight = widget.calendarHeight ?? 293;
+
     return OverlayEntry(
       builder:
           (context) => StatefulBuilder(
@@ -103,11 +108,11 @@ class _InlineDatePickerFieldState extends State<InlineDatePickerField> {
                   Positioned(
                     left: offset.dx,
                     top: offset.dy + size.height + 4,
-                    width: calendarWidth, // Usar el ancho personalizado
+                    width: calendarWidth,
                     child: Material(
                       borderRadius: BorderRadius.circular(8),
                       child: Container(
-                        height: 293,
+                        height: calendarHeight, // USAR ALTURA PERSONALIZADA
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
@@ -360,12 +365,6 @@ class _InlineDatePickerFieldState extends State<InlineDatePickerField> {
               decoration: InputDecoration(
                 hintText: widget.hintText,
                 prefixIcon: const Icon(Icons.calendar_today_outlined, size: 20),
-                // suffixIcon: Icon(
-                //   _showCalendar
-                //       ? Icons.keyboard_arrow_up
-                //       : Icons.keyboard_arrow_down,
-                //   size: 20,
-                // ),
                 errorText: field.errorText,
               ),
               child: Text(

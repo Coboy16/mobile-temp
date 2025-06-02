@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 
 import '/presentation/feactures/request/widgets/widget.dart';
 import '/presentation/feactures/request/mixins/mixins.dart';
@@ -152,27 +153,36 @@ class _GenericRequestModalState extends State<GenericRequestModal>
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = ResponsiveBreakpoints.of(context).smallerOrEqualTo(MOBILE);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Dialog(
         backgroundColor: const Color(0xfff9f9fc),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-        insetPadding: const EdgeInsets.symmetric(
-          horizontal: 20.0,
-          vertical: 20.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(isMobile ? 12.0 : 8.0),
         ),
+        insetPadding: EdgeInsets.all(isMobile ? 16.0 : 20.0),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 625, maxHeight: 830),
+          constraints: BoxConstraints(
+            maxWidth: isMobile ? screenWidth : 625,
+            maxHeight: isMobile ? screenHeight * 0.95 : 830,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               RequestModalHeader(
                 requestType: widget.requestType,
                 onClose: () => Navigator.of(context).pop(),
+                isMobile: isMobile,
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 20.0 : 30.0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -194,6 +204,7 @@ class _GenericRequestModalState extends State<GenericRequestModal>
                               onDateOrDaysChanged: _onDateOrDaysChanged,
                               showMedicalLicenseType:
                                   widget.requestType.requiresMedicalInfo,
+                              isMobile: isMobile,
                             ),
                             const SizedBox(height: 16),
                             RequestReasonSection(
@@ -215,7 +226,7 @@ class _GenericRequestModalState extends State<GenericRequestModal>
                             ),
                             const SizedBox(height: 20),
                             const ImportantInfoBanner(),
-                            const SizedBox(height: 2),
+                            SizedBox(height: isMobile ? 20 : 2),
                           ],
                         ),
                       ),
@@ -227,6 +238,7 @@ class _GenericRequestModalState extends State<GenericRequestModal>
                 onCancel: () => Navigator.of(context).pop(),
                 onSubmit: _submitForm,
                 requestType: widget.requestType,
+                isMobile: isMobile,
               ),
             ],
           ),
