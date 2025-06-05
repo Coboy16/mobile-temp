@@ -10,6 +10,14 @@ import '/presentation/widgets/widgets.dart';
 import '/presentation/resources/resources.dart';
 import '/presentation/bloc/blocs.dart';
 
+// Estados del flujo de login
+enum LoginStep {
+  initial,
+  verifyingEmailExists,
+  attemptingLogin,
+  performingSecurityChecks,
+}
+
 class LoginForm extends StatefulWidget {
   final void Function()? onGoogleLogin;
   final void Function(String email, String passOrCedula)? onLogin;
@@ -32,61 +40,299 @@ class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormBuilderState>();
   bool _isPasswordVisible = false;
 
-  // Estados para coordinar ambos checks
+  // Estados para coordinar todos los checks
+  bool emailVerificationCompleted = false;
+  bool _loginAttemptCompleted = false;
   bool _lockCheckCompleted = false;
   bool _sessionCheckCompleted = false;
-  bool _canProceedWithLogin = false;
+  bool _canFinishLogin = false;
   bool _isCheckingStatus = false;
 
+  // Estado para el flujo de login
+  LoginStep _currentLoginStep = LoginStep.initial;
+
+  // Variables para almacenar credenciales durante el flujo
+  String? _pendingEmail;
+  String? _pendingPassword;
+
   void _onLoginAttempt() {
-    if (_formKey.currentState?.saveAndValidate() ?? false) {
-      // Reset de estados
-      _lockCheckCompleted = false;
-      _sessionCheckCompleted = false;
-      _canProceedWithLogin = false;
-      _isCheckingStatus = true;
+    debugPrint("🚀 Iniciando intento de login...");
 
-      final username =
-          _formKey.currentState?.fields['username']?.value as String;
-
-      // Disparar ambos eventos
-      context.read<CheckLockStatusBloc>().add(
-        CheckUserLockStatusRequested(email: username.trim()),
-      );
-      context.read<CheckSessionStatusBloc>().add(
-        CheckSessionStatusRequested(email: username.trim()),
-      );
+    // Validar y guardar el formulario
+    if (!(_formKey.currentState?.saveAndValidate() ?? false)) {
+      debugPrint("❌ Formulario no válido - validación falló");
+      return;
     }
-  }
 
-  void _proceedWithLogin() {
-    if (_canProceedWithLogin && _lockCheckCompleted && _sessionCheckCompleted) {
-      final username =
-          _formKey.currentState?.fields['username']?.value as String;
-      final password =
-          _formKey.currentState?.fields['password']?.value as String;
-      widget.onLogin?.call(username.trim(), password);
+    // Obtener referencias a los campos de forma segura
+    final formState = _formKey.currentState;
+    if (formState == null) {
+      debugPrint("❌ Error: FormState es null");
+      return;
     }
-  }
 
-  void _checkIfCanProceed() {
-    if (_lockCheckCompleted && _sessionCheckCompleted && _canProceedWithLogin) {
-      _proceedWithLogin();
+    final usernameField = formState.fields['username'];
+    final passwordField = formState.fields['password'];
+
+    if (usernameField == null || passwordField == null) {
+      debugPrint("❌ Error: Campos del formulario no encontrados");
+      return;
     }
-  }
 
-  void _resetChecks() {
+    // Obtener valores de forma segura
+    final usernameValue = usernameField.value;
+    final passwordValue = passwordField.value;
+
+    // Verificar que los valores no sean null
+    if (usernameValue == null || passwordValue == null) {
+      debugPrint("❌ Error: Valores del formulario son null");
+      return;
+    }
+
+    // Convertir a String de forma segura
+    final username = usernameValue.toString().trim();
+    final password = passwordValue.toString();
+
+    // Verificar que no estén vacíos después de la conversión
+    if (username.isEmpty || password.isEmpty) {
+      debugPrint("❌ Error: Email o contraseña están vacíos");
+      return;
+    }
+
+    debugPrint(
+      "✅ Datos del formulario válidos: email='$username', password='[***]'",
+    );
+
+    // Reset de todos los estados ANTES de almacenar credenciales
+    _resetAllChecks();
+
+    // Almacenar credenciales para usar después
+    _pendingEmail = username;
+    _pendingPassword = password;
+
+    // Verificar que se almacenaron correctamente
+    if (_pendingEmail == null || _pendingPassword == null) {
+      debugPrint("❌ Error: Fallo al almacenar credenciales");
+      return;
+    }
+
     setState(() {
-      _lockCheckCompleted = false;
-      _sessionCheckCompleted = false;
-      _canProceedWithLogin = false;
-      _isCheckingStatus = false;
+      _currentLoginStep = LoginStep.verifyingEmailExists;
+      _isCheckingStatus = true;
     });
 
-    _formKey.currentState?.reset();
-    // Reset de los blocs
+    debugPrint("🔍 PASO 1: Verificando si el email '$_pendingEmail' existe...");
+
+    // PASO 1: Verificar si el email existe antes de hacer login
+    try {
+      context.read<OtpVerificationBloc>().add(
+        OtpRequestSubmitted(email: _pendingEmail!, onlyRequest: false),
+      );
+    } catch (e) {
+      debugPrint("❌ Error al enviar OtpRequestSubmitted: $e");
+      _resetAllAndClearCredentials();
+    }
+  }
+
+  // PASO 2: Proceder con el login real después de verificar email
+  void _proceedWithLogin() {
+    if (_pendingEmail != null &&
+        _pendingPassword != null &&
+        _pendingEmail!.isNotEmpty &&
+        _pendingPassword!.isNotEmpty) {
+      setState(() {
+        _currentLoginStep = LoginStep.attemptingLogin;
+        emailVerificationCompleted = true;
+      });
+
+      debugPrint("🔐 PASO 2: Email verificado. Procediendo con login real...");
+      // Hacer el login real con las credenciales
+      widget.onLogin?.call(_pendingEmail!, _pendingPassword!);
+      _resetAllAndClearCredentials();
+    } else {
+      debugPrint("❌ Error: Credenciales pendientes inválidas");
+      _resetAllAndClearCredentials();
+    }
+  }
+
+  // PASO 3: Proceder con checks de seguridad después de login exitoso
+  void _proceedWithSecurityChecks() {
+    if (_pendingEmail != null && _pendingEmail!.isNotEmpty) {
+      setState(() {
+        _currentLoginStep = LoginStep.performingSecurityChecks;
+        _loginAttemptCompleted = true;
+      });
+
+      debugPrint("🛡️ PASO 3: Login exitoso. Iniciando checks de seguridad...");
+      context.read<CheckLockStatusBloc>().add(
+        CheckUserLockStatusRequested(email: _pendingEmail!),
+      );
+      context.read<CheckSessionStatusBloc>().add(
+        CheckSessionStatusRequested(email: _pendingEmail!),
+      );
+    } else {
+      debugPrint("❌ Error: Email pendiente inválido para checks de seguridad");
+      _resetAllAndClearCredentials();
+    }
+  }
+
+  void _checkIfCanFinishLogin() {
+    if (_loginAttemptCompleted &&
+        _lockCheckCompleted &&
+        _sessionCheckCompleted &&
+        _canFinishLogin) {
+      debugPrint(
+        "✅ Todos los checks completados. Login finalizado correctamente.",
+      );
+      setState(() {
+        _isCheckingStatus = false;
+        _currentLoginStep = LoginStep.initial;
+      });
+      // Limpiar credenciales después del login exitoso
+      _pendingEmail = null;
+      _pendingPassword = null;
+      // El login se completa automáticamente por AuthBloc
+    }
+  }
+
+  void _resetAllChecks() {
+    debugPrint("🔄 Reseteando todos los checks...");
+    setState(() {
+      emailVerificationCompleted = false;
+      _loginAttemptCompleted = false;
+      _lockCheckCompleted = false;
+      _sessionCheckCompleted = false;
+      _canFinishLogin = false;
+      _isCheckingStatus = false;
+      _currentLoginStep = LoginStep.initial;
+    });
+
+    // NO limpiar credenciales pendientes aquí - se limpiarán al final
+    // _pendingEmail = null;
+    // _pendingPassword = null;
+
+    // Reset de todos los blocs
+    context.read<OtpVerificationBloc>().add(OtpVerificationReset());
     context.read<CheckLockStatusBloc>().add(ResetCheckLockStatus());
     context.read<CheckSessionStatusBloc>().add(ResetCheckSessionStatus());
+  }
+
+  void _resetAllAndClearCredentials() {
+    debugPrint("🔄 Reseteando completamente y limpiando credenciales...");
+    setState(() {
+      emailVerificationCompleted = false;
+      _loginAttemptCompleted = false;
+      _lockCheckCompleted = false;
+      _sessionCheckCompleted = false;
+      _canFinishLogin = false;
+      _isCheckingStatus = false;
+      _currentLoginStep = LoginStep.initial;
+    });
+
+    // Limpiar credenciales pendientes
+    _pendingEmail = null;
+    _pendingPassword = null;
+
+    // Reset de todos los blocs
+    context.read<OtpVerificationBloc>().add(OtpVerificationReset());
+    context.read<CheckLockStatusBloc>().add(ResetCheckLockStatus());
+    context.read<CheckSessionStatusBloc>().add(ResetCheckSessionStatus());
+  }
+
+  /// Maneja el caso cuando el usuario no existe en la plataforma
+  void _handleUserNotFound(String email) {
+    CustomConfirmationModal.show(
+      context: context,
+      title: "Usuario no encontrado",
+      subtitle:
+          "Usuario no existe, ¿desea registrarse en nuestra plataforma Ho-tech del Caribe?",
+      confirmButtonText: "Registrarme",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: AppColors.primaryBlue,
+      width: 480,
+      onConfirm: () {
+        Navigator.of(context).pop();
+        widget.onGoToRegister();
+      },
+      onCancel: () {
+        Navigator.of(context).pop();
+        _resetAllAndClearCredentials();
+      },
+    ).then((result) {
+      if (result == null) {
+        _resetAllAndClearCredentials();
+      }
+    });
+  }
+
+  /// Verifica si el error indica que el usuario no existe
+  bool _isUserNotFoundError(String errorMessage, int? statusCode) {
+    final userNotFoundIndicators = [
+      "correo no existe",
+      "user not found",
+      "usuario no encontrado",
+      "email not found",
+      "no existe",
+      "not found",
+      "usuario no existe",
+      "correo electrónico no encontrado",
+    ];
+
+    final message = errorMessage.toLowerCase();
+    final isNotFoundStatusCode =
+        statusCode == 404 || statusCode == 401 || statusCode == 400;
+    final hasNotFoundMessage = userNotFoundIndicators.any(
+      (indicator) => message.contains(indicator),
+    );
+
+    return isNotFoundStatusCode && hasNotFoundMessage;
+  }
+
+  /// Maneja la verificación de existencia del email (PASO 1)
+  void _handleEmailVerificationState(
+    BuildContext context,
+    OtpVerificationState otpState,
+  ) {
+    if (_currentLoginStep != LoginStep.verifyingEmailExists) return;
+
+    final emailFromForm = _pendingEmail ?? '';
+
+    // Validar que tengamos un email válido
+    if (emailFromForm.isEmpty) {
+      debugPrint("❌ Error: Email pendiente está vacío en verificación");
+      _resetAllAndClearCredentials();
+      return;
+    }
+
+    debugPrint("📧 Procesando estado de verificación para: $emailFromForm");
+
+    if (otpState is OtpRequestSuccess &&
+        otpState.email == emailFromForm &&
+        otpState.wasOnlyRequest == false) {
+      // El usuario SÍ existe - proceder con login real
+      debugPrint(
+        "✅ PASO 1 completado: Usuario existe. Procediendo con login...",
+      );
+      _proceedWithLogin();
+    } else if (otpState is OtpRequestFailure &&
+        otpState.email == emailFromForm &&
+        otpState.wasOnlyRequest == false) {
+      if (_isUserNotFoundError(otpState.message, otpState.statusCode)) {
+        // El usuario NO existe
+        debugPrint("❌ PASO 1: Usuario no existe. Mostrando modal de registro.");
+        _handleUserNotFound(emailFromForm);
+      } else {
+        // Otro tipo de error en la verificación del email
+        debugPrint("⚠️ Error en verificación de email: ${otpState.message}");
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => UserBlockedDialog(errorMessage: otpState.message),
+        ).then((_) {
+          _resetAllAndClearCredentials();
+        });
+      }
+    }
   }
 
   @override
@@ -96,15 +342,39 @@ class _LoginFormState extends State<LoginForm> {
 
     return MultiBlocListener(
       listeners: [
+        // LISTENER 1: Verificación de existencia del email (PASO 1)
+        BlocListener<OtpVerificationBloc, OtpVerificationState>(
+          listener: _handleEmailVerificationState,
+        ),
+
+        // LISTENER 2: Resultado del login real (PASO 2)
+        BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (_currentLoginStep != LoginStep.attemptingLogin) return;
+
+            if (state is AuthAuthenticated) {
+              // Login exitoso - proceder con checks de seguridad
+              debugPrint(
+                "✅ PASO 2 completado: Login exitoso. Iniciando checks de seguridad...",
+              );
+              _proceedWithSecurityChecks();
+            }
+          },
+        ),
+
+        // LISTENER 3: Check de estado de bloqueo (PASO 3a)
         BlocListener<CheckLockStatusBloc, CheckLockStatusState>(
           listener: (context, state) {
+            if (_currentLoginStep != LoginStep.performingSecurityChecks) return;
+
             if (state is CheckLockStatusSuccess) {
               setState(() {
                 _lockCheckCompleted = true;
               });
 
               if (state.validationInfo.isBlocked) {
-                // Usuario bloqueado - mostrar modal y detener flujo
+                // Usuario bloqueado - mostrar modal
+                debugPrint("❌ PASO 3a: Usuario bloqueado detectado");
                 CustomConfirmationModal.showSimple(
                   context: context,
                   title: l10n.accountBlockedTitle,
@@ -113,82 +383,83 @@ class _LoginFormState extends State<LoginForm> {
                   confirmButtonColor: AppColors.primaryBlue,
                   width: 450,
                 ).then((_) {
-                  _resetChecks();
+                  _resetAllAndClearCredentials();
                 });
               } else {
-                // Usuario no bloqueado - marcar como OK para continuar
+                // No bloqueado - marcar como OK para continuar
+                debugPrint("✅ PASO 3a: Usuario no bloqueado");
                 setState(() {
-                  _canProceedWithLogin = true;
+                  _canFinishLogin = true;
                 });
-                _checkIfCanProceed();
+                _checkIfCanFinishLogin();
               }
             } else if (state is CheckLockStatusFailure) {
+              debugPrint(
+                "⚠️ PASO 3a: Error en check de bloqueo, continuando...",
+              );
               setState(() {
                 _lockCheckCompleted = true;
+                _canFinishLogin = true; // Continuar a pesar del error
               });
-
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (_) => UserBlockedDialog(errorMessage: state.message),
-              ).then((_) {
-                _resetChecks();
-              });
+              _checkIfCanFinishLogin();
             }
           },
         ),
+
+        // LISTENER 4: Check de sesión activa (PASO 3b)
         BlocListener<CheckSessionStatusBloc, CheckSessionStatusState>(
           listener: (context, state) {
+            if (_currentLoginStep != LoginStep.performingSecurityChecks) return;
+
             if (state is CheckSessionStatusLoaded) {
               setState(() {
                 _sessionCheckCompleted = true;
               });
 
               if (state.hasActiveSession) {
-                // Hay sesión activa - mostrar modal y esperar decisión
-                final l10n = AppLocalizations.of(context)!;
-
+                // Sesión activa detectada - mostrar modal solo después de login exitoso
+                debugPrint("⚠️ PASO 3b: Sesión activa detectada");
                 CustomConfirmationModal.show(
                   context: context,
                   title: l10n.activeSessionDialogTitle,
                   subtitle: l10n.activeSessionDialogMessage,
                   confirmButtonText: l10n.keepSessionButtonLabel,
                   cancelButtonText: l10n.closeSessionButtonLabel,
-                  confirmButtonColor: const Color(
-                    0xFFDC2626,
-                  ), // Rojo para cerrar sesión
+                  confirmButtonColor: const Color(0xFFDC2626),
                   width: 450,
                   onConfirm: () {
                     Navigator.of(context).pop();
                     setState(() {
-                      _canProceedWithLogin = true;
+                      _canFinishLogin = true;
                     });
-                    _checkIfCanProceed();
+                    _checkIfCanFinishLogin();
                   },
                   onCancel: () {
                     Navigator.of(context).pop();
-                    _resetChecks();
+                    _resetAllAndClearCredentials();
                   },
                 ).then((result) {
-                  // Opcional: manejar si el usuario cierra con la X
                   if (result == null) {
-                    _resetChecks();
+                    _resetAllAndClearCredentials();
                   }
                 });
               } else {
-                // No hay sesión activa - OK para continuar
+                // No hay sesión activa - OK para finalizar
+                debugPrint("✅ PASO 3b: No hay sesión activa");
                 setState(() {
-                  _canProceedWithLogin = true;
+                  _canFinishLogin = true;
                 });
-                _checkIfCanProceed();
+                _checkIfCanFinishLogin();
               }
             } else if (state is CheckSessionStatusFailure) {
+              debugPrint(
+                "⚠️ PASO 3b: Error en check de sesión, continuando...",
+              );
               setState(() {
                 _sessionCheckCompleted = true;
-                _canProceedWithLogin =
-                    true; // En caso de error, permitir continuar
+                _canFinishLogin = true;
               });
-              _checkIfCanProceed();
+              _checkIfCanFinishLogin();
             }
           },
         ),
@@ -212,7 +483,7 @@ class _LoginFormState extends State<LoginForm> {
                 ),
               ]),
               textInputAction: TextInputAction.next,
-              enabled: !_isCheckingStatus, // Deshabilitar durante checks
+              enabled: !_isCheckingStatus,
             ),
             SizedBox(
               height:
@@ -254,7 +525,7 @@ class _LoginFormState extends State<LoginForm> {
               ]),
               textInputAction: TextInputAction.done,
               onSubmitted: (_) => !_isCheckingStatus ? _onLoginAttempt() : null,
-              enabled: !_isCheckingStatus, // Deshabilitar durante checks
+              enabled: !_isCheckingStatus,
             ),
             SizedBox(
               height:

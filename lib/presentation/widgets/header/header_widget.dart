@@ -182,9 +182,10 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                   },
                   child: AccountDropdown(
                     onProfile: () {
-                      debugPrint("Perfil presionado - cerrando dropdown");
+                      context.read<SidebarBloc>().add(
+                        const SidebarRouteSelected('Configuración'),
+                      );
                       _removeAccountDropdown();
-                      // Aquí puedes navegar a la pantalla de perfil
                     },
                     onSettings: () {
                       context.read<SidebarBloc>().add(
@@ -236,28 +237,37 @@ class _HeaderWidgetState extends State<HeaderWidget> {
   }
 
   void _handleLogout(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
-    final bool? confirmLogout = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const ConfirmLogoutDialog(),
-    );
+    debugPrint("🏠 [HeaderWidget] Logout iniciado");
 
-    if (confirmLogout == true) {
-      showDialog(
+    final l10n = AppLocalizations.of(context)!;
+
+    try {
+      // ✅ Usar CustomConfirmationModal
+      final bool? confirmLogout = await CustomConfirmationModal.show(
         context: context,
-        barrierDismissible: false,
-        builder: (BuildContext loadingContext) {
-          return PopScope(
-            canPop: false,
-            child: CustomLoadingHotech(
-              overlay: true,
-              message: l10n.loggingOutMessage,
-            ),
-          );
-        },
+        title: l10n.confirmLogoutTitle,
+        subtitle: l10n.confirmLogoutMessage,
+        confirmButtonText: l10n.logoutButton,
+        cancelButtonText: l10n.cancel,
+        confirmButtonColor: const Color(0xFFDC2626), // Rojo para logout
+        width: 420,
       );
-      context.read<AuthBloc>().add(const AuthLogoutRequested());
+
+      debugPrint("🏠 [HeaderWidget] Confirmación: $confirmLogout");
+
+      if (confirmLogout == true) {
+        debugPrint("🏠 [HeaderWidget] Logout confirmado");
+
+        context.read<AuthBloc>().add(const AuthLogoutRequested());
+        debugPrint(
+          "🏠 [HeaderWidget] AuthLogoutRequested enviado - delegando a HomeScreen",
+        );
+      } else {
+        debugPrint("🏠 [HeaderWidget] Logout cancelado");
+      }
+    } catch (e, stackTrace) {
+      debugPrint("❌ [HeaderWidget] Error en logout: $e");
+      debugPrint("❌ [HeaderWidget] StackTrace: $stackTrace");
     }
   }
 

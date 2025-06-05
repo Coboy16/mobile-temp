@@ -1141,7 +1141,7 @@ abstract class AppLocalizations {
   /// No description provided for @emailAlreadyRegisteredError.
   ///
   /// In en, this message translates to:
-  /// **'User already exists, please sign in.'**
+  /// **'This email is already registered. Please log in.'**
   String get emailAlreadyRegisteredError;
 
   /// No description provided for @passwordMismatchTitle.
@@ -1287,6 +1287,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'User ID not available to delete the account.'**
   String get userIdNotAvailableError;
+
+  /// No description provided for @invalidEmailFormatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Email Format'**
+  String get invalidEmailFormatTitle;
+
+  /// No description provided for @invalidEmailFormatMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The email format entered is not valid. Please check that it has the correct format (example: user@domain.com) and try again.'**
+  String get invalidEmailFormatMessage;
+
+  /// No description provided for @confirmLogoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Logout'**
+  String get confirmLogoutTitle;
+
+  /// No description provided for @confirmLogoutMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to log out? You will be redirected to the login screen.'**
+  String get confirmLogoutMessage;
+
+  /// No description provided for @logoutButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out'**
+  String get logoutButton;
 }
 
 class _AppLocalizationsDelegate

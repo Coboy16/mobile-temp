@@ -1,17 +1,16 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:fe_core_vips/core/l10n/app_localizations.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 
 import '/presentation/resources/resources.dart';
 import '/presentation/widgets/widgets.dart';
-import '/presentation/routes/app_router.dart';
 import '/presentation/bloc/blocs.dart';
 
 class SidebarWrapper extends StatelessWidget {
@@ -118,132 +117,114 @@ class _SidebarWidgetState extends State<SidebarWidget>
       'Mi Perfil',
     ];
 
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, authState) {
-        if (authState is AuthUnauthenticated || authState is AuthFailure) {
-          if (Navigator.of(context, rootNavigator: true).canPop()) {
-            Navigator.of(context, rootNavigator: true).pop();
-          }
-        }
-        if (authState is AuthUnauthenticated) {
-          if (authState.message != null) {
-            context.pushReplacementNamed(AppRoutes.login);
-          }
-        } else if (authState is AuthFailure) {
-          ScaffoldMessenger.of(context)
-            ..removeCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(authState.message)));
-        }
+    return BlocConsumer<SidebarBloc, SidebarState>(
+      listener: (context, state) {
+        _handleToggleSidebarAnimation(state.isSidebarExpanded);
       },
-      child: BlocConsumer<SidebarBloc, SidebarState>(
-        listener: (context, state) {
-          _handleToggleSidebarAnimation(state.isSidebarExpanded);
-        },
-        listenWhen:
-            (previous, current) =>
-                previous.isSidebarExpanded != current.isSidebarExpanded,
-        builder: (context, sidebarState) {
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              if (!widget.isDrawer) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _checkLayout(context);
-                });
-              }
+      listenWhen:
+          (previous, current) =>
+              previous.isSidebarExpanded != current.isSidebarExpanded,
+      builder: (context, sidebarState) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            if (!widget.isDrawer) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _checkLayout(context);
+              });
+            }
 
-              return AnimatedBuilder(
-                animation: _widthAnimation,
-                builder: (context, child) {
-                  bool isMobilePlatform =
-                      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+            return AnimatedBuilder(
+              animation: _widthAnimation,
+              builder: (context, child) {
+                bool isMobilePlatform =
+                    !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
-                  // Determinar el ancho efectivo
-                  double effectiveWidth =
-                      widget.isDrawer
-                          ? isMobilePlatform
-                              ? drawerWidth
-                              : sidebarWidth
-                          : _widthAnimation.value;
+                // Determinar el ancho efectivo
+                double effectiveWidth =
+                    widget.isDrawer
+                        ? isMobilePlatform
+                            ? drawerWidth
+                            : sidebarWidth
+                        : _widthAnimation.value;
 
-                  return Container(
-                    width: effectiveWidth,
-                    color: AppColors.primaryBlue,
-                    child: Column(
-                      children: [
-                        isMobilePlatform
-                            ? const SizedBox(height: 55)
-                            : const SizedBox.shrink(),
-                        SidebarHeaderWithToggle(
-                          isExpanded:
-                              widget.isDrawer
-                                  ? true
-                                  : sidebarState.isSidebarExpanded,
-                          isDrawer:
-                              widget.isDrawer, // ✅ Pasar el parámetro isDrawer
-                          onToggle:
-                              widget.isDrawer
-                                  ? () {
-                                    // En drawer, cerrar el drawer en lugar de toggle
-                                    Navigator.of(context).pop();
-                                  }
-                                  : () => context.read<SidebarBloc>().add(
-                                    const SidebarVisibilityToggled(),
-                                  ),
-                          widthAnimation:
-                              widget.isDrawer
-                                  ? AlwaysStoppedAnimation(sidebarWidth)
-                                  : _widthAnimation,
+                return Container(
+                  width: effectiveWidth,
+                  color: AppColors.primaryBlue,
+                  child: Column(
+                    children: [
+                      isMobilePlatform
+                          ? const SizedBox(height: 55)
+                          : const SizedBox.shrink(),
+                      SidebarHeaderWithToggle(
+                        isExpanded:
+                            widget.isDrawer
+                                ? true
+                                : sidebarState.isSidebarExpanded,
+                        isDrawer:
+                            widget.isDrawer, // ✅ Pasar el parámetro isDrawer
+                        onToggle:
+                            widget.isDrawer
+                                ? () {
+                                  // En drawer, cerrar el drawer en lugar de toggle
+                                  Navigator.of(context).pop();
+                                }
+                                : () => context.read<SidebarBloc>().add(
+                                  const SidebarVisibilityToggled(),
+                                ),
+                        widthAnimation:
+                            widget.isDrawer
+                                ? AlwaysStoppedAnimation(sidebarWidth)
+                                : _widthAnimation,
+                      ),
+                      // UserInfo siempre visible en drawer
+                      AnimatedOpacity(
+                        opacity:
+                            widget.isDrawer
+                                ? 1.0
+                                : (1.0 - _animationController.value).clamp(
+                                  0.0,
+                                  1.0,
+                                ),
+                        duration: Duration.zero,
+                        child: Visibility(
+                          visible:
+                              widget.isDrawer ||
+                              _animationController.value < 0.8,
+                          maintainState: true,
+                          maintainAnimation: true,
+                          maintainSize: false,
+                          child: const UserInfo(),
                         ),
-                        // UserInfo siempre visible en drawer
-                        AnimatedOpacity(
-                          opacity:
-                              widget.isDrawer
-                                  ? 1.0
-                                  : (1.0 - _animationController.value).clamp(
-                                    0.0,
-                                    1.0,
-                                  ),
-                          duration: Duration.zero,
-                          child: Visibility(
-                            visible:
-                                widget.isDrawer ||
-                                _animationController.value < 0.8,
-                            maintainState: true,
-                            maintainAnimation: true,
-                            maintainSize: false,
-                            child: const UserInfo(),
-                          ),
-                        ),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            physics: const BouncingScrollPhysics(),
-                            child: ClipRect(
-                              child: _buildSidebarContent(
-                                sidebarState,
-                                portalEmpleadoRoutes,
-                                reclutamientoRoutes,
-                                portalCandidatoRoutes,
-                                context,
-                              ),
+                      ),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: ClipRect(
+                            child: _buildSidebarContent(
+                              sidebarState,
+                              portalEmpleadoRoutes,
+                              reclutamientoRoutes,
+                              portalCandidatoRoutes,
+                              context,
                             ),
                           ),
                         ),
-                        Divider(
-                          color: AppColors.dividerColor.withOpacity(0.1),
-                          height: 1,
-                          thickness: 1,
-                        ),
-                        _buildFooterSection(sidebarState, context),
-                        const SizedBox(height: 10),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
-      ),
+                      ),
+                      Divider(
+                        color: AppColors.dividerColor.withOpacity(0.1),
+                        height: 1,
+                        thickness: 1,
+                      ),
+                      _buildFooterSection(sidebarState, context),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 
@@ -393,7 +374,6 @@ class _SidebarWidgetState extends State<SidebarWidget>
             title: 'Cerrar Sesión',
             icon: LucideIcons.logOut,
             onTap: () {
-              Navigator.of(context).pop();
               _handleLogout(context);
             },
           ),
@@ -533,29 +513,56 @@ class _SidebarWidgetState extends State<SidebarWidget>
     return '';
   }
 
+  // ✅ VERSIÓN COMPLETAMENTE SIMPLIFICADA SIN LOADING MANUAL
   void _handleLogout(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
-    final bool? confirmLogout = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const ConfirmLogoutDialog(),
+    debugPrint(
+      "🚪 [SidebarWidget] Logout iniciado - isDrawer: ${widget.isDrawer}",
     );
 
-    if (confirmLogout == true) {
-      showDialog(
+    final l10n = AppLocalizations.of(context)!;
+
+    try {
+      // Mostrar modal de confirmación
+      final bool? confirmLogout = await CustomConfirmationModal.show(
         context: context,
-        barrierDismissible: false,
-        builder: (BuildContext loadingContext) {
-          return PopScope(
-            canPop: false,
-            child: CustomLoadingHotech(
-              overlay: true,
-              message: l10n.loggingOutMessage,
-            ),
-          );
-        },
+        title: l10n.confirmLogoutTitle,
+        subtitle: l10n.confirmLogoutMessage,
+        confirmButtonText: l10n.logoutButton,
+        cancelButtonText: l10n.cancel,
+        confirmButtonColor: const Color(0xFFDC2626),
+        width: 420,
       );
-      context.read<AuthBloc>().add(const AuthLogoutRequested());
+
+      debugPrint("🚪 [SidebarWidget] Confirmación: $confirmLogout");
+
+      if (confirmLogout == true) {
+        debugPrint("🚪 [SidebarWidget] Logout confirmado");
+
+        // Obtener AuthBloc ANTES de cerrar drawer
+        final authBloc = context.read<AuthBloc>();
+        debugPrint("🚪 [SidebarWidget] AuthBloc obtenido");
+
+        // Cerrar drawer si es mobile
+        if (widget.isDrawer && context.mounted) {
+          debugPrint("🚪 [SidebarWidget] Cerrando drawer...");
+          Navigator.of(context).pop();
+          // Pequeña pausa para que el drawer se cierre completamente
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
+
+        // Ejecutar logout SIN mostrar loading manual
+        // El HomeScreen se encargará de todo el manejo posterior
+        debugPrint("🚪 [SidebarWidget] Ejecutando logout...");
+        authBloc.add(const AuthLogoutRequested());
+        debugPrint(
+          "🚪 [SidebarWidget] AuthLogoutRequested enviado - delegando manejo a HomeScreen",
+        );
+      } else {
+        debugPrint("🚪 [SidebarWidget] Logout cancelado");
+      }
+    } catch (e, stackTrace) {
+      debugPrint("❌ [SidebarWidget] Error en logout: $e");
+      debugPrint("❌ [SidebarWidget] StackTrace: $stackTrace");
     }
   }
 }

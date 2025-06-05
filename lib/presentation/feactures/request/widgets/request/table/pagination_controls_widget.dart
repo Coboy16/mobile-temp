@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-class PaginationControls extends StatelessWidget {
+class PaginationControls extends StatefulWidget {
   const PaginationControls({super.key});
+
+  @override
+  State<PaginationControls> createState() => _PaginationControlsState();
+}
+
+class _PaginationControlsState extends State<PaginationControls> {
+  int _itemsPerPage =
+      10; // Variable de estado para mantener el valor seleccionado
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +33,7 @@ class PaginationControls extends StatelessWidget {
       children: [
         // Info
         Text(
-          'Mostrando 1-10 de 17 resultados',
+          'Mostrando 1-$_itemsPerPage de 17 resultados',
           style: textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
         ),
 
@@ -81,14 +89,13 @@ class PaginationControls extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Primera fila: Info a la izquierda, dropdown a la derecha
+        // Primera fila: Info a la izquierda, dropdown con padding a la derecha
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // Info de resultados
-            Flexible(
+            Expanded(
               child: Text(
-                'Mostrando 1-10 de 17 resultados',
+                'Mostrando 1-$_itemsPerPage de 17 resultados',
                 style: textTheme.bodySmall?.copyWith(
                   color: Colors.grey.shade600,
                   fontSize: 12,
@@ -96,6 +103,9 @@ class PaginationControls extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+
+            // Espaciador para evitar que esté pegado al extremo
+            const SizedBox(width: 12),
 
             // Dropdown con label
             Row(
@@ -112,6 +122,9 @@ class PaginationControls extends StatelessWidget {
                 _buildPageSizeDropdown(compact: true),
               ],
             ),
+
+            // Padding adicional para separar del extremo
+            const SizedBox(width: 8),
           ],
         ),
 
@@ -170,27 +183,38 @@ class PaginationControls extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: 10,
-          items:
-              [10, 25, 50].map((int value) {
-                return DropdownMenuItem<int>(
-                  value: value,
-                  child: Text(
-                    '$value',
-                    style: TextStyle(
-                      fontSize: compact ? 12 : 13,
-                      color: Colors.black87,
+        child: SizedBox(
+          child: DropdownButton<int>(
+            value: _itemsPerPage,
+            items:
+                [10, 25, 50].map((int value) {
+                  return DropdownMenuItem<int>(
+                    value: value,
+                    child: Text(
+                      '$value',
+                      style: TextStyle(
+                        fontSize: compact ? 12 : 13,
+                        color: Colors.black87,
+                      ),
                     ),
-                  ),
-                );
-              }).toList(),
-          onChanged: (int? newValue) {
-            // TODO: cambiar filas por página
-          },
-          isDense: true,
-          style: TextStyle(fontSize: compact ? 12 : 13, color: Colors.black87),
-          icon: Icon(LucideIcons.chevronDown, size: compact ? 14 : 16),
+                  );
+                }).toList(),
+            onChanged: (int? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  _itemsPerPage = newValue; // Actualizar el estado
+                });
+                // lógica adicional como callback a parent widget
+                // widget.onItemsPerPageChanged?.call(newValue);
+              }
+            },
+            isDense: true,
+            style: TextStyle(
+              fontSize: compact ? 12 : 13,
+              color: Colors.black87,
+            ),
+            icon: Icon(LucideIcons.chevronDown, size: compact ? 14 : 16),
+          ),
         ),
       ),
     );

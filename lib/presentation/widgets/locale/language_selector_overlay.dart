@@ -20,6 +20,9 @@ class _LanguageSelectorOverlayState extends State<LanguageSelectorOverlay>
   late final Animation<Offset> _slideAnimation;
   final GlobalKey _buttonKey = GlobalKey();
 
+  // Definir español como locale por defecto
+  static const Locale _defaultLocale = Locale('es');
+
   @override
   void initState() {
     super.initState();
@@ -68,9 +71,10 @@ class _LanguageSelectorOverlayState extends State<LanguageSelectorOverlay>
   @override
   Widget build(BuildContext context) {
     final localeBloc = BlocProvider.of<LocaleBloc>(context, listen: false);
+
+    // Cambiar el currentLocale para usar español por defecto
     final currentLocale = context.select(
-      (LocaleBloc bloc) =>
-          bloc.state.locale ?? LocaleBloc.supportedLocales.first,
+      (LocaleBloc bloc) => bloc.state.locale ?? _defaultLocale,
     );
 
     return OverlayPortal(

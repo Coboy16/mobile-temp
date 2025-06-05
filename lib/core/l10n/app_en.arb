@@ -232,7 +232,7 @@
   "invalidCredentialsTitle": "Invalid Credentials",
   "invalidCredentialsMessage": "Incorrect username or password. Please verify your information and try again.",
   "userAlreadyExistsTitle": "User Already Exists",
-  "emailAlreadyRegisteredError": "User already exists, please sign in.",
+  "emailAlreadyRegisteredError": "This email is already registered. Please log in.",
   "passwordMismatchTitle": "Passwords Don't Match",
   "passwordMismatchMessage": "The passwords entered do not match. Please verify and try again.",
   "registrationErrorTitle": "Registration Error",
@@ -256,5 +256,10 @@
   "deleteAccountMessage": "Are you sure? This action is irreversible and all your data will be permanently deleted.",
   "deleteConfirm": "Yes, Delete",
   "accountDeletedSuccessTitle": "Account Deleted",
-  "userIdNotAvailableError": "User ID not available to delete the account."
+  "userIdNotAvailableError": "User ID not available to delete the account.",
+  "invalidEmailFormatTitle": "Invalid Email Format",
+  "invalidEmailFormatMessage": "The email format entered is not valid. Please check that it has the correct format (example: user@domain.com) and try again.",
+  "confirmLogoutTitle": "Confirm Logout",
+  "confirmLogoutMessage": "Are you sure you want to log out? You will be redirected to the login screen.",
+  "logoutButton": "Log Out"
 }

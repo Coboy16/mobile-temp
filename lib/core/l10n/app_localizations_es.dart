@@ -602,7 +602,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get emailAlreadyRegisteredError =>
-      'Usuario ya existe, por favor inicie sesión.';
+      'El correo electrónico ya está registrado. Por favor, inicia sesión.';
 
   @override
   String get passwordMismatchTitle => 'Las contraseñas no coinciden';
@@ -682,4 +682,21 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get userIdNotAvailableError =>
       'ID de usuario no disponible para eliminar la cuenta.';
+
+  @override
+  String get invalidEmailFormatTitle => 'Formato de correo inválido';
+
+  @override
+  String get invalidEmailFormatMessage =>
+      'El formato del correo electrónico ingresado no es válido. Por favor, verifique que tenga el formato correcto (ejemplo: usuario@dominio.com) e intente nuevamente.';
+
+  @override
+  String get confirmLogoutTitle => 'Confirmar cierre de sesión';
+
+  @override
+  String get confirmLogoutMessage =>
+      '¿Está seguro que desea cerrar su sesión? Será redirigido a la pantalla de inicio de sesión.';
+
+  @override
+  String get logoutButton => 'Cerrar Sesión';
 }

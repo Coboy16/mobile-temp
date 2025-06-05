@@ -196,7 +196,7 @@
   "invalidCredentialsTitle": "Credenciales incorrectas",
   "invalidCredentialsMessage": "Usuario o contraseña incorrectos. Por favor verifique los datos e intente nuevamente.",
   "userAlreadyExistsTitle": "Usuario ya existe",
-  "emailAlreadyRegisteredError": "Usuario ya existe, por favor inicie sesión.",
+  "emailAlreadyRegisteredError": "El correo electrónico ya está registrado. Por favor, inicia sesión.",
   "passwordMismatchTitle": "Las contraseñas no coinciden",
   "passwordMismatchMessage": "Las contraseñas ingresadas no coinciden. Por favor verifique e intente de nuevo.",
   "registrationErrorTitle": "Error de registro",
@@ -220,5 +220,10 @@
   "deleteAccountMessage": "¿Estás seguro? Esta acción es irreversible y todos tus datos serán eliminados permanentemente.",
   "deleteConfirm": "Sí, Eliminar",
   "accountDeletedSuccessTitle": "Cuenta Eliminada",
-  "userIdNotAvailableError": "ID de usuario no disponible para eliminar la cuenta."
+  "userIdNotAvailableError": "ID de usuario no disponible para eliminar la cuenta.",
+  "invalidEmailFormatTitle": "Formato de correo inválido",
+  "invalidEmailFormatMessage": "El formato del correo electrónico ingresado no es válido. Por favor, verifique que tenga el formato correcto (ejemplo: usuario@dominio.com) e intente nuevamente.",
+  "confirmLogoutTitle": "Confirmar cierre de sesión",
+  "confirmLogoutMessage": "¿Está seguro que desea cerrar su sesión? Será redirigido a la pantalla de inicio de sesión.",
+  "logoutButton": "Cerrar Sesión"
 }

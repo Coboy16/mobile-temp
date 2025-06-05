@@ -89,7 +89,6 @@ class RegisterView extends StatelessWidget {
       'Error de login post-registro (AuthGoogleBloc): ${state.message}, statusCode: ${state.statusCode}',
     );
 
-    // OPCIONAL: También reemplazar este RegistrationFailedDialog
     final l10n = AppLocalizations.of(context)!;
     CustomConfirmationModal.showSimple(
       context: context,

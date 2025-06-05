@@ -209,40 +209,97 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       "[HomeScreen Shell build] GoRouterState NAME: '${goStateForBuild.name}', FullPath: '${goStateForBuild.fullPath}'",
     );
 
-    return BlocListener<SidebarBloc, SidebarState>(
-      listenWhen:
-          (previous, current) =>
-              previous.currentSelectedRoute != current.currentSelectedRoute,
-      listener: (context, sidebarState) {
-        final String blocSelectedConstant = sidebarState.currentSelectedRoute;
-        final String targetGoRouterPath = getGoRouterPathForSidebarRoute(
-          blocSelectedConstant,
-        );
+    return MultiBlocListener(
+      listeners: [
+        // ✅ LISTENER PRINCIPAL PARA LOGOUT
+        BlocListener<AuthBloc, AuthState>(
+          listenWhen: (previous, current) {
+            // Solo escuchar cambios relevantes para logout
+            final isLogoutEvent =
+                (previous is AuthAuthenticated || previous is AuthLoading) &&
+                (current is AuthUnauthenticated || current is AuthFailure);
+            debugPrint(
+              "🏠 [HomeScreen] AuthBloc listener - isLogoutEvent: $isLogoutEvent",
+            );
+            debugPrint(
+              "🏠 [HomeScreen] Previous: ${previous.runtimeType}, Current: ${current.runtimeType}",
+            );
+            return isLogoutEvent;
+          },
+          listener: (context, authState) {
+            debugPrint(
+              "🏠 [HomeScreen] 🚨 LOGOUT DETECTADO - Estado: ${authState.runtimeType}",
+            );
 
-        final GoRouterState currentGoRouterStateListener = GoRouterState.of(
-          context,
-        );
-        final String? currentActualPathListener =
-            currentGoRouterStateListener.fullPath;
+            // Cerrar TODOS los dialogs abiertos inmediatamente
+            _closeAllDialogs();
 
-        debugPrint("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        debugPrint("[HomeScreen Shell BlocListener] (Instance: $hashCode)");
-        debugPrint("  Bloc wants to go to (constant): '$blocSelectedConstant'");
-        debugPrint("  Target GoRouter PATH: '$targetGoRouterPath'");
-        debugPrint("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            // Pequeña pausa para asegurar que los dialogs se cierren
+            Future.delayed(const Duration(milliseconds: 100), () {
+              if (mounted) {
+                debugPrint("🏠 [HomeScreen] Navegando a login...");
 
-        if (targetGoRouterPath.isNotEmpty &&
-            targetGoRouterPath != currentActualPathListener) {
-          debugPrint(
-            "[HomeScreen Shell BlocListener] DECISION: Navigation needed. Attempting AppRouter.router.go('$targetGoRouterPath')",
-          );
-          AppRouter.router.go(targetGoRouterPath);
-        } else {
-          debugPrint(
-            "[HomeScreen Shell BlocListener] DECISION: No navigation by PATH needed. Target: '$targetGoRouterPath', Current: '$currentActualPathListener'.",
-          );
-        }
-      },
+                try {
+                  // Usar go para reemplazar completamente el stack de navegación
+                  context.go(AppRoutes.login);
+                  debugPrint("🏠 [HomeScreen] ✅ Navegación a login exitosa");
+                } catch (e) {
+                  debugPrint("🏠 [HomeScreen] ❌ Error en navegación: $e");
+                  // Fallback: usar pushReplacementNamed
+                  try {
+                    context.pushReplacementNamed(AppRoutes.login);
+                    debugPrint("🏠 [HomeScreen] ✅ Navegación fallback exitosa");
+                  } catch (e2) {
+                    debugPrint(
+                      "🏠 [HomeScreen] ❌ Error en navegación fallback: $e2",
+                    );
+                  }
+                }
+              }
+            });
+          },
+        ),
+
+        // LISTENER ORIGINAL PARA SIDEBAR
+        BlocListener<SidebarBloc, SidebarState>(
+          listenWhen:
+              (previous, current) =>
+                  previous.currentSelectedRoute != current.currentSelectedRoute,
+          listener: (context, sidebarState) {
+            final String blocSelectedConstant =
+                sidebarState.currentSelectedRoute;
+            final String targetGoRouterPath = getGoRouterPathForSidebarRoute(
+              blocSelectedConstant,
+            );
+
+            final GoRouterState currentGoRouterStateListener = GoRouterState.of(
+              context,
+            );
+            final String? currentActualPathListener =
+                currentGoRouterStateListener.fullPath;
+
+            debugPrint("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            debugPrint("[HomeScreen Shell BlocListener] (Instance: $hashCode)");
+            debugPrint(
+              "  Bloc wants to go to (constant): '$blocSelectedConstant'",
+            );
+            debugPrint("  Target GoRouter PATH: '$targetGoRouterPath'");
+            debugPrint("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+            if (targetGoRouterPath.isNotEmpty &&
+                targetGoRouterPath != currentActualPathListener) {
+              debugPrint(
+                "[HomeScreen Shell BlocListener] DECISION: Navigation needed. Attempting AppRouter.router.go('$targetGoRouterPath')",
+              );
+              AppRouter.router.go(targetGoRouterPath);
+            } else {
+              debugPrint(
+                "[HomeScreen Shell BlocListener] DECISION: No navigation by PATH needed. Target: '$targetGoRouterPath', Current: '$currentActualPathListener'.",
+              );
+            }
+          },
+        ),
+      ],
       child: BlocBuilder<SidebarBloc, SidebarState>(
         buildWhen:
             (previous, current) =>
@@ -320,5 +377,52 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ],
       ),
     );
+  }
+
+  // ✅ MÉTODO PARA CERRAR TODOS LOS DIALOGS DE FORMA SEGURA
+  void _closeAllDialogs() {
+    debugPrint("🏠 [HomeScreen] Cerrando todos los dialogs...");
+
+    try {
+      // Intentar cerrar dialogs del navigator root
+      final navigator = Navigator.of(context, rootNavigator: true);
+
+      // Contar cuántos dialogs hay abiertos
+      int dialogCount = 0;
+      while (navigator.canPop() && dialogCount < 10) {
+        // Max 10 por seguridad
+        final route = ModalRoute.of(context);
+        if (route != null &&
+            route.settings.name != null &&
+            (route.settings.name!.contains('dialog') ||
+                route.settings.name!.contains('modal') ||
+                route is DialogRoute ||
+                route is PopupRoute)) {
+          debugPrint("🏠 [HomeScreen] Cerrando dialog ${dialogCount + 1}");
+          navigator.pop();
+          dialogCount++;
+        } else {
+          break;
+        }
+      }
+
+      // Alternativa: usar popUntil de forma más agresiva si hay dialogs persistentes
+      if (navigator.canPop()) {
+        debugPrint("🏠 [HomeScreen] Usando popUntil para limpiar stack...");
+        try {
+          navigator.popUntil(
+            (route) =>
+                route.isFirst ||
+                !route.settings.name.toString().contains('dialog'),
+          );
+        } catch (e) {
+          debugPrint("🏠 [HomeScreen] Error en popUntil: $e");
+        }
+      }
+
+      debugPrint("🏠 [HomeScreen] ✅ Dialogs cerrados exitosamente");
+    } catch (e) {
+      debugPrint("🏠 [HomeScreen] ❌ Error cerrando dialogs: $e");
+    }
   }
 }

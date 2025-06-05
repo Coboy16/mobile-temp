@@ -127,9 +127,7 @@ class _RegisterFormState extends State<RegisterForm> {
           title: l10n.userAlreadyExistsTitle,
           subtitle: l10n.emailAlreadyRegisteredError,
           confirmButtonText: l10n.accept,
-          confirmButtonColor: const Color(
-            0xFFF59E0B,
-          ), // Amarillo para advertencia
+          confirmButtonColor: AppColors.primaryBlue,
           width: 420,
           onConfirm: () {
             Navigator.of(context).pop();

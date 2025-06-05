@@ -195,7 +195,7 @@
   "invalidCredentialsTitle": "Identifiants incorrects",
   "invalidCredentialsMessage": "Nom d'utilisateur ou mot de passe incorrect. Veuillez vérifier vos informations et réessayer.",
   "userAlreadyExistsTitle": "Utilisateur déjà existant",
-  "emailAlreadyRegisteredError": "L'utilisateur existe déjà, veuillez vous connecter.",
+  "emailAlreadyRegisteredError": "Cet e-mail est déjà enregistré. Veuillez vous connecter.",
   "passwordMismatchTitle": "Les mots de passe ne correspondent pas",
   "passwordMismatchMessage": "Les mots de passe saisis ne correspondent pas. Veuillez vérifier et réessayer.",
   "registrationErrorTitle": "Erreur d'inscription",
@@ -219,5 +219,10 @@
   "deleteAccountMessage": "Êtes-vous sûr ? Cette action est irréversible et toutes vos données seront définitivement supprimées.",
   "deleteConfirm": "Oui, supprimer",
   "accountDeletedSuccessTitle": "Compte supprimé",
-  "userIdNotAvailableError": "Identifiant utilisateur non disponible pour supprimer le compte."
+  "userIdNotAvailableError": "Identifiant utilisateur non disponible pour supprimer le compte.",
+  "invalidEmailFormatTitle": "Format d'email invalide",
+  "invalidEmailFormatMessage": "Le format de l'email saisi n'est pas valide. Veuillez vérifier qu'il ait le format correct (exemple : utilisateur@domaine.com) et réessayez.",
+  "confirmLogoutTitle": "Confirmer la déconnexion",
+  "confirmLogoutMessage": "Êtes-vous sûr de vouloir vous déconnecter ? Vous serez redirigé vers l'écran de connexion.",
+  "logoutButton": "Se Déconnecter"
 }

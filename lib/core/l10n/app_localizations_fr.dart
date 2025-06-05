@@ -611,7 +611,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get emailAlreadyRegisteredError =>
-      'L\'utilisateur existe déjà, veuillez vous connecter.';
+      'Cet e-mail est déjà enregistré. Veuillez vous connecter.';
 
   @override
   String get passwordMismatchTitle => 'Les mots de passe ne correspondent pas';
@@ -690,4 +690,21 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get userIdNotAvailableError =>
       'Identifiant utilisateur non disponible pour supprimer le compte.';
+
+  @override
+  String get invalidEmailFormatTitle => 'Format d\'email invalide';
+
+  @override
+  String get invalidEmailFormatMessage =>
+      'Le format de l\'email saisi n\'est pas valide. Veuillez vérifier qu\'il ait le format correct (exemple : utilisateur@domaine.com) et réessayez.';
+
+  @override
+  String get confirmLogoutTitle => 'Confirmer la déconnexion';
+
+  @override
+  String get confirmLogoutMessage =>
+      'Êtes-vous sûr de vouloir vous déconnecter ? Vous serez redirigé vers l\'écran de connexion.';
+
+  @override
+  String get logoutButton => 'Se Déconnecter';
 }

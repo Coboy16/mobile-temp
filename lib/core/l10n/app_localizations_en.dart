@@ -595,7 +595,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emailAlreadyRegisteredError =>
-      'User already exists, please sign in.';
+      'This email is already registered. Please log in.';
 
   @override
   String get passwordMismatchTitle => 'Passwords Don\'t Match';
@@ -674,4 +674,21 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get userIdNotAvailableError =>
       'User ID not available to delete the account.';
+
+  @override
+  String get invalidEmailFormatTitle => 'Invalid Email Format';
+
+  @override
+  String get invalidEmailFormatMessage =>
+      'The email format entered is not valid. Please check that it has the correct format (example: user@domain.com) and try again.';
+
+  @override
+  String get confirmLogoutTitle => 'Confirm Logout';
+
+  @override
+  String get confirmLogoutMessage =>
+      'Are you sure you want to log out? You will be redirected to the login screen.';
+
+  @override
+  String get logoutButton => 'Log Out';
 }
