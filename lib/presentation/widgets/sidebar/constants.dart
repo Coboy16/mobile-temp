@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 // Constantes específicas del Sidebar
 const double sidebarWidth = 270.0;
+const double drawerWidth = 310.0;
 const double logoHeight = 60.0;
 const double userInfoHeight = 80.0;
 const double indicatorWidth = 4.0;

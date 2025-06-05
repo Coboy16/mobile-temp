@@ -73,4 +73,43 @@ class SimpleRequestHelper {
       onSubmit: onSubmit,
     );
   }
+
+  static Future<Map<String, dynamic>?> showHousingChangeRequestModal(
+    BuildContext context, {
+    Function(SimpleRequestData)? onSubmit,
+  }) async {
+    return await showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return HousingChangeRequestModal(onSubmit: onSubmit);
+      },
+    );
+  }
+
+  static Future<Map<String, dynamic>?> showExitRequestModal(
+    BuildContext context, {
+    Function(SimpleRequestData)? onSubmit,
+  }) async {
+    return await showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return ExitRequestModal(onSubmit: onSubmit);
+      },
+    );
+  }
+
+  static Future<Map<String, dynamic>?> showLetterRequestModal(
+    BuildContext context, {
+    Function(SimpleRequestData)? onSubmit,
+  }) async {
+    return await showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return LetterRequestModal(onSubmit: onSubmit);
+      },
+    );
+  }
 }

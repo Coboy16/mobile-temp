@@ -84,6 +84,7 @@ class _SolicitudScreenState extends State<SolicitudScreen> {
     final theme = Theme.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 1024; // Breakpoint para desktop
+    debugPrint('idCard: ${widget.requestId}');
 
     // Envolver todo en WillPopScope para capturar el botón físico del teléfono
     return WillPopScope(
@@ -279,7 +280,7 @@ class _SolicitudScreenState extends State<SolicitudScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Detalle de Solicitud ${widget.requestId}',
+              'Detalle de Solicitud ',
               style: const TextStyle(
                 color: AppColors.primaryTextColor,
                 fontSize: 18,

@@ -105,13 +105,13 @@ class _LoginFormState extends State<LoginForm> {
 
               if (state.validationInfo.isBlocked) {
                 // Usuario bloqueado - mostrar modal y detener flujo
-                showDialog(
+                CustomConfirmationModal.showSimple(
                   context: context,
-                  barrierDismissible: false,
-                  builder:
-                      (_) => UserBlockedDialog(
-                        minutesBlocked: state.validationInfo.minutesBlocked,
-                      ),
+                  title: l10n.accountBlockedTitle,
+                  subtitle: l10n.accountBlockedMessage,
+                  confirmButtonText: l10n.accept,
+                  confirmButtonColor: AppColors.primaryBlue,
+                  width: 450,
                 ).then((_) {
                   _resetChecks();
                 });
@@ -146,25 +146,35 @@ class _LoginFormState extends State<LoginForm> {
 
               if (state.hasActiveSession) {
                 // Hay sesión activa - mostrar modal y esperar decisión
-                showDialog(
+                final l10n = AppLocalizations.of(context)!;
+
+                CustomConfirmationModal.show(
                   context: context,
-                  barrierDismissible: false,
-                  builder:
-                      (_) => WillPopScope(
-                        onWillPop: () async => false,
-                        child: ActiveSessionDialog(
-                          onCloseSession: () {
-                            setState(() {
-                              _canProceedWithLogin = true;
-                            });
-                            _checkIfCanProceed();
-                          },
-                          onKeepSession: () {
-                            _resetChecks();
-                          },
-                        ),
-                      ),
-                );
+                  title: l10n.activeSessionDialogTitle,
+                  subtitle: l10n.activeSessionDialogMessage,
+                  confirmButtonText: l10n.keepSessionButtonLabel,
+                  cancelButtonText: l10n.closeSessionButtonLabel,
+                  confirmButtonColor: const Color(
+                    0xFFDC2626,
+                  ), // Rojo para cerrar sesión
+                  width: 450,
+                  onConfirm: () {
+                    Navigator.of(context).pop();
+                    setState(() {
+                      _canProceedWithLogin = true;
+                    });
+                    _checkIfCanProceed();
+                  },
+                  onCancel: () {
+                    Navigator.of(context).pop();
+                    _resetChecks();
+                  },
+                ).then((result) {
+                  // Opcional: manejar si el usuario cierra con la X
+                  if (result == null) {
+                    _resetChecks();
+                  }
+                });
               } else {
                 // No hay sesión activa - OK para continuar
                 setState(() {

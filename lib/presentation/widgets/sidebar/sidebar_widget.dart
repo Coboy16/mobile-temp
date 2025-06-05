@@ -24,7 +24,10 @@ class SidebarWrapper extends StatelessWidget {
 }
 
 class SidebarWidget extends StatefulWidget {
-  const SidebarWidget({super.key});
+  // Agregamos un parámetro para saber si está siendo usado como drawer
+  final bool isDrawer;
+
+  const SidebarWidget({super.key, this.isDrawer = false});
 
   @override
   State<SidebarWidget> createState() => _SidebarWidgetState();
@@ -42,10 +45,12 @@ class _SidebarWidgetState extends State<SidebarWidget>
     super.initState();
     final sidebarBloc = BlocProvider.of<SidebarBloc>(context);
 
+    // Si es drawer, siempre iniciamos como expandido
     _animationController = AnimationController(
       vsync: this,
       duration: _animationDuration,
-      value: sidebarBloc.state.isSidebarExpanded ? 0.0 : 1.0,
+      value:
+          (widget.isDrawer || sidebarBloc.state.isSidebarExpanded) ? 0.0 : 1.0,
     );
 
     _widthAnimation = Tween<double>(
@@ -62,7 +67,9 @@ class _SidebarWidgetState extends State<SidebarWidget>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _checkLayout(context);
+    if (!widget.isDrawer) {
+      _checkLayout(context);
+    }
   }
 
   @override
@@ -72,6 +79,9 @@ class _SidebarWidgetState extends State<SidebarWidget>
   }
 
   void _handleToggleSidebarAnimation(bool isExpanded) {
+    // Si es drawer, no animamos (siempre expandido)
+    if (widget.isDrawer) return;
+
     if (isExpanded) {
       _animationController.reverse();
     } else {
@@ -135,39 +145,69 @@ class _SidebarWidgetState extends State<SidebarWidget>
         builder: (context, sidebarState) {
           return LayoutBuilder(
             builder: (context, constraints) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _checkLayout(context);
-              });
+              if (!widget.isDrawer) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _checkLayout(context);
+                });
+              }
 
               return AnimatedBuilder(
                 animation: _widthAnimation,
                 builder: (context, child) {
                   bool isMobilePlatform =
                       !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
+                  // Determinar el ancho efectivo
+                  double effectiveWidth =
+                      widget.isDrawer
+                          ? isMobilePlatform
+                              ? drawerWidth
+                              : sidebarWidth
+                          : _widthAnimation.value;
+
                   return Container(
-                    width: _widthAnimation.value,
+                    width: effectiveWidth,
                     color: AppColors.primaryBlue,
                     child: Column(
                       children: [
                         isMobilePlatform
-                            ? const SizedBox(height: 30)
+                            ? const SizedBox(height: 55)
                             : const SizedBox.shrink(),
                         SidebarHeaderWithToggle(
-                          isExpanded: sidebarState.isSidebarExpanded,
+                          isExpanded:
+                              widget.isDrawer
+                                  ? true
+                                  : sidebarState.isSidebarExpanded,
+                          isDrawer:
+                              widget.isDrawer, // ✅ Pasar el parámetro isDrawer
                           onToggle:
-                              () => context.read<SidebarBloc>().add(
-                                const SidebarVisibilityToggled(),
-                              ),
-                          widthAnimation: _widthAnimation,
+                              widget.isDrawer
+                                  ? () {
+                                    // En drawer, cerrar el drawer en lugar de toggle
+                                    Navigator.of(context).pop();
+                                  }
+                                  : () => context.read<SidebarBloc>().add(
+                                    const SidebarVisibilityToggled(),
+                                  ),
+                          widthAnimation:
+                              widget.isDrawer
+                                  ? AlwaysStoppedAnimation(sidebarWidth)
+                                  : _widthAnimation,
                         ),
+                        // UserInfo siempre visible en drawer
                         AnimatedOpacity(
-                          opacity: (1.0 - _animationController.value).clamp(
-                            0.0,
-                            1.0,
-                          ),
+                          opacity:
+                              widget.isDrawer
+                                  ? 1.0
+                                  : (1.0 - _animationController.value).clamp(
+                                    0.0,
+                                    1.0,
+                                  ),
                           duration: Duration.zero,
                           child: Visibility(
-                            visible: _animationController.value < 0.8,
+                            visible:
+                                widget.isDrawer ||
+                                _animationController.value < 0.8,
                             maintainState: true,
                             maintainAnimation: true,
                             maintainSize: false,
@@ -178,103 +218,12 @@ class _SidebarWidgetState extends State<SidebarWidget>
                           child: SingleChildScrollView(
                             physics: const BouncingScrollPhysics(),
                             child: ClipRect(
-                              child: Stack(
-                                alignment: Alignment.topLeft,
-                                children: [
-                                  AnimatedOpacity(
-                                    opacity: (1.0 - _animationController.value)
-                                        .clamp(0.0, 1.0),
-                                    duration: Duration.zero,
-                                    child: Visibility(
-                                      visible: _animationController.value < 1.0,
-                                      maintainState: true,
-                                      maintainAnimation: true,
-                                      maintainSize: false,
-                                      child: IgnorePointer(
-                                        ignoring:
-                                            _animationController.value > 0.5,
-                                        child: ExpandedSidebarContent(
-                                          key: const ValueKey(
-                                            'expanded_content_stack_child',
-                                          ),
-                                          currentRoute:
-                                              sidebarState.currentSelectedRoute,
-                                          expandedParentRoutes:
-                                              sidebarState.expandedParentRoutes,
-                                          portalEmpleadoRoutes:
-                                              portalEmpleadoRoutes,
-                                          reclutamientoRoutes:
-                                              reclutamientoRoutes,
-                                          portalCandidatoRoutes:
-                                              portalCandidatoRoutes,
-                                          onNavigateToRoute: (
-                                            routeName, {
-                                            parentRouteName,
-                                            isParentItem = false,
-                                          }) {
-                                            context.read<SidebarBloc>().add(
-                                              SidebarRouteSelected(
-                                                routeName,
-                                                parentRouteName:
-                                                    parentRouteName,
-                                                isParentItem: isParentItem,
-                                              ),
-                                            );
-                                          },
-                                          onToggleExpansion: (parentRouteName) {
-                                            context.read<SidebarBloc>().add(
-                                              SidebarExpansionToggled(
-                                                parentRouteName,
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  AnimatedOpacity(
-                                    opacity: _animationController.value.clamp(
-                                      0.0,
-                                      1.0,
-                                    ),
-                                    duration: Duration.zero,
-                                    child: Visibility(
-                                      visible: _animationController.value > 0.0,
-                                      maintainState: true,
-                                      maintainAnimation: true,
-                                      maintainSize: false,
-                                      child: IgnorePointer(
-                                        ignoring:
-                                            _animationController.value < 0.5,
-                                        child: CollapsedSidebarContent(
-                                          key: const ValueKey(
-                                            'collapsed_content_stack_child',
-                                          ),
-                                          currentRoute:
-                                              sidebarState.currentSelectedRoute,
-                                          portalEmpleadoRoutes:
-                                              portalEmpleadoRoutes,
-                                          reclutamientoRoutes:
-                                              reclutamientoRoutes,
-                                          portalCandidatoRoutes:
-                                              portalCandidatoRoutes,
-                                          onNavigateToRoute: (
-                                            routeName, {
-                                            parentRouteName,
-                                          }) {
-                                            context.read<SidebarBloc>().add(
-                                              SidebarRouteSelected(
-                                                routeName,
-                                                parentRouteName:
-                                                    parentRouteName,
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              child: _buildSidebarContent(
+                                sidebarState,
+                                portalEmpleadoRoutes,
+                                reclutamientoRoutes,
+                                portalCandidatoRoutes,
+                                context,
                               ),
                             ),
                           ),
@@ -284,111 +233,7 @@ class _SidebarWidgetState extends State<SidebarWidget>
                           height: 1,
                           thickness: 1,
                         ),
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            AnimatedOpacity(
-                              opacity: (1.0 - _animationController.value).clamp(
-                                0.0,
-                                1.0,
-                              ),
-                              duration: Duration.zero,
-                              child: Visibility(
-                                visible: _animationController.value < 0.8,
-                                maintainState: true,
-                                maintainAnimation: true,
-                                maintainSize: false,
-                                child: IgnorePointer(
-                                  ignoring: _animationController.value > 0.5,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      SidebarItem(
-                                        title: 'Ayuda y Soporte',
-                                        icon: LucideIcons.circleHelp,
-                                        isSelected:
-                                            sidebarState.currentSelectedRoute ==
-                                            'Ayuda y Soporte',
-                                        onTap: () {
-                                          context.read<SidebarBloc>().add(
-                                            const SidebarRouteSelected(
-                                              'Ayuda y Soporte',
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      SidebarItem(
-                                        title: 'Configuración',
-                                        icon: LucideIcons.settings,
-                                        isSelected:
-                                            sidebarState.currentSelectedRoute ==
-                                            'Configuración',
-                                        onTap: () {
-                                          context.read<SidebarBloc>().add(
-                                            const SidebarRouteSelected(
-                                              'Configuración',
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      SidebarItem(
-                                        title: 'Cerrar Sesión',
-                                        icon: LucideIcons.logOut,
-                                        onTap: () => _handleLogout(context),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            AnimatedOpacity(
-                              opacity: _animationController.value.clamp(
-                                0.0,
-                                1.0,
-                              ),
-                              duration: Duration.zero,
-                              child: Visibility(
-                                visible: _animationController.value > 0.2,
-                                maintainState: true,
-                                maintainAnimation: true,
-                                maintainSize: false,
-                                child: IgnorePointer(
-                                  ignoring: _animationController.value < 0.5,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      _buildCollapsedFooterItem(
-                                        LucideIcons.circleHelp,
-                                        sidebarState.currentSelectedRoute ==
-                                            'Ayuda y Soporte',
-                                        () => context.read<SidebarBloc>().add(
-                                          const SidebarRouteSelected(
-                                            'Ayuda y Soporte',
-                                          ),
-                                        ),
-                                      ),
-                                      _buildCollapsedFooterItem(
-                                        LucideIcons.settings,
-                                        sidebarState.currentSelectedRoute ==
-                                            'Configuración',
-                                        () => context.read<SidebarBloc>().add(
-                                          const SidebarRouteSelected(
-                                            'Configuración',
-                                          ),
-                                        ),
-                                      ),
-                                      _buildCollapsedFooterItem(
-                                        LucideIcons.logOut,
-                                        false,
-                                        () => _handleLogout(context),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        _buildFooterSection(sidebarState, context),
                         const SizedBox(height: 10),
                       ],
                     ),
@@ -399,6 +244,250 @@ class _SidebarWidgetState extends State<SidebarWidget>
           );
         },
       ),
+    );
+  }
+
+  Widget _buildSidebarContent(
+    SidebarState sidebarState,
+    List<String> portalEmpleadoRoutes,
+    List<String> reclutamientoRoutes,
+    List<String> portalCandidatoRoutes,
+    BuildContext context,
+  ) {
+    // Si es drawer, siempre mostrar contenido expandido
+    if (widget.isDrawer) {
+      return ExpandedSidebarContent(
+        key: const ValueKey('drawer_expanded_content'),
+        currentRoute: sidebarState.currentSelectedRoute,
+        expandedParentRoutes: sidebarState.expandedParentRoutes,
+        portalEmpleadoRoutes: portalEmpleadoRoutes,
+        reclutamientoRoutes: reclutamientoRoutes,
+        portalCandidatoRoutes: portalCandidatoRoutes,
+        onNavigateToRoute: (
+          routeName, {
+          parentRouteName,
+          isParentItem = false,
+        }) {
+          context.read<SidebarBloc>().add(
+            SidebarRouteSelected(
+              routeName,
+              parentRouteName: parentRouteName,
+              isParentItem: isParentItem,
+            ),
+          );
+          // Cerrar el drawer después de navegar
+          Navigator.of(context).pop();
+        },
+        onToggleExpansion: (parentRouteName) {
+          context.read<SidebarBloc>().add(
+            SidebarExpansionToggled(parentRouteName),
+          );
+        },
+      );
+    }
+
+    // Para web, usar la lógica original con stack
+    return Stack(
+      alignment: Alignment.topLeft,
+      children: [
+        AnimatedOpacity(
+          opacity: (1.0 - _animationController.value).clamp(0.0, 1.0),
+          duration: Duration.zero,
+          child: Visibility(
+            visible: _animationController.value < 1.0,
+            maintainState: true,
+            maintainAnimation: true,
+            maintainSize: false,
+            child: IgnorePointer(
+              ignoring: _animationController.value > 0.5,
+              child: ExpandedSidebarContent(
+                key: const ValueKey('expanded_content_stack_child'),
+                currentRoute: sidebarState.currentSelectedRoute,
+                expandedParentRoutes: sidebarState.expandedParentRoutes,
+                portalEmpleadoRoutes: portalEmpleadoRoutes,
+                reclutamientoRoutes: reclutamientoRoutes,
+                portalCandidatoRoutes: portalCandidatoRoutes,
+                onNavigateToRoute: (
+                  routeName, {
+                  parentRouteName,
+                  isParentItem = false,
+                }) {
+                  context.read<SidebarBloc>().add(
+                    SidebarRouteSelected(
+                      routeName,
+                      parentRouteName: parentRouteName,
+                      isParentItem: isParentItem,
+                    ),
+                  );
+                },
+                onToggleExpansion: (parentRouteName) {
+                  context.read<SidebarBloc>().add(
+                    SidebarExpansionToggled(parentRouteName),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+        AnimatedOpacity(
+          opacity: _animationController.value.clamp(0.0, 1.0),
+          duration: Duration.zero,
+          child: Visibility(
+            visible: _animationController.value > 0.0,
+            maintainState: true,
+            maintainAnimation: true,
+            maintainSize: false,
+            child: IgnorePointer(
+              ignoring: _animationController.value < 0.5,
+              child: CollapsedSidebarContent(
+                key: const ValueKey('collapsed_content_stack_child'),
+                currentRoute: sidebarState.currentSelectedRoute,
+                portalEmpleadoRoutes: portalEmpleadoRoutes,
+                reclutamientoRoutes: reclutamientoRoutes,
+                portalCandidatoRoutes: portalCandidatoRoutes,
+                onNavigateToRoute: (routeName, {parentRouteName}) {
+                  context.read<SidebarBloc>().add(
+                    SidebarRouteSelected(
+                      routeName,
+                      parentRouteName: parentRouteName,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFooterSection(SidebarState sidebarState, BuildContext context) {
+    // Si es drawer, siempre mostrar footer expandido
+    if (widget.isDrawer) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SidebarItem(
+            title: 'Ayuda y Soporte',
+            icon: LucideIcons.circleHelp,
+            isSelected: sidebarState.currentSelectedRoute == 'Ayuda y Soporte',
+            onTap: () {
+              context.read<SidebarBloc>().add(
+                const SidebarRouteSelected('Ayuda y Soporte'),
+              );
+              Navigator.of(context).pop();
+            },
+          ),
+          SidebarItem(
+            title: 'Configuración',
+            icon: LucideIcons.settings,
+            isSelected: sidebarState.currentSelectedRoute == 'Configuración',
+            onTap: () {
+              context.read<SidebarBloc>().add(
+                const SidebarRouteSelected('Configuración'),
+              );
+              Navigator.of(context).pop();
+            },
+          ),
+          SidebarItem(
+            title: 'Cerrar Sesión',
+            icon: LucideIcons.logOut,
+            onTap: () {
+              Navigator.of(context).pop();
+              _handleLogout(context);
+            },
+          ),
+        ],
+      );
+    }
+
+    // Para web, usar la lógica original con stack
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        AnimatedOpacity(
+          opacity: (1.0 - _animationController.value).clamp(0.0, 1.0),
+          duration: Duration.zero,
+          child: Visibility(
+            visible: _animationController.value < 0.8,
+            maintainState: true,
+            maintainAnimation: true,
+            maintainSize: false,
+            child: IgnorePointer(
+              ignoring: _animationController.value > 0.5,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SidebarItem(
+                    title: 'Ayuda y Soporte',
+                    icon: LucideIcons.circleHelp,
+                    isSelected:
+                        sidebarState.currentSelectedRoute == 'Ayuda y Soporte',
+                    onTap: () {
+                      context.read<SidebarBloc>().add(
+                        const SidebarRouteSelected('Ayuda y Soporte'),
+                      );
+                    },
+                  ),
+                  SidebarItem(
+                    title: 'Configuración',
+                    icon: LucideIcons.settings,
+                    isSelected:
+                        sidebarState.currentSelectedRoute == 'Configuración',
+                    onTap: () {
+                      context.read<SidebarBloc>().add(
+                        const SidebarRouteSelected('Configuración'),
+                      );
+                    },
+                  ),
+                  SidebarItem(
+                    title: 'Cerrar Sesión',
+                    icon: LucideIcons.logOut,
+                    onTap: () => _handleLogout(context),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        AnimatedOpacity(
+          opacity: _animationController.value.clamp(0.0, 1.0),
+          duration: Duration.zero,
+          child: Visibility(
+            visible: _animationController.value > 0.2,
+            maintainState: true,
+            maintainAnimation: true,
+            maintainSize: false,
+            child: IgnorePointer(
+              ignoring: _animationController.value < 0.5,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildCollapsedFooterItem(
+                    LucideIcons.circleHelp,
+                    sidebarState.currentSelectedRoute == 'Ayuda y Soporte',
+                    () => context.read<SidebarBloc>().add(
+                      const SidebarRouteSelected('Ayuda y Soporte'),
+                    ),
+                  ),
+                  _buildCollapsedFooterItem(
+                    LucideIcons.settings,
+                    sidebarState.currentSelectedRoute == 'Configuración',
+                    () => context.read<SidebarBloc>().add(
+                      const SidebarRouteSelected('Configuración'),
+                    ),
+                  ),
+                  _buildCollapsedFooterItem(
+                    LucideIcons.logOut,
+                    false,
+                    () => _handleLogout(context),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

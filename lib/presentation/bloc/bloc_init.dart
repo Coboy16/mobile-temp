@@ -68,5 +68,10 @@ List<SingleChildWidget> getListBloc() {
     BlocProvider<TipChangeBloc>(create: (_) => TipChangeBloc()),
     BlocProvider<AdvanceRequestBloc>(create: (_) => AdvanceRequestBloc()),
     BlocProvider<UniformRequestBloc>(create: (_) => UniformRequestBloc()),
+    BlocProvider<ExitRequestBloc>(create: (_) => ExitRequestBloc()),
+    BlocProvider<HousingChangeRequestBloc>(
+      create: (_) => HousingChangeRequestBloc(),
+    ),
+    BlocProvider<LetterRequestBloc>(create: (_) => LetterRequestBloc()),
   ];
 }

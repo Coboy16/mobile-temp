@@ -12,7 +12,13 @@ enum SimpleRequestType {
     'Complete los detalles de su solicitud',
   ),
   advance('Solicitud de Avance', 'Complete los detalles de su solicitud'),
-  uniform('Solicitud de Uniforme', 'Complete los detalles de su solicitud');
+  uniform('Solicitud de Uniforme', 'Complete los detalles de su solicitud'),
+  letter('Solicitud de Cartas', 'Complete los detalles de su solicitud'),
+  housingChange(
+    'Solicitud de Cambio de Alojamiento',
+    'Complete los detalles de su solicitud',
+  ),
+  exit('Solicitud de Salida', 'Complete los detalles de su solicitud');
 
   const SimpleRequestType(this.title, this.subtitle);
 
@@ -31,6 +37,12 @@ enum SimpleRequestType {
         return 'Fecha requerida';
       case SimpleRequestType.uniform:
         return 'Fecha requerida';
+      case SimpleRequestType.letter:
+        return 'Fecha de efectividad';
+      case SimpleRequestType.housingChange:
+        return '';
+      case SimpleRequestType.exit:
+        return 'Fecha de salida';
     }
   }
 
@@ -46,6 +58,12 @@ enum SimpleRequestType {
         return 'Describa el motivo de su solicitud de avance';
       case SimpleRequestType.uniform:
         return 'Describa el motivo de su solicitud de uniforme';
+      case SimpleRequestType.letter:
+        return 'Describa el motivo o detalles adicionales para su solicitud de carta';
+      case SimpleRequestType.housingChange:
+        return 'Describa el motivo de su solicitud de cambio de alojamiento';
+      case SimpleRequestType.exit:
+        return 'Describa el motivo de su solicitud de salida';
     }
   }
 
@@ -61,6 +79,12 @@ enum SimpleRequestType {
         return 'Los avances están sujetos a políticas de la empresa y disponibilidad presupuestaria. El monto será descontado de futuros pagos.';
       case SimpleRequestType.uniform:
         return 'Las solicitudes de uniforme están sujetas a disponibilidad de inventario y políticas de reposición de la empresa.';
+      case SimpleRequestType.letter:
+        return 'Especifique claramente el tipo de carta que necesita y el propósito para el cual será utilizada. Adjunte cualquier documento de respaldo si es necesario.';
+      case SimpleRequestType.housingChange:
+        return 'Las solicitudes de cambio de alojamiento serán evaluadas según disponibilidad y políticas de la empresa. Detalle claramente su situación actual y la razón del cambio.';
+      case SimpleRequestType.exit:
+        return 'Las solicitudes de salida o terminación de contrato deben incluir la fecha efectiva y el motivo detallado. Asegúrese de cumplir con los plazos de preaviso establecidos en su contrato.';
     }
   }
 }

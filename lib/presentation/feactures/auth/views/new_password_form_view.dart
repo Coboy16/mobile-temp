@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fe_core_vips/core/l10n/app_localizations.dart';
+import 'package:toastification/toastification.dart';
 
 import '/presentation/feactures/auth/bloc/blocs.dart';
 import '/presentation/feactures/auth/views/auth_layout.dart';
@@ -28,8 +29,17 @@ class NewPasswordFormView extends StatelessWidget {
       listener: (context, state) {
         if (state is ForgotPasswordChangeSuccess && state.email == args.email) {
           ScaffoldMessenger.of(context).removeCurrentSnackBar();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.passwordChangeSuccessMessage)),
+          toastification.show(
+            context: context,
+            type: ToastificationType.success,
+            style: ToastificationStyle.minimal,
+            title: Text(l10n.passwordChangeSuccessTitle),
+            description: Text(l10n.passwordChangeSuccessMessage),
+            alignment: Alignment.topCenter,
+            autoCloseDuration: const Duration(seconds: 4),
+            animationDuration: const Duration(milliseconds: 300),
+            showIcon: true,
+            showProgressBar: false,
           );
           context.read<ForgotPasswordBloc>().add(ForgotPasswordReset());
           context.goNamed(AppRoutes.login);

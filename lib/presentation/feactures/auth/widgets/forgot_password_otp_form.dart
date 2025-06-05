@@ -8,14 +8,14 @@ class ForgotPasswordOtpForm extends StatefulWidget {
   final String email;
   final Function(String otp) onOtpVerified;
   final VoidCallback onResendOtp;
-  final VoidCallback onGoBack;
+  // final VoidCallback onGoBack;
 
   const ForgotPasswordOtpForm({
     super.key,
     required this.email,
     required this.onOtpVerified,
     required this.onResendOtp,
-    required this.onGoBack,
+    // required this.onGoBack,
   });
 
   @override
@@ -121,12 +121,12 @@ class _ForgotPasswordOtpFormState extends State<ForgotPasswordOtpForm> {
               child: Text(l10n.forgotPasswordOtpFormResendCodeButton),
             ),
           ),
-          Center(
-            child: TextButton(
-              onPressed: widget.onGoBack,
-              child: Text(l10n.forgotPasswordOtpFormEnterDifferentEmailButton),
-            ),
-          ),
+          // Center(
+          //   child: TextButton(
+          //     onPressed: widget.onGoBack,
+          //     child: Text(l10n.forgotPasswordOtpFormEnterDifferentEmailButton),
+          //   ),
+          // ),
         ],
       ),
     );

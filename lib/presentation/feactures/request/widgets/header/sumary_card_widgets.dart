@@ -69,7 +69,7 @@ class SummaryCards extends StatelessWidget {
           children: [
             Expanded(
               child: _SummaryCard(
-                title: 'Total Solicitudes',
+                title: 'Solicitudes',
                 count: '124',
                 icon: LucideIcons.fileSpreadsheet,
                 iconColor: Colors.blue.shade700,
@@ -171,6 +171,7 @@ class _SummaryCard extends StatelessWidget {
                     title,
                     style: AppTextStyles.titlekpi,
                     overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
                   ),
                   const SizedBox(height: 8),
                   Text(

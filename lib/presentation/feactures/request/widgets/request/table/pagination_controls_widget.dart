@@ -10,7 +10,10 @@ class PaginationControls extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: isMobile ? SizedBox.shrink() : _buildDesktopPagination(context),
+      child:
+          isMobile
+              ? _buildMobilePagination(context)
+              : _buildDesktopPagination(context),
     );
   }
 
@@ -39,12 +42,14 @@ class PaginationControls extends StatelessWidget {
               context,
               LucideIcons.chevronsLeft,
               tooltip: 'Primera',
+              compact: false,
             ),
             const SizedBox(width: 4),
             _buildPaginationButton(
               context,
               LucideIcons.chevronLeft,
               tooltip: 'Anterior',
+              compact: false,
             ),
             const SizedBox(width: 4),
             _buildPageNumber(1, isActive: true),
@@ -55,12 +60,14 @@ class PaginationControls extends StatelessWidget {
               context,
               LucideIcons.chevronRight,
               tooltip: 'Siguiente',
+              compact: false,
             ),
             const SizedBox(width: 4),
             _buildPaginationButton(
               context,
               LucideIcons.chevronsRight,
               tooltip: 'Última',
+              compact: false,
             ),
           ],
         ),
@@ -69,35 +76,94 @@ class PaginationControls extends StatelessWidget {
   }
 
   Widget _buildMobilePagination(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              _buildPaginationButton(context, LucideIcons.chevronsLeft),
-              const SizedBox(width: 4),
-              _buildPaginationButton(context, LucideIcons.chevronLeft),
-              const SizedBox(width: 4),
-              _buildPageNumber(1, isActive: true),
-              const SizedBox(width: 4),
-              _buildPageNumber(2),
-              const SizedBox(width: 4),
-              _buildPaginationButton(context, LucideIcons.chevronRight),
-              const SizedBox(width: 4),
-              _buildPaginationButton(context, LucideIcons.chevronsRight),
-            ],
-          ),
+        // Primera fila: Info a la izquierda, dropdown a la derecha
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Info de resultados
+            Flexible(
+              child: Text(
+                'Mostrando 1-10 de 17 resultados',
+                style: textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade600,
+                  fontSize: 12,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+
+            // Dropdown con label
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Filas:',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _buildPageSizeDropdown(compact: true),
+              ],
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        // Segunda fila: Botones de navegación centrados
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildPaginationButton(
+              context,
+              LucideIcons.chevronsLeft,
+              tooltip: 'Primera',
+              compact: true,
+            ),
+            const SizedBox(width: 4),
+            _buildPaginationButton(
+              context,
+              LucideIcons.chevronLeft,
+              tooltip: 'Anterior',
+              compact: true,
+            ),
+            const SizedBox(width: 8),
+            _buildPageNumber(1, isActive: true),
+            const SizedBox(width: 4),
+            _buildPageNumber(2),
+            const SizedBox(width: 8),
+            _buildPaginationButton(
+              context,
+              LucideIcons.chevronRight,
+              tooltip: 'Siguiente',
+              compact: true,
+            ),
+            const SizedBox(width: 4),
+            _buildPaginationButton(
+              context,
+              LucideIcons.chevronsRight,
+              tooltip: 'Última',
+              compact: true,
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildPageSizeDropdown() {
+  Widget _buildPageSizeDropdown({bool compact = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 6 : 8,
+        vertical: compact ? 2 : 4,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFFF9FAFB),
         border: Border.all(color: const Color(0xFFE5E7EB)),
@@ -110,15 +176,21 @@ class PaginationControls extends StatelessWidget {
               [10, 25, 50].map((int value) {
                 return DropdownMenuItem<int>(
                   value: value,
-                  child: Text('$value', style: const TextStyle(fontSize: 13)),
+                  child: Text(
+                    '$value',
+                    style: TextStyle(
+                      fontSize: compact ? 12 : 13,
+                      color: Colors.black87,
+                    ),
+                  ),
                 );
               }).toList(),
           onChanged: (int? newValue) {
             // TODO: cambiar filas por página
           },
           isDense: true,
-          style: const TextStyle(fontSize: 13, color: Colors.black87),
-          icon: const Icon(LucideIcons.chevronDown, size: 16),
+          style: TextStyle(fontSize: compact ? 12 : 13, color: Colors.black87),
+          icon: Icon(LucideIcons.chevronDown, size: compact ? 14 : 16),
         ),
       ),
     );
@@ -129,23 +201,48 @@ class PaginationControls extends StatelessWidget {
     IconData icon, {
     VoidCallback? onPressed,
     String? tooltip,
+    bool compact = false,
   }) {
     return Tooltip(
       message: tooltip ?? '',
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: IconButton(
-          icon: Icon(icon, size: 16),
-          padding: const EdgeInsets.all(8),
-          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-          splashRadius: 20,
-          onPressed: onPressed ?? () {},
-        ),
-      ),
+      child:
+          compact
+              ? // Estilo compacto para móvil (mismo tamaño que _buildPageNumber)
+              GestureDetector(
+                onTap: onPressed ?? () {},
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9FAFB),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    child: Icon(icon, size: 16, color: Colors.black87),
+                  ),
+                ),
+              )
+              : // Estilo normal para desktop
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: IconButton(
+                  icon: Icon(icon, size: 16),
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  splashRadius: 20,
+                  onPressed: onPressed ?? () {},
+                ),
+              ),
     );
   }
 

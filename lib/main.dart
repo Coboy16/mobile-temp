@@ -47,7 +47,7 @@ class MyApp extends StatelessWidget {
               Breakpoint(start: 1921, end: double.infinity, name: '4K'),
             ],
           ),
-      title: 'Fe Core Vips',
+      title: 'Ho-tech del Caribe',
       routerConfig: AppRouter.router,
       localizationsDelegates: const [
         AppLocalizations.delegate,

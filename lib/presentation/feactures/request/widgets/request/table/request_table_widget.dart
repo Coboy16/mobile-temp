@@ -220,33 +220,37 @@ class _RequestsTableAreaState extends State<RequestsTableArea> {
     );
   }
 
-  // Vista móvil sin paginación interna
+  // Vista móvil SIN scroll interno - modificada para usar Column
   Widget _buildMobileView(List<RequestData> requests) {
     return Container(
-      constraints: const BoxConstraints(minHeight: 400, maxHeight: 600),
+      // Quitamos las constraints de altura para que se adapte al contenido
       padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
       child:
           requests.isEmpty
               ? _buildEmptyState()
-              : ListView.builder(
-                shrinkWrap: true,
-                itemCount: requests.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      bottom: index == requests.length - 1 ? 0 : 16.0,
-                    ),
-                    child: RequestCard(
-                      request: requests[index],
-                      onViewDetails: () {
-                        context.go('/home/request/${requests[index].code}');
-                      },
-                      onActionSelected: (action) {
-                        /* TODO */
-                      },
-                    ),
-                  );
-                },
+              : Column(
+                // Cambiamos ListView.builder por Column
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children:
+                    requests.asMap().entries.map((entry) {
+                      final int index = entry.key;
+                      final RequestData request = entry.value;
+
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: index == requests.length - 1 ? 0 : 16.0,
+                        ),
+                        child: RequestCard(
+                          request: request,
+                          onViewDetails: () {
+                            context.go('/home/request/${request.code}');
+                          },
+                          onActionSelected: (action) {
+                            /* TODO */
+                          },
+                        ),
+                      );
+                    }).toList(),
               ),
     );
   }

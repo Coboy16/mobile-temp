@@ -6,12 +6,18 @@ class SimpleRequestData {
   final String? reason;
   final List<UploadedFile>? attachments;
   final SimpleRequestType requestType;
+  final ExitType? exitType;
+  final LetterType? letterType;
+  final String? addressee;
 
   const SimpleRequestData({
+    this.letterType,
+    this.addressee,
     this.employee,
     this.effectiveDate,
     this.reason,
     this.attachments,
+    this.exitType,
     required this.requestType,
   });
 
@@ -21,6 +27,9 @@ class SimpleRequestData {
     String? reason,
     List<UploadedFile>? attachments,
     SimpleRequestType? requestType,
+    ExitType? exitType,
+    LetterType? letterType,
+    String? addressee,
   }) {
     return SimpleRequestData(
       employee: employee ?? this.employee,
@@ -28,6 +37,9 @@ class SimpleRequestData {
       reason: reason ?? this.reason,
       attachments: attachments ?? this.attachments,
       requestType: requestType ?? this.requestType,
+      exitType: exitType ?? this.exitType,
+      letterType: letterType ?? this.letterType,
+      addressee: addressee ?? this.addressee,
     );
   }
 
@@ -38,6 +50,9 @@ class SimpleRequestData {
       'reason': reason,
       'attachments': attachments?.map((f) => f.name).toList(),
       'request_type': requestType.name,
+      'exitType': exitType?.name,
+      'letter_type': letterType?.name,
+      'addressee': addressee,
     };
   }
 }

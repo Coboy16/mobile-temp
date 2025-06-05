@@ -109,55 +109,72 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
 
     var size = renderBox.size;
     var offset = renderBox.localToGlobal(Offset.zero);
-    debugPrint('🔧 CustomDropdown: RenderBox size: $size, offset: $offset');
 
-    // Obtener el ancho de la pantalla para calcular límites
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    // Obtener dimensiones de pantalla seguras
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+    final screenHeight = mediaQuery.size.height;
+    final padding = mediaQuery.padding;
+    final viewInsets = mediaQuery.viewInsets;
 
-    // Calcular ancho seguro del dropdown - usar un valor fijo mínimo
-    double dropdownWidth = widget.dropdownWidth ?? 200;
-    double minWidth = 160;
+    // Calcular área segura de pantalla
+    final safeTop = padding.top;
+    final safeBottom = padding.bottom + viewInsets.bottom;
+    final availableHeight = screenHeight - safeTop - safeBottom;
+    final safeMargin = 16.0; // Margen de seguridad
 
-    // Si el ancho del campo es razonable, usarlo como base
-    if (size.width > minWidth) {
-      dropdownWidth = dropdownWidth < size.width ? size.width : dropdownWidth;
-    } else {
-      dropdownWidth = dropdownWidth < minWidth ? minWidth : dropdownWidth;
-    }
+    // Calcular ancho del dropdown
+    double dropdownWidth = widget.dropdownWidth ?? size.width;
+    const double minWidth = 160;
+    const double maxWidthRatio = 0.9;
 
-    // Verificar que no exceda el ancho de pantalla
-    double availableWidth = screenWidth - offset.dx - 20;
-    if (dropdownWidth > availableWidth) {
-      dropdownWidth = availableWidth > minWidth ? availableWidth : minWidth;
-    }
+    dropdownWidth = dropdownWidth.clamp(minWidth, screenWidth * maxWidthRatio);
 
-    // Ajustar posición si es necesario
+    // Ajustar posición horizontal
     double leftPosition = offset.dx;
-    if (leftPosition + dropdownWidth > screenWidth - 20) {
-      leftPosition = screenWidth - dropdownWidth - 20;
+    if (leftPosition + dropdownWidth > screenWidth - safeMargin) {
+      leftPosition = screenWidth - dropdownWidth - safeMargin;
     }
-    leftPosition = leftPosition < 10 ? 10 : leftPosition;
+    leftPosition = leftPosition.clamp(
+      safeMargin,
+      screenWidth - dropdownWidth - safeMargin,
+    );
 
-    // Calcular altura del dropdown
-    double itemHeight = 48.0;
-    double maxHeight = widget.maxVisibleItems * itemHeight;
-    double actualHeight = widget.items.length * itemHeight;
-    double baseDropdownHeight =
-        actualHeight > maxHeight ? maxHeight : actualHeight;
+    // Calcular dimensiones del contenido
+    const double itemHeight = 48.0;
+    final int itemCount =
+        widget.items.where((item) => item.value != null).length;
+    final double idealHeight = itemCount * itemHeight;
+    final double maxAllowedHeight = widget.maxVisibleItems * itemHeight;
+    final double contentHeight = idealHeight.clamp(
+      itemHeight,
+      maxAllowedHeight,
+    );
 
-    // Calcular espacio disponible hacia abajo
-    final availableSpaceDown = screenHeight - offset.dy - size.height - 20;
-    double dropdownHeight =
-        baseDropdownHeight > availableSpaceDown
-            ? availableSpaceDown
-            : baseDropdownHeight;
+    // Calcular espacios disponibles arriba y abajo
+    final double spaceBelow =
+        availableHeight - (offset.dy - safeTop) - size.height - safeMargin;
+    final double spaceAbove = (offset.dy - safeTop) - safeMargin;
 
-    // Asegurar altura mínima
-    dropdownHeight = dropdownHeight < 100 ? 100 : dropdownHeight;
+    // Decidir si mostrar arriba o abajo
+    bool showAbove = false;
+    double finalHeight = contentHeight;
+    double topPosition = offset.dy + size.height + 4;
+
+    if (contentHeight > spaceBelow) {
+      if (spaceAbove > spaceBelow && spaceAbove >= itemHeight * 2) {
+        // Mostrar arriba si hay más espacio arriba
+        showAbove = true;
+        finalHeight = contentHeight.clamp(itemHeight * 2, spaceAbove);
+        topPosition = offset.dy - finalHeight - 4;
+      } else {
+        // Mostrar abajo pero ajustar altura
+        finalHeight = spaceBelow.clamp(itemHeight * 2, contentHeight);
+      }
+    }
 
     debugPrint(
-      '🔧 CustomDropdown: Creando OverlayEntry con needsScroll: ${actualHeight > maxHeight}',
+      '🔧 CustomDropdown: Calculado - showAbove: $showAbove, finalHeight: $finalHeight',
     );
 
     return OverlayEntry(
@@ -178,34 +195,27 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                     child: Container(color: Colors.transparent),
                   ),
                 ),
-                // El dropdown con z-index alto
+                // El dropdown
                 Positioned(
                   left: leftPosition,
-                  top: offset.dy + size.height + 4,
+                  top: topPosition,
                   child: Material(
                     elevation: 8,
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
                       width: dropdownWidth,
-                      height: dropdownHeight,
-                      constraints: BoxConstraints(
-                        maxHeight: availableSpaceDown,
-                        maxWidth: dropdownWidth,
-                        minWidth: minWidth,
-                        minHeight: 100,
-                      ),
+                      height: finalHeight,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: Colors.grey[300]!),
                       ),
-                      child: Builder(
-                        builder: (context) {
-                          return _buildDropdownContent(
-                            setOverlayState,
-                            actualHeight > maxHeight,
-                          );
-                        },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: _buildDropdownContent(
+                          setOverlayState,
+                          finalHeight < idealHeight,
+                        ),
                       ),
                     ),
                   ),
@@ -223,7 +233,11 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
       return Container(
         height: 48,
         padding: const EdgeInsets.all(16),
-        child: const Text('No hay opciones disponibles'),
+        alignment: Alignment.center,
+        child: const Text(
+          'No hay opciones disponibles',
+          style: TextStyle(color: Colors.grey),
+        ),
       );
     }
 
@@ -234,22 +248,31 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
             .map((item) => _buildDropdownItem(item))
             .toList();
 
-    debugPrint('🔧 CustomDropdown: validItems.length: ${validItems.length}');
-
-    if (!needsScroll) {
-      debugPrint(
-        '🔧 CustomDropdown: No necesita scroll, mostrando Column simple',
+    if (validItems.isEmpty) {
+      return Container(
+        height: 48,
+        padding: const EdgeInsets.all(16),
+        alignment: Alignment.center,
+        child: const Text(
+          'No hay opciones válidas',
+          style: TextStyle(color: Colors.grey),
+        ),
       );
-      return Column(mainAxisSize: MainAxisSize.min, children: validItems);
     }
 
-    debugPrint(
-      '🔧 CustomDropdown: Necesita scroll, usando SingleChildScrollView SIN controller',
-    );
-
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      child: Column(mainAxisSize: MainAxisSize.min, children: validItems),
+    // Usar siempre ListView para evitar problemas de overflow
+    // El contenedor padre ya tiene altura fija, así que ListView respetará esas constraints
+    return Scrollbar(
+      thumbVisibility: needsScroll,
+      child: ListView.builder(
+        shrinkWrap: true,
+        physics:
+            needsScroll
+                ? const AlwaysScrollableScrollPhysics()
+                : const NeverScrollableScrollPhysics(),
+        itemCount: validItems.length,
+        itemBuilder: (context, index) => validItems[index],
+      ),
     );
   }
 
@@ -259,11 +282,9 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
     }
 
     bool isSelected = _selectedValue == item.value;
-    debugPrint('🔧 CustomDropdown: Item isSelected: $isSelected');
 
     return InkWell(
       onTap: () {
-        debugPrint('🔧 CustomDropdown: Item tapped - value: ${item.value}');
         _selectItem(item.value!);
       },
       child: Container(
@@ -276,42 +297,32 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                   ? Theme.of(context).primaryColor.withOpacity(0.1)
                   : Colors.transparent,
         ),
-        child:
-            isSelected
-                ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Expanded(
-                      child: DefaultTextStyle(
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        child: item.child,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.check,
-                      size: 16,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ],
-                )
-                : Align(
-                  alignment: Alignment.centerLeft,
-                  child: DefaultTextStyle(
-                    style: const TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.normal,
-                      fontSize: 14,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    child: item.child,
-                  ),
+        child: Row(
+          children: [
+            Expanded(
+              child: DefaultTextStyle(
+                style: TextStyle(
+                  color:
+                      isSelected
+                          ? Theme.of(context).primaryColor
+                          : Colors.black87,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  fontSize: 14,
                 ),
+                overflow: TextOverflow.ellipsis,
+                child: item.child,
+              ),
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              Icon(
+                Icons.check,
+                size: 16,
+                color: Theme.of(context).primaryColor,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -365,6 +376,9 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                   size: 20,
                 ),
                 errorText: field.errorText,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
               ),
               child: Text(
                 _getDisplayText(),
@@ -375,6 +389,7 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                               Colors.black87
                           : Colors.grey[600],
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           );

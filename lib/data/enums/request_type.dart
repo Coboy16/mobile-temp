@@ -14,7 +14,13 @@ enum RequestType {
   suspension(
     'Solicitud de Suspensión',
     'Complete los detalles de su solicitud de suspensión',
-  );
+  ),
+  letter('Solicitud de Cartas', 'Complete los detalles de su solicitud'),
+  accommodationChange(
+    'Solicitud de Cambio de Alojamiento',
+    'Complete los detalles de su solicitud',
+  ),
+  exitRequest('Solicitud de Salida', 'Complete los detalles de su solicitud');
 
   const RequestType(this.title, this.subtitle);
 

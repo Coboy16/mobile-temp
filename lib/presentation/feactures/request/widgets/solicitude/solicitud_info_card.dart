@@ -116,8 +116,24 @@ class SolicitudInfoCard extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Comentarios section
-          _buildSectionContent('Comentarios', solicitud.comentarios),
-          const SizedBox(height: 24),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isSmallScreen = constraints.maxWidth < 600;
+              return isSmallScreen
+                  ? SizedBox.shrink()
+                  : Column(
+                    mainAxisSize: MainAxisSize.min,
+
+                    children: [
+                      _buildSectionContent(
+                        'Comentarios',
+                        solicitud.comentarios,
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  );
+            },
+          ),
 
           // Documento adjunto section - responsivo
           _buildDocumentSection(),
@@ -270,7 +286,7 @@ class SolicitudInfoCard extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(right: 15, bottom: 8),
                   child: Container(
-                    width: 40,
+                    width: 135,
                     height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -280,14 +296,35 @@ class SolicitudInfoCard extends StatelessWidget {
                         width: 0.5,
                       ),
                     ),
-                    child: IconButton(
-                      onPressed: () {},
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        side: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 0.4,
+                        ),
+                      ),
                       icon: const Icon(
                         LucideIcons.download,
                         size: 18,
                         color: Colors.black,
                       ),
-                      padding: EdgeInsets.zero,
+                      label: const Text(
+                        'Descargar',
+                        style: TextStyle(
+                          color: Colors.black87,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      onPressed: () {},
                     ),
                   ),
                 ),

@@ -415,10 +415,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get otpVerificationResendButtonForRegistration => 'Reenviar Código';
 
   @override
-  String get emailAlreadyRegisteredError =>
-      'Este correo electrónico ya está registrado. Por favor, intenta iniciar sesión o usa un correo diferente.';
-
-  @override
   String get otpRequestLoadingMessage => 'Solicitando OTP...';
 
   @override
@@ -563,4 +559,127 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get invalidOtpMessage =>
       'El código que ingresaste no es válido. Por favor, revisa e intenta nuevamente.';
+
+  @override
+  String get logoutConfirmTitle => 'Cerrar sesión';
+
+  @override
+  String get logoutConfirmMessage =>
+      '¿Está seguro que desea cerrar sesión? Deberá iniciar sesión nuevamente para acceder al sistema.';
+
+  @override
+  String get logout => 'Cerrar sesión';
+
+  @override
+  String get cancel => 'Cancelar';
+
+  @override
+  String get passwordRecoveryErrorTitle => 'Correo no encontrado';
+
+  @override
+  String get passwordRecoveryErrorMessage =>
+      'Esta dirección de correo no está registrada en el sistema. Verifique e intente nuevamente.';
+
+  @override
+  String get accept => 'Entendido';
+
+  @override
+  String get accountBlockedTitle => 'Cuenta bloqueada temporalmente';
+
+  @override
+  String get accountBlockedMessage =>
+      'Su cuenta ha sido bloqueada temporalmente por motivos de seguridad. Intente nuevamente después de 2 horas o contacte al administrador si necesita asistencia inmediata.';
+
+  @override
+  String get invalidCredentialsTitle => 'Credenciales incorrectas';
+
+  @override
+  String get invalidCredentialsMessage =>
+      'Usuario o contraseña incorrectos. Por favor verifique los datos e intente nuevamente.';
+
+  @override
+  String get userAlreadyExistsTitle => 'Usuario ya existe';
+
+  @override
+  String get emailAlreadyRegisteredError =>
+      'Usuario ya existe, por favor inicie sesión.';
+
+  @override
+  String get passwordMismatchTitle => 'Las contraseñas no coinciden';
+
+  @override
+  String get passwordMismatchMessage =>
+      'Las contraseñas ingresadas no coinciden. Por favor verifique e intente de nuevo.';
+
+  @override
+  String get registrationErrorTitle => 'Error de registro';
+
+  @override
+  String get registrationErrorMessage =>
+      'No se pudo completar el registro. Por favor intente nuevamente.';
+
+  @override
+  String get otpVerificationErrorTitle => 'Código incorrecto';
+
+  @override
+  String get autoLoginFailedTitle => 'Error de inicio automático';
+
+  @override
+  String get formValidationErrorTitle => 'Formulario incompleto';
+
+  @override
+  String get googleSignInCancelledTitle => 'Registro cancelado';
+
+  @override
+  String get passwordChangeSuccessTitle => 'Contraseña actualizada';
+
+  @override
+  String get emailNotProvidedErrorTitle => 'Email requerido';
+
+  @override
+  String get otpVerificationSuccessTitle => 'Código verificado';
+
+  @override
+  String get operationErrorTitle => 'Error';
+
+  @override
+  String get authLoginErrorTitle => 'Error de autenticación';
+
+  @override
+  String get googleLoginErrorTitle => 'Error con Google';
+
+  @override
+  String get loginSuccessTitle => '¡Bienvenido!';
+
+  @override
+  String get loginSuccessMessage =>
+      'Ha iniciado sesión correctamente. Redirigiendo al sistema...';
+
+  @override
+  String get loginSuccessGoogleMessage =>
+      'Inicio de sesión con Google exitoso. Accediendo al sistema...';
+
+  @override
+  String get returnToLoginTitle => 'Regresando';
+
+  @override
+  String get returnToLoginMessage =>
+      'Volviendo a la pantalla de inicio de sesión.';
+
+  @override
+  String get deleteAccountTitle => 'Eliminar Cuenta';
+
+  @override
+  String get deleteAccountMessage =>
+      '¿Estás seguro? Esta acción es irreversible y todos tus datos serán eliminados permanentemente.';
+
+  @override
+  String get deleteConfirm => 'Sí, Eliminar';
+
+  @override
+  String get accountDeletedSuccessTitle => 'Cuenta Eliminada';
+
+  @override
+  String get userIdNotAvailableError =>
+      'ID de usuario no disponible para eliminar la cuenta.';
 }

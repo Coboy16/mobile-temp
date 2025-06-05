@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fe_core_vips/core/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:toastification/toastification.dart';
 
 import '/presentation/feactures/auth/views/auth_layout.dart';
 import '/presentation/feactures/auth/widgets/widgets.dart';
@@ -39,20 +40,6 @@ class _RegisterOtpViewState extends State<RegisterOtpView> {
   final GlobalKey<OtpFormWidgetState> _otpFormKey =
       GlobalKey<OtpFormWidgetState>();
 
-  void _showSnackBar(
-    BuildContext context,
-    String message, {
-    bool isError = false,
-  }) {
-    ScaffoldMessenger.of(context).removeCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Theme.of(context).colorScheme.error : null,
-      ),
-    );
-  }
-
   void _handleOtpVerificationState(
     BuildContext context,
     OtpVerificationState otpState,
@@ -73,21 +60,45 @@ class _RegisterOtpViewState extends State<RegisterOtpView> {
       // Limpiar el formulario OTP cuando hay un error
       _otpFormKey.currentState?.clearOtpField();
 
-      showDialog(
+      CustomConfirmationModal.showSimple(
         context: context,
-        builder:
-            (_) => RegistrationFailedDialog(message: l10n.invalidOtpMessage),
+        title: l10n.otpVerificationErrorTitle,
+        subtitle: l10n.invalidOtpMessage,
+        confirmButtonText: l10n.accept,
+        confirmButtonColor: const Color(0xFFDC2626), // Rojo para error
+        width: 420,
+        onConfirm: () {
+          Navigator.of(context).pop();
+        },
       );
     } else if (otpState is OtpRequestSuccess &&
         otpState.email == widget.registrationArgs.email &&
         otpState.wasOnlyRequest == true) {
-      _showSnackBar(context, l10n.otpResendSuccessMessage(otpState.email));
+      toastification.show(
+        context: context,
+        type: ToastificationType.success,
+        style: ToastificationStyle.minimal,
+        title: Text('Código reenviado'),
+        description: Text(l10n.otpResendSuccessMessage(otpState.email)),
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 4),
+        animationDuration: const Duration(milliseconds: 300),
+        showIcon: true,
+        showProgressBar: false,
+      );
     } else if (otpState is OtpRequestFailure &&
         otpState.wasOnlyRequest == true) {
       // Si el reenvío falla durante el proceso de registro OTP
-      showDialog(
+      CustomConfirmationModal.showSimple(
         context: context,
-        builder: (_) => RegistrationFailedDialog(message: otpState.message),
+        title: l10n.otpVerificationErrorTitle,
+        subtitle: l10n.invalidOtpMessage,
+        confirmButtonText: l10n.accept,
+        confirmButtonColor: const Color(0xFFDC2626), // Rojo para error
+        width: 420,
+        onConfirm: () {
+          Navigator.of(context).pop();
+        },
       );
     }
   }
@@ -104,10 +115,16 @@ class _RegisterOtpViewState extends State<RegisterOtpView> {
         ),
       );
     } else if (registerState is RegisterFailure) {
-      showDialog(
+      CustomConfirmationModal.showSimple(
         context: context,
-        builder:
-            (_) => RegistrationFailedDialog(message: registerState.message),
+        title: l10n.otpVerificationErrorTitle,
+        subtitle: l10n.invalidOtpMessage,
+        confirmButtonText: l10n.accept,
+        confirmButtonColor: const Color(0xFFDC2626),
+        width: 420,
+        onConfirm: () {
+          Navigator.of(context).pop();
+        },
       );
     }
   }
@@ -116,10 +133,18 @@ class _RegisterOtpViewState extends State<RegisterOtpView> {
     if (authState is AuthAuthenticated) {
       context.goNamed(AppRoutes.homeRequestName);
     } else if (authState is AuthFailure) {
-      _showSnackBar(
-        context,
-        '${AppLocalizations.of(context)!.autoLoginFailedMessage}: ${authState.message}',
-        isError: true,
+      final l10n = AppLocalizations.of(context)!;
+
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        style: ToastificationStyle.minimal,
+        title: Text(l10n.autoLoginFailedTitle),
+        description: Text(authState.message),
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 5),
+        showIcon: true,
+        showProgressBar: false,
       );
       context.goNamed(AppRoutes.login);
     }

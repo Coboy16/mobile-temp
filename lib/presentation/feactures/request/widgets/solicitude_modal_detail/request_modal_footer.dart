@@ -27,6 +27,12 @@ class RequestModalFooter extends StatelessWidget {
         return 'Enviar solicitud de licencia';
       case RequestType.suspension:
         return 'Enviar solicitud de suspensión';
+      case RequestType.letter:
+        return 'Enviar solicitud de cartas';
+      case RequestType.accommodationChange:
+        return 'Enviar solicitud de alojamiento';
+      case RequestType.exitRequest:
+        return 'Enviar solicitud de salida';
     }
   }
 
@@ -39,6 +45,12 @@ class RequestModalFooter extends StatelessWidget {
       case RequestType.medicalLeave:
         return 'Enviar solicitud';
       case RequestType.suspension:
+        return 'Enviar solicitud';
+      case RequestType.letter:
+        return 'Enviar solicitud';
+      case RequestType.accommodationChange:
+        return 'Enviar solicitud';
+      case RequestType.exitRequest:
         return 'Enviar solicitud';
     }
   }

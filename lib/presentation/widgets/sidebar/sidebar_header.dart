@@ -12,12 +12,14 @@ class SidebarHeaderWithToggle extends StatelessWidget {
   final bool isExpanded;
   final VoidCallback onToggle;
   final Animation<double> widthAnimation;
+  final bool isDrawer; // Nuevo parámetro
 
   const SidebarHeaderWithToggle({
     super.key,
     required this.isExpanded,
     required this.onToggle,
     required this.widthAnimation,
+    this.isDrawer = false, // Por defecto false
   });
 
   @override
@@ -33,12 +35,14 @@ class SidebarHeaderWithToggle extends StatelessWidget {
       alignment: Alignment.centerLeft,
       padding: EdgeInsets.symmetric(
         horizontal:
-            (parentHorizontalPadding / 2) +
-            (parentHorizontalPadding /
-                2 *
-                ((widthAnimation.value - collapsedSidebarWidth) /
-                        (sidebarWidth - collapsedSidebarWidth))
-                    .clamp(0.0, 1.0)),
+            isDrawer
+                ? parentHorizontalPadding // Si es drawer, usar padding fijo
+                : (parentHorizontalPadding / 2) +
+                    (parentHorizontalPadding /
+                        2 *
+                        ((widthAnimation.value - collapsedSidebarWidth) /
+                                (sidebarWidth - collapsedSidebarWidth))
+                            .clamp(0.0, 1.0)),
       ),
       child: ClipRect(
         child: AnimatedSwitcher(
@@ -57,9 +61,12 @@ class SidebarHeaderWithToggle extends StatelessWidget {
             );
           },
           child:
-              isExpanded
+              (isDrawer ||
+                      isExpanded) // Si es drawer, siempre mostrar expandido
                   ? Row(
-                    key: const ValueKey('expanded_header'),
+                    key: ValueKey(
+                      isDrawer ? 'drawer_header' : 'expanded_header',
+                    ),
                     children: [
                       GestureDetector(
                         onTap: isMobilePlatform ? onToggle : () {},
@@ -77,28 +84,30 @@ class SidebarHeaderWithToggle extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const Spacer(),
-                      isMobilePlatform
+                      (isMobilePlatform || isDrawer)
                           ? SizedBox.shrink()
-                          : IconButton(
-                            icon: Icon(
-                              LucideIcons.chevronLeft,
-                              color: iconColor,
-                              size: 20,
-                            ),
-                            onPressed: onToggle,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            tooltip: 'Collapse Sidebar',
+                          : const Spacer(),
+                      // Mostrar botón apropiado según el contexto
+                      if (isMobilePlatform || isDrawer)
+                        SizedBox.shrink()
+                      else
+                        IconButton(
+                          icon: Icon(
+                            LucideIcons.chevronLeft,
+                            color: iconColor,
+                            size: 20,
                           ),
+                          onPressed: onToggle,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          tooltip: 'Collapse Sidebar',
+                        ),
                     ],
                   )
                   : Container(
                     key: const ValueKey('collapsed_header'),
                     alignment: Alignment.center,
-                    width:
-                        collapsedSidebarWidth -
-                        (parentHorizontalPadding), // Ensure enough space
+                    width: collapsedSidebarWidth - (parentHorizontalPadding),
                     child: GestureDetector(
                       onTap: onToggle,
                       child: _buildLogo(),

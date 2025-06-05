@@ -63,13 +63,6 @@ class _SimpleRequestModalState extends State<SimpleRequestModal>
     });
   }
 
-  void _onFilesChanged(List<UploadedFile> files) {
-    setState(() {
-      _attachedFiles = files;
-    });
-    debugPrint('📁 Files changed: ${files.length}');
-  }
-
   void _submitForm() {
     final isEmployeeValid = validateEmployee(_selectedEmployee, (error) {
       setState(() => _employeeError = error);
@@ -199,7 +192,7 @@ class _SimpleRequestModalState extends State<SimpleRequestModal>
                                 debugPrint('Files selected: ${files.length}');
                               },
                               allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-                              maxFileSizeMB: 5,
+                              maxFileSizeMB: 2,
                               maxFiles: 1,
                               allowMultiple: false,
                             ),

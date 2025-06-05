@@ -154,7 +154,15 @@ class AuthLayout extends StatelessWidget {
               alignment: Alignment.topRight,
               child: Padding(
                 padding: const EdgeInsets.only(top: 16.0, right: 16.0),
-                child: SafeArea(child: LanguageSelectorOverlay()),
+                child: SafeArea(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: LanguageSelectorOverlay(),
+                  ),
+                ),
               ),
             ),
             BlocBuilder<AuthBloc, AuthState>(

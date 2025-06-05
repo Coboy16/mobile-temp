@@ -86,14 +86,12 @@ class TimelineEventWidget extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Expanded(
-                          child: Text(
-                            evento.titulo,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primaryTextColor,
-                            ),
+                        Text(
+                          evento.titulo,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primaryTextColor,
                           ),
                         ),
                         if (evento.nivelTag != null) ...[
@@ -104,14 +102,18 @@ class TimelineEventWidget extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.nivelTagBgColor,
+                              color: Colors.white,
+                              border: Border.all(
+                                color: AppColors.lightGrayBorderColor,
+                                width: 1,
+                              ),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               evento.nivelTag!,
                               style: const TextStyle(
                                 fontSize: 10,
-                                color: AppColors.primaryBlue,
+                                color: Colors.black,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),

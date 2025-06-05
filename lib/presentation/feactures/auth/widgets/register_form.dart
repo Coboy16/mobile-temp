@@ -10,6 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:toastification/toastification.dart';
 
 import '/presentation/resources/resources.dart';
 import '/presentation/bloc/blocs.dart';
@@ -46,9 +47,27 @@ class _RegisterFormState extends State<RegisterForm> {
   String? _pendingGoogleName;
 
   void _initiateRegistrationProcess() {
+    final l10n = AppLocalizations.of(context)!;
+
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       final values = _formKey.currentState!.value;
       final email = (values['email'] as String).trim();
+      final password = values['password'] as String;
+      final confirmPassword = values['confirmPassword'] as String;
+      final l10n = AppLocalizations.of(context)!;
+
+      // Validación adicional de contraseñas coincidentes
+      if (password != confirmPassword) {
+        CustomConfirmationModal.showSimple(
+          context: context,
+          title: l10n.passwordMismatchTitle,
+          subtitle: l10n.passwordMismatchMessage,
+          confirmButtonText: l10n.accept,
+          confirmButtonColor: const Color(0xFFDC2626), // Rojo para error
+          width: 420,
+        );
+        return; // Salimos sin continuar con el registro
+      }
 
       setState(() {
         _currentStep = RegistrationStep.preVerifyingEmail;
@@ -58,13 +77,17 @@ class _RegisterFormState extends State<RegisterForm> {
       );
     } else {
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.red,
-          content: Text(
-            AppLocalizations.of(context)!.formValidationCompleteCorrectly,
-          ),
-        ),
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        style: ToastificationStyle.minimal,
+        title: Text(l10n.formValidationErrorTitle),
+        description: Text(l10n.formValidationCompleteCorrectly),
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 4),
+        animationDuration: const Duration(milliseconds: 300),
+        showIcon: true,
+        showProgressBar: false,
       );
     }
   }
@@ -89,7 +112,6 @@ class _RegisterFormState extends State<RegisterForm> {
     BuildContext context,
     OtpVerificationState otpState,
   ) {
-    final l10n = AppLocalizations.of(context)!;
     final values = _formKey.currentState?.value;
     final emailFromForm =
         values != null ? (values['email'] as String).trim() : '';
@@ -98,16 +120,24 @@ class _RegisterFormState extends State<RegisterForm> {
       if (otpState is OtpRequestSuccess &&
           otpState.email == emailFromForm &&
           otpState.wasOnlyRequest == false) {
-        showDialog(
+        final l10n = AppLocalizations.of(context)!;
+
+        CustomConfirmationModal.showSimple(
           context: context,
-          builder:
-              (_) => RegistrationFailedDialog(
-                message: l10n.emailAlreadyRegisteredError,
-              ),
+          title: l10n.userAlreadyExistsTitle,
+          subtitle: l10n.emailAlreadyRegisteredError,
+          confirmButtonText: l10n.accept,
+          confirmButtonColor: const Color(
+            0xFFF59E0B,
+          ), // Amarillo para advertencia
+          width: 420,
+          onConfirm: () {
+            Navigator.of(context).pop();
+            setState(() {
+              _currentStep = RegistrationStep.initial;
+            });
+          },
         );
-        setState(() {
-          _currentStep = RegistrationStep.initial;
-        });
       } else if (otpState is OtpRequestFailure &&
           otpState.email == emailFromForm &&
           otpState.wasOnlyRequest == false) {
@@ -210,22 +240,38 @@ class _RegisterFormState extends State<RegisterForm> {
       );
     } else if (googleState is GoogleIdTokenFailure) {
       debugPrint('Error obteniendo token de Google: ${googleState.message}');
-      showDialog(
+      CustomConfirmationModal.showSimple(
         context: context,
-        builder: (_) => RegistrationFailedDialog(message: googleState.message),
+        title: l10n.registrationErrorTitle,
+        subtitle: l10n.registrationErrorMessage,
+        confirmButtonText: l10n.accept,
+        confirmButtonColor: const Color(0xFFDC2626), // Rojo para error
+        width: 420,
+        onConfirm: () {
+          Navigator.of(context).pop();
+          setState(() {
+            _currentStep = RegistrationStep.initial;
+            _pendingGoogleIdToken = null;
+            _pendingGoogleEmail = null;
+            _pendingGoogleName = null;
+          });
+        },
       );
-      setState(() {
-        _currentStep = RegistrationStep.initial;
-        _pendingGoogleIdToken = null;
-        _pendingGoogleEmail = null;
-        _pendingGoogleName = null;
-      });
     } else if (googleState is GoogleIdTokenCancelled) {
       debugPrint('Registro con Google cancelado por el usuario.');
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.googleSignInCancelled)));
+      toastification.show(
+        context: context,
+        type: ToastificationType.info,
+        style: ToastificationStyle.minimal,
+        title: Text(l10n.googleSignInCancelledTitle),
+        description: Text(l10n.googleSignInCancelled),
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 3),
+        animationDuration: const Duration(milliseconds: 300),
+        showIcon: true,
+        showProgressBar: false,
+      );
       setState(() {
         _currentStep = RegistrationStep.initial;
         _pendingGoogleIdToken = null;
@@ -272,17 +318,25 @@ class _RegisterFormState extends State<RegisterForm> {
         });
       }
     } else if (registerState is RegisterFailure) {
-      showDialog(
+      // REEMPLAZO: RegistrationFailedDialog por CustomConfirmationModal
+      final l10n = AppLocalizations.of(context)!;
+      CustomConfirmationModal.showSimple(
         context: context,
-        builder:
-            (_) => RegistrationFailedDialog(message: registerState.message),
+        title: l10n.registrationErrorTitle,
+        subtitle: l10n.registrationErrorMessage,
+        confirmButtonText: l10n.accept,
+        confirmButtonColor: const Color(0xFFDC2626), // Rojo para error
+        width: 420,
+        onConfirm: () {
+          Navigator.of(context).pop();
+          setState(() {
+            _currentStep = RegistrationStep.initial;
+            _pendingGoogleIdToken = null;
+            _pendingGoogleEmail = null;
+            _pendingGoogleName = null;
+          });
+        },
       );
-      setState(() {
-        _currentStep = RegistrationStep.initial;
-        _pendingGoogleIdToken = null;
-        _pendingGoogleEmail = null;
-        _pendingGoogleName = null;
-      });
     }
   }
 

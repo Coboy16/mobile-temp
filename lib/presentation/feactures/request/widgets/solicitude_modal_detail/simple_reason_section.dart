@@ -21,7 +21,7 @@ class SimpleReasonSection extends StatelessWidget {
           isRequired: true,
         ),
         SizedBox(
-          height: 110,
+          height: 180,
           child: FormBuilderTextField(
             name: 'reason',
             maxLines: 4,

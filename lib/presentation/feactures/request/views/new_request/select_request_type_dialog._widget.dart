@@ -108,6 +108,71 @@ class SelectRequestTypeDialog extends StatelessWidget {
             }
           },
         ),
+        BlocListener<LetterRequestBloc, LetterRequestState>(
+          listener: (context, state) {
+            if (state is LetterRequestSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.green,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            } else if (state is LetterRequestFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.errorMessage),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            }
+          },
+        ),
+        // Listener para Cambio de Alojamiento
+        BlocListener<HousingChangeRequestBloc, HousingChangeRequestState>(
+          listener: (context, state) {
+            if (state is HousingChangeRequestSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.green,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            } else if (state is HousingChangeRequestFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.errorMessage),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            }
+          },
+        ),
+        // Listener para Solicitud de Salida
+        BlocListener<ExitRequestBloc, ExitRequestState>(
+          listener: (context, state) {
+            if (state is ExitRequestSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.green,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            } else if (state is ExitRequestFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.errorMessage),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            }
+          },
+        ),
       ],
       child: Dialog(
         backgroundColor: Colors.white,
@@ -670,16 +735,66 @@ class SelectRequestTypeDialog extends StatelessWidget {
     }
   }
 
-  void _openLetterRequest(BuildContext context) {
-    _showComingSoonDialog(context, 'Solicitud de Carta');
+  void _openLetterRequest(BuildContext context) async {
+    // Guardar referencias ANTES de la llamada asíncrona al modal
+    final letterBloc = context.read<LetterRequestBloc>();
+    final navigator = Navigator.of(context); // Para cerrar el modal específico
+
+    final result = await SimpleRequestHelper.showLetterRequestModal(
+      context,
+      onSubmit: (requestData) {
+        debugPrint('✅ Procesando solicitud de Carta: ${requestData.toMap()}');
+        navigator.pop(); // Cierra el LetterRequestModal
+        letterBloc.add(SubmitLetterRequest(requestData));
+        debugPrint('✅ Evento de Solicitud de Carta enviado al BLoC');
+      },
+    );
+
+    if (result != null) {
+      debugPrint('✅ Resultado de solicitud de Carta: $result');
+      // Aquí podrías hacer algo con el resultado si el modal devolviera datos
+      // y no se cerrara desde el onSubmit.
+    }
   }
 
-  void _openHousingChangeRequest(BuildContext context) {
-    _showComingSoonDialog(context, 'Cambio de Alojamiento');
+  void _openHousingChangeRequest(BuildContext context) async {
+    final housingChangeBloc = context.read<HousingChangeRequestBloc>();
+    final navigator = Navigator.of(context);
+
+    final result = await SimpleRequestHelper.showHousingChangeRequestModal(
+      context,
+      onSubmit: (requestData) {
+        debugPrint(
+          '✅ Procesando solicitud de Cambio de Alojamiento: ${requestData.toMap()}',
+        );
+        navigator.pop(); // Cierra el HousingChangeRequestModal
+        housingChangeBloc.add(SubmitHousingChangeRequest(requestData));
+        debugPrint('✅ Evento de Cambio de Alojamiento enviado al BLoC');
+      },
+    );
+
+    if (result != null) {
+      debugPrint('✅ Resultado de solicitud de Cambio de Alojamiento: $result');
+    }
   }
 
-  void _openExitRequest(BuildContext context) {
-    _showComingSoonDialog(context, 'Solicitud de Salida');
+  void _openExitRequest(BuildContext context) async {
+    final exitRequestBloc = context.read<ExitRequestBloc>();
+    final navigator = Navigator.of(context);
+
+    final result = await SimpleRequestHelper.showExitRequestModal(
+      context,
+      onSubmit: (requestData) {
+        debugPrint('✅ Procesando solicitud de Salida: ${requestData.toMap()}');
+        navigator.pop(); // Cierra el ExitRequestModal
+        exitRequestBloc.add(SubmitExitRequest(requestData));
+        debugPrint('✅ Evento de Solicitud de Salida enviado al BLoC');
+      },
+    );
+
+    if (result != null) {
+      debugPrint('✅ Resultado de solicitud de Salida: $result');
+    }
   }
 
   void _showNotImplementedDialog(BuildContext context, String typeId) {
@@ -700,25 +815,25 @@ class SelectRequestTypeDialog extends StatelessWidget {
     );
   }
 
-  void _showComingSoonDialog(BuildContext context, String requestType) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Próximamente'),
-          content: Text(
-            'La funcionalidad "$requestType" estará disponible pronto.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // void _showComingSoonDialog(BuildContext context, String requestType) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         title: const Text('Próximamente'),
+  //         content: Text(
+  //           'La funcionalidad "$requestType" estará disponible pronto.',
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () => Navigator.of(context).pop(),
+  //             child: const Text('OK'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 }
 
 // Función helper para mostrar el selector de tipos de solicitud

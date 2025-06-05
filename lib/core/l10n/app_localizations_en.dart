@@ -411,10 +411,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get otpVerificationResendButtonForRegistration => 'Resend Code';
 
   @override
-  String get emailAlreadyRegisteredError =>
-      'This email is already registered. Please try logging in or use a different email.';
-
-  @override
   String get otpRequestLoadingMessage => 'Requesting OTP...';
 
   @override
@@ -556,4 +552,126 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get invalidOtpMessage =>
       'The code you entered is not valid. Please check it and try again.';
+
+  @override
+  String get logoutConfirmTitle => 'Sign Out';
+
+  @override
+  String get logoutConfirmMessage =>
+      'Are you sure you want to sign out? You will need to sign in again to access the system.';
+
+  @override
+  String get logout => 'Sign Out';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get passwordRecoveryErrorTitle => 'Email Not Found';
+
+  @override
+  String get passwordRecoveryErrorMessage =>
+      'This email address is not registered in the system. Please verify and try again.';
+
+  @override
+  String get accept => 'Understood';
+
+  @override
+  String get accountBlockedTitle => 'Account Temporarily Blocked';
+
+  @override
+  String get accountBlockedMessage =>
+      'Your account has been temporarily blocked for security reasons. Please try again after 2 hours or contact the administrator if you need immediate assistance.';
+
+  @override
+  String get invalidCredentialsTitle => 'Invalid Credentials';
+
+  @override
+  String get invalidCredentialsMessage =>
+      'Incorrect username or password. Please verify your information and try again.';
+
+  @override
+  String get userAlreadyExistsTitle => 'User Already Exists';
+
+  @override
+  String get emailAlreadyRegisteredError =>
+      'User already exists, please sign in.';
+
+  @override
+  String get passwordMismatchTitle => 'Passwords Don\'t Match';
+
+  @override
+  String get passwordMismatchMessage =>
+      'The passwords entered do not match. Please verify and try again.';
+
+  @override
+  String get registrationErrorTitle => 'Registration Error';
+
+  @override
+  String get registrationErrorMessage =>
+      'Could not complete the registration. Please try again.';
+
+  @override
+  String get otpVerificationErrorTitle => 'Incorrect Code';
+
+  @override
+  String get autoLoginFailedTitle => 'Auto Login Failed';
+
+  @override
+  String get formValidationErrorTitle => 'Incomplete Form';
+
+  @override
+  String get googleSignInCancelledTitle => 'Registration Cancelled';
+
+  @override
+  String get passwordChangeSuccessTitle => 'Password Updated';
+
+  @override
+  String get emailNotProvidedErrorTitle => 'Email Required';
+
+  @override
+  String get otpVerificationSuccessTitle => 'Code Verified';
+
+  @override
+  String get operationErrorTitle => 'Error';
+
+  @override
+  String get authLoginErrorTitle => 'Authentication Error';
+
+  @override
+  String get googleLoginErrorTitle => 'Google Error';
+
+  @override
+  String get loginSuccessTitle => 'Welcome!';
+
+  @override
+  String get loginSuccessMessage =>
+      'You have successfully signed in. Redirecting to the system...';
+
+  @override
+  String get loginSuccessGoogleMessage =>
+      'Google sign-in successful. Accessing the system...';
+
+  @override
+  String get returnToLoginTitle => 'Going Back';
+
+  @override
+  String get returnToLoginMessage => 'Returning to the login screen.';
+
+  @override
+  String get deleteAccountTitle => 'Delete Account';
+
+  @override
+  String get deleteAccountMessage =>
+      'Are you sure? This action is irreversible and all your data will be permanently deleted.';
+
+  @override
+  String get deleteConfirm => 'Yes, Delete';
+
+  @override
+  String get accountDeletedSuccessTitle => 'Account Deleted';
+
+  @override
+  String get userIdNotAvailableError =>
+      'User ID not available to delete the account.';
 }

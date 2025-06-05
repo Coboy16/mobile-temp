@@ -37,3 +37,4 @@ export './modals/susses/confirm_action_modal_widget.dart';
 export './modals/susses/success_result_modal_widget.dart';
 
 export './modals/request_action_handler_widget.dart';
+export './modals/custom_confirmation_modal.dart';

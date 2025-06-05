@@ -206,7 +206,7 @@ class _GenericRequestModalState extends State<GenericRequestModal>
                                   widget.requestType.requiresMedicalInfo,
                               isMobile: isMobile,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 5),
                             RequestReasonSection(
                               requestType: widget.requestType,
                             ),
@@ -220,7 +220,7 @@ class _GenericRequestModalState extends State<GenericRequestModal>
                                 debugPrint('Files selected: ${files.length}');
                               },
                               allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-                              maxFileSizeMB: 5,
+                              maxFileSizeMB: 2,
                               maxFiles: 1,
                               allowMultiple: false,
                             ),

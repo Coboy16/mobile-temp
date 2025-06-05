@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:adaptive_dialog/adaptive_dialog.dart';
-import 'package:go_router/go_router.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:toastification/toastification.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+
 import 'package:fe_core_vips/presentation/bloc/blocs.dart';
-import '/presentation/routes/app_router.dart';
 import '/presentation/resources/resources.dart';
+import '/presentation/routes/app_router.dart';
+import '/core/l10n/app_localizations.dart';
+import '/presentation/widgets/widgets.dart';
 
 class ProfileActions extends StatefulWidget {
   final String? currentUserId;
@@ -58,42 +61,65 @@ class _ProfileActionsState extends State<ProfileActions> {
     );
   }
 
+  void _showSuccessToast(String message) {
+    final l10n = AppLocalizations.of(context)!;
+
+    toastification.show(
+      context: context,
+      type: ToastificationType.success,
+      style: ToastificationStyle.minimal,
+      title: Text(l10n.accountDeletedSuccessTitle),
+      description: Text(message),
+      alignment: Alignment.topCenter,
+      autoCloseDuration: const Duration(seconds: 3),
+      animationDuration: const Duration(milliseconds: 300),
+      showIcon: true,
+      showProgressBar: false,
+    );
+  }
+
   Future<void> _onDeleteAccount() async {
+    final l10n = AppLocalizations.of(context)!;
+
     if (widget.currentUserId == null) {
-      _showSnackBar(
-        'ID de usuario no disponible para eliminar la cuenta.',
-        isError: true,
-      );
+      _showSnackBar(l10n.userIdNotAvailableError, isError: true);
       return;
     }
 
-    final result = await showOkCancelAlertDialog(
+    // Remover cualquier SnackBar actual
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+
+    // Mostrar modal de confirmación personalizado
+    final result = await CustomConfirmationModal.showSimple(
       context: context,
-      title: 'Eliminar Cuenta',
-      message:
-          '¿Estás seguro? Esta acción es irreversible y todos tus datos serán eliminados permanentemente.',
-      okLabel: 'Sí, Eliminar',
-      cancelLabel: 'Cancelar',
-      isDestructiveAction: true,
-      builder:
-          (context, child) => Theme(
-            data: ThemeData(
-              textButtonTheme: TextButtonThemeData(
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  textStyle: AppTextStyles.button.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            child: child,
-          ),
+      title: l10n.deleteAccountTitle,
+      subtitle: l10n.deleteAccountMessage,
+      confirmButtonText: l10n.deleteConfirm,
+      confirmButtonColor: const Color(
+        0xFFDC2626,
+      ), // Rojo para acción destructiva
+      width: 420,
     );
 
-    if (result == OkCancelResult.ok) {
+    if (result == true) {
       _deleteUserBloc.add(DeleteUserRequested(userId: widget.currentUserId!));
     }
+  }
+
+  Future<void> _handleDeleteSuccess(String message) async {
+    // Esperar 1 segundo antes de mostrar el toast
+    await Future.delayed(const Duration(seconds: 1));
+
+    if (!mounted) return;
+
+    // Mostrar toast de éxito
+    _showSuccessToast(message);
+
+    // Logout y navegación
+    _authBloc.add(AuthLogoutRequested());
+    context.pushReplacementNamed(AppRoutes.auth);
+
+    debugPrint("CUENTA ELIMINADA: Usuario deslogueado y redirigido al login");
   }
 
   @override
@@ -102,12 +128,7 @@ class _ProfileActionsState extends State<ProfileActions> {
       bloc: _deleteUserBloc,
       listener: (context, state) {
         if (state is DeleteUserSuccess) {
-          _authBloc.add(AuthLogoutRequested());
-          _showSnackBar(state.message);
-          context.pushReplacementNamed(AppRoutes.auth);
-          debugPrint(
-            "CUENTA ELIMINADA: Implementar logout y navegación a login",
-          );
+          _handleDeleteSuccess(state.message);
         } else if (state is DeleteUserFailure) {
           _showSnackBar(
             'Error al eliminar cuenta: ${state.message}',

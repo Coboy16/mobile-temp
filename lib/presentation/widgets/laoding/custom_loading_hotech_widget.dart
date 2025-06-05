@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 
 import '/presentation/resources/resources.dart';
 
-class _IconForLoading extends StatelessWidget {
+class IconForLoading extends StatelessWidget {
   final double? containerSize;
   final double? iconFontSize;
 
-  const _IconForLoading({this.containerSize = 60, this.iconFontSize = 28});
+  const IconForLoading({
+    super.key,
+    this.containerSize = 60,
+    this.iconFontSize = 28,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -57,13 +61,11 @@ class CustomLoadingHotech extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _IconForLoading(
+          IconForLoading(
             containerSize: iconContainerSize,
             iconFontSize: iconFontSize,
           ),
-          SizedBox(
-            height: AppDimensions.itemSpacing * 0.75,
-          ), // Espacio entre icono y barra
+          SizedBox(height: AppDimensions.itemSpacing * 0.75),
           SizedBox(
             width: progressBarWidth,
             child: LinearProgressIndicator(

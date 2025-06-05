@@ -1,10 +1,11 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:fe_core_vips/presentation/widgets/widgets.dart';
-import '/presentation/feactures/splash/widgets/widgets.dart';
 import '/presentation/routes/app_router.dart' show AppRoutes;
+import '/presentation/resources/resources.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -68,16 +69,27 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       body: GradientBackground(
         child: SafeArea(
-          child: Stack(
-            children: [
-              // Logo y nombre de la app animados
-              Center(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: const AnimatedLogo(),
-                ),
+          child: Center(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconForLoading(containerSize: 80, iconFontSize: 35),
+                  SizedBox(height: AppDimensions.itemSpacing * 0.75),
+                  SizedBox(
+                    width: 90,
+                    child: LinearProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Colors.blue.shade900,
+                      ),
+                      backgroundColor: Colors.white,
+                      minHeight: 4.0,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

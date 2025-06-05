@@ -21,6 +21,12 @@ class RequestReasonSection extends StatelessWidget {
         return 'Describa el motivo de su licencia médica';
       case RequestType.suspension:
         return 'Describa el motivo de su solicitud de suspensión';
+      case RequestType.letter:
+        return 'Describa el motivo de su solicitud de cartas';
+      case RequestType.accommodationChange:
+        return 'Describa el motivo de su solicitud de cambio de alojamiento';
+      case RequestType.exitRequest:
+        return 'Describa el motivo de su solicitud de salida';
     }
   }
 
@@ -34,7 +40,7 @@ class RequestReasonSection extends StatelessWidget {
           isRequired: true,
         ),
         SizedBox(
-          height: 110,
+          height: 180,
           child: FormBuilderTextField(
             name: 'reason',
             maxLines: 4,

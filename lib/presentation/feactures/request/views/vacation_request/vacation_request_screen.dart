@@ -375,7 +375,7 @@ class _VacationRequestModalState extends State<VacationRequestModal> {
                                 debugPrint('Files selected: ${files.length}');
                               },
                               allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-                              maxFileSizeMB: 5,
+                              maxFileSizeMB: 2,
                               maxFiles: 1,
                               allowMultiple: false,
                             ),

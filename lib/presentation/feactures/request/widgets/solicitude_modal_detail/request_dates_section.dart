@@ -62,15 +62,18 @@ class RequestDatesSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const FormSectionHeader(title: 'Fecha de inicio', isRequired: true),
-            InlineDatePickerField(
-              name: 'start_date',
-              hintText: 'Seleccionar fecha',
-              calendarWidth: 200,
-              calendarHeight: 380,
-              firstDate: fifteenDaysFromToday,
-              lastDate: DateTime(DateTime.now().year + 5),
-              validators: [],
-              onChanged: (value) => onDateOrDaysChanged(),
+            SizedBox(
+              width: 280,
+              child: InlineDatePickerField(
+                name: 'start_date',
+                hintText: 'Seleccionar fecha',
+                calendarWidth: 200,
+                calendarHeight: 340,
+                firstDate: fifteenDaysFromToday,
+                lastDate: DateTime(DateTime.now().year + 5),
+                validators: [],
+                onChanged: (value) => onDateOrDaysChanged(),
+              ),
             ),
           ],
         ),

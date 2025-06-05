@@ -44,3 +44,7 @@ export 'solicitude_modal_detail/simple_effective_date_section.dart';
 export 'solicitude_modal_detail/simple_important_info_banner.dart';
 export 'solicitude_modal_detail/simple_reason_section.dart';
 export 'solicitude_modal_detail/simple_request_modal.dart';
+export 'solicitude_modal_detail/letter_request_modal.dart';
+export 'solicitude_modal_detail/housing_change_request_modal.dart';
+export 'solicitude_modal_detail/exit_request_modal.dart';
+export 'solicitude_modal_detail/custom_drow_fiel_compa.dart';

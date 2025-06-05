@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fe_core_vips/core/l10n/app_localizations.dart';
+import 'package:toastification/toastification.dart';
 
 import '/presentation/feactures/auth/bloc/blocs.dart';
 import '/presentation/feactures/auth/views/auth_layout.dart';
@@ -24,8 +25,17 @@ class ForgotPasswordOtpView extends StatelessWidget {
         context.read<ForgotPasswordBloc>().add(ForgotPasswordReset());
         context.goNamed(AppRoutes.forgotPassword);
         ScaffoldMessenger.of(context).removeCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorEmailNotProvidedMessage)),
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          style: ToastificationStyle.minimal,
+          title: Text(l10n.emailNotProvidedErrorTitle),
+          description: Text(l10n.errorEmailNotProvidedMessage),
+          alignment: Alignment.topCenter,
+          autoCloseDuration: const Duration(seconds: 4),
+          animationDuration: const Duration(milliseconds: 300),
+          showIcon: true,
+          showProgressBar: false,
         );
       });
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -36,30 +46,61 @@ class ForgotPasswordOtpView extends StatelessWidget {
         if (state is ForgotPasswordOtpVerificationSuccess &&
             state.email == currentEmail) {
           ScaffoldMessenger.of(context).removeCurrentSnackBar();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.otpVerificationSuccessMessage)),
+          toastification.show(
+            context: context,
+            type: ToastificationType.success,
+            style: ToastificationStyle.minimal,
+            title: Text(l10n.otpVerificationSuccessTitle),
+            description: Text(l10n.otpVerificationSuccessMessage),
+            alignment: Alignment.topCenter,
+            autoCloseDuration: const Duration(seconds: 3),
+            animationDuration: const Duration(milliseconds: 300),
+            showIcon: true,
+            showProgressBar: false,
           );
-          context.goNamed(
-            AppRoutes.newPasswordForm,
-            extra: {'email': state.email, 'otp': state.otp},
-          );
+          Future.delayed(const Duration(milliseconds: 500), () {
+            context.goNamed(
+              AppRoutes.newPasswordForm,
+              extra: {'email': state.email, 'otp': state.otp},
+            );
+          });
         } else if (state is ForgotPasswordOtpVerificationFailure &&
             state.email == currentEmail) {
-          showDialog(
+          final l10n = AppLocalizations.of(context)!;
+
+          CustomConfirmationModal.showSimple(
             context: context,
-            builder: (_) => RegistrationFailedDialog(message: state.message),
+            title: l10n.otpVerificationErrorTitle,
+            subtitle: state.message,
+            confirmButtonText: l10n.accept,
+            confirmButtonColor: const Color(0xFFDC2626),
+            width: 420,
           );
         } else if (state is ForgotPasswordEmailVerificationSuccess &&
             state.email == currentEmail) {
           ScaffoldMessenger.of(context).removeCurrentSnackBar();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.otpResendSuccessMessage(state.email))),
+
+          toastification.show(
+            context: context,
+            type: ToastificationType.success,
+            style: ToastificationStyle.minimal,
+            title: Text('Código reenviado'),
+            description: Text(l10n.otpResendSuccessMessage(state.email)),
+            alignment: Alignment.topCenter,
+            autoCloseDuration: const Duration(seconds: 4),
+            animationDuration: const Duration(milliseconds: 300),
+            showIcon: true,
+            showProgressBar: false,
           );
         } else if (state is ForgotPasswordEmailVerificationFailure &&
             state.email == currentEmail) {
-          showDialog(
+          CustomConfirmationModal.showSimple(
             context: context,
-            builder: (_) => RegistrationFailedDialog(message: state.message),
+            title: l10n.operationErrorTitle,
+            subtitle: state.message,
+            confirmButtonText: l10n.accept,
+            confirmButtonColor: const Color(0xFFDC2626),
+            width: 420,
           );
         }
       },
@@ -78,10 +119,10 @@ class ForgotPasswordOtpView extends StatelessWidget {
               ForgotPasswordEmailSubmitted(email: currentEmail),
             );
           },
-          onGoBack: () {
-            context.read<ForgotPasswordBloc>().add(ForgotPasswordReset());
-            context.goNamed(AppRoutes.forgotPassword);
-          },
+          // onGoBack: () {
+          //   context.read<ForgotPasswordBloc>().add(ForgotPasswordReset());
+          //   context.goNamed(AppRoutes.forgotPassword);
+          // },
         ),
       ),
     );

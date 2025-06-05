@@ -51,67 +51,12 @@ class _FilterHeaderWidgetState extends State<FilterHeaderWidget> {
         final bool isWideScreen = constraints.maxWidth > 768;
 
         if (isMobile) {
-          // Layout en columna para móvil
+          // Layout en columna para móvil con espaciado optimizado
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Tabs arriba
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(tabs.length, (index) {
-                    final bool isSelected = _selectedTabIndex == index;
-                    return InkWell(
-                      onTap: () {
-                        setState(() {
-                          _selectedTabIndex = index;
-                          widget.onTabChanged(index);
-                        });
-                      },
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected ? Colors.white : Colors.transparent,
-                          borderRadius: BorderRadius.circular(6),
-                          boxShadow:
-                              isSelected
-                                  ? [
-                                    BoxShadow(
-                                      color: Colors.grey.withOpacity(0.1),
-                                      blurRadius: 1,
-                                      offset: const Offset(0, 1),
-                                    ),
-                                  ]
-                                  : null,
-                        ),
-                        child: Text(
-                          tabs[index],
-                          style: TextStyle(
-                            fontSize: 13,
-                            color:
-                                isSelected
-                                    ? Colors.black
-                                    : Colors.grey.shade700,
-                            fontWeight:
-                                isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
+              // Tabs arriba - optimizado para móvil
+              _buildMobileTabs(tabs),
               const SizedBox(height: 16),
               // Botones abajo
               _buildMobileActions(),
@@ -124,58 +69,7 @@ class _FilterHeaderWidgetState extends State<FilterHeaderWidget> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // Panel de tabs (izquierda)
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: List.generate(tabs.length, (index) {
-                  final bool isSelected = _selectedTabIndex == index;
-                  return InkWell(
-                    onTap: () {
-                      setState(() {
-                        _selectedTabIndex = index;
-                        widget.onTabChanged(index);
-                      });
-                    },
-                    borderRadius: BorderRadius.circular(6),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.white : Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
-                        boxShadow:
-                            isSelected
-                                ? [
-                                  BoxShadow(
-                                    color: Colors.grey.withOpacity(0.1),
-                                    blurRadius: 1,
-                                    offset: const Offset(0, 1),
-                                  ),
-                                ]
-                                : null,
-                      ),
-                      child: Text(
-                        tabs[index],
-                        style: TextStyle(
-                          fontSize: 13,
-                          color:
-                              isSelected ? Colors.black : Colors.grey.shade700,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-              ),
-            ),
+            _buildDesktopTabs(tabs),
 
             // Botones del lado derecho según el tamaño de pantalla
             if (!isWideScreen)
@@ -188,26 +82,167 @@ class _FilterHeaderWidgetState extends State<FilterHeaderWidget> {
     );
   }
 
+  // Tabs optimizados para móvil
+  Widget _buildMobileTabs(List<String> tabs) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.max, // Ocupa todo el ancho disponible
+        children: List.generate(tabs.length, (index) {
+          final bool isSelected = _selectedTabIndex == index;
+          return Expanded(
+            // Cada tab ocupa el mismo espacio
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  _selectedTabIndex = index;
+                  widget.onTabChanged(index);
+                });
+              },
+              borderRadius: BorderRadius.circular(6),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6, // Reducido de 16 a 6 para móvil
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(6),
+                  boxShadow:
+                      isSelected
+                          ? [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              blurRadius: 1,
+                              offset: const Offset(0, 1),
+                            ),
+                          ]
+                          : null,
+                ),
+                child: Text(
+                  tabs[index],
+                  textAlign: TextAlign.center, // Centrar texto
+                  style: TextStyle(
+                    fontSize: 11, // Reducido de 13 a 11 para móvil
+                    color: isSelected ? Colors.black : Colors.grey.shade700,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  // Tabs para desktop (mantiene el diseño original)
+  Widget _buildDesktopTabs(List<String> tabs) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(tabs.length, (index) {
+          final bool isSelected = _selectedTabIndex == index;
+          return InkWell(
+            onTap: () {
+              setState(() {
+                _selectedTabIndex = index;
+                widget.onTabChanged(index);
+              });
+            },
+            borderRadius: BorderRadius.circular(6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16, // Mantiene el padding original para desktop
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: isSelected ? Colors.white : Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+                boxShadow:
+                    isSelected
+                        ? [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            blurRadius: 1,
+                            offset: const Offset(0, 1),
+                          ),
+                        ]
+                        : null,
+              ),
+              child: Text(
+                tabs[index],
+                style: TextStyle(
+                  fontSize: 13, // Mantiene el tamaño original para desktop
+                  color: isSelected ? Colors.black : Colors.grey.shade700,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
   // Acciones para móvil (< 600px)
   Widget _buildMobileActions() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        OutlinedButton.icon(
-          icon: const Icon(
-            LucideIcons.calendarDays,
-            size: 16,
-            color: Colors.black,
+        Expanded(
+          // Hace que el botón se adapte al espacio disponible
+          child: OutlinedButton.icon(
+            icon: const Icon(
+              LucideIcons.calendarDays,
+              size: 16,
+              color: Colors.black,
+            ),
+            label: Text(
+              'Filtrar por fecha',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 12, // Reducido de 13 a 12 para móvil
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            onPressed: widget.onFilterByDate,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.grey.shade700,
+              side: BorderSide(color: Colors.grey.shade300),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 8,
+              ), // Reducido padding
+              textStyle: const TextStyle(fontSize: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
           ),
-          label: Text(
-            'Filtrar por fecha',
+        ),
+        const SizedBox(width: 8),
+        OutlinedButton.icon(
+          icon: const Icon(LucideIcons.download, size: 16, color: Colors.black),
+          label: const Text(
+            'Descargar',
             style: TextStyle(
               color: Colors.black,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
           ),
-          onPressed: widget.onFilterByDate,
+          onPressed: widget.onDownload,
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.grey.shade700,
             side: BorderSide(color: Colors.grey.shade300),
@@ -216,24 +251,6 @@ class _FilterHeaderWidgetState extends State<FilterHeaderWidget> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(6),
             ),
-          ),
-        ),
-        // Botón de descarga - solo icono
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: IconButton(
-            icon: Icon(
-              LucideIcons.download,
-              size: 18,
-              color: Colors.grey.shade700,
-            ),
-            onPressed: widget.onDownload,
-            padding: EdgeInsets.zero,
           ),
         ),
       ],

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:fe_core_vips/core/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import '/presentation/bloc/blocs.dart';
 import '/presentation/resources/resources.dart';
 import '/presentation/widgets/widgets.dart';
+import 'account_dropdown.dart';
 
 const double _headerHeight = 60.0;
 
@@ -24,48 +26,181 @@ class HeaderWidget extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _HeaderWidgetState extends State<HeaderWidget> {
-  OverlayEntry? _overlayEntry;
-  final LayerLink _layerLink = LayerLink();
-  bool _isDropdownOpen = false;
-  final GlobalKey _iconKey = GlobalKey();
+  // Para las notificaciones
+  OverlayEntry? _notificationOverlayEntry;
+  final LayerLink _notificationLayerLink = LayerLink();
+  bool _isNotificationDropdownOpen = false;
+  final GlobalKey _notificationIconKey = GlobalKey();
 
-  void _toggleDropdown() {
-    if (_isDropdownOpen) {
-      _removeDropdown();
+  // Para el dropdown de cuenta
+  OverlayEntry? _accountOverlayEntry;
+  bool _isAccountDropdownOpen = false;
+  final GlobalKey _avatarKey = GlobalKey();
+
+  // Detectar si es móvil
+  bool get _isMobile => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
+  // Métodos para notificaciones (modificados para móvil)
+  void _toggleNotificationDropdown() {
+    if (_isNotificationDropdownOpen) {
+      _removeNotificationDropdown();
     } else {
-      _showDropdown();
+      _showNotificationDropdown();
     }
   }
 
-  void _showDropdown() {
+  void _showNotificationDropdown() {
+    // Cerrar dropdown de cuenta si está abierto
+    if (_isAccountDropdownOpen) {
+      _removeAccountDropdown();
+    }
+
     final overlay = Overlay.of(context);
     final RenderBox renderBox =
-        _iconKey.currentContext!.findRenderObject() as RenderBox;
+        _notificationIconKey.currentContext!.findRenderObject() as RenderBox;
     final size = renderBox.size;
     final offset = renderBox.localToGlobal(Offset.zero);
 
-    _overlayEntry = OverlayEntry(
+    // Obtener el ancho de la pantalla
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Calcular posición según la plataforma
+    double leftPosition;
+    const double dropdownWidth = 350.0;
+    const double mobileMargin = 16.0; // Margen desde el borde derecho en móvil
+
+    if (_isMobile) {
+      // En móvil: pegado al borde derecho con un pequeño margen
+      leftPosition = screenWidth - dropdownWidth - mobileMargin;
+    } else {
+      // En desktop: comportamiento original
+      leftPosition = offset.dx + size.width - dropdownWidth;
+
+      // Verificar que no se salga del borde derecho en desktop
+      if (leftPosition + dropdownWidth > screenWidth) {
+        leftPosition = screenWidth - dropdownWidth - 16;
+      }
+    }
+
+    _notificationOverlayEntry = OverlayEntry(
       builder:
           (context) => Stack(
             children: [
               Positioned.fill(
                 child: GestureDetector(
-                  onTap: _removeDropdown,
+                  onTap: _removeNotificationDropdown,
                   behavior: HitTestBehavior.opaque,
                   child: Container(color: Colors.transparent),
                 ),
               ),
               Positioned(
-                left: offset.dx + size.width - 350,
+                left: leftPosition,
                 top: offset.dy + size.height + 5,
-                child: CompositedTransformFollower(
-                  link: _layerLink,
-                  showWhenUnlinked: false,
-                  offset: Offset(size.width - 350, size.height + 5),
-                  child: NotificationDropdown(
-                    onViewAll: () {
-                      print("Ver todas presionado");
-                      _removeDropdown();
+                child: NotificationDropdown(
+                  onViewAll: () {
+                    print("Ver todas presionado");
+                    _removeNotificationDropdown();
+                  },
+                ),
+              ),
+            ],
+          ),
+    );
+
+    overlay.insert(_notificationOverlayEntry!);
+    setState(() {
+      _isNotificationDropdownOpen = true;
+    });
+  }
+
+  void _removeNotificationDropdown() {
+    if (_notificationOverlayEntry != null) {
+      _notificationOverlayEntry!.remove();
+      _notificationOverlayEntry = null;
+      setState(() {
+        _isNotificationDropdownOpen = false;
+      });
+    }
+  }
+
+  // Métodos para el dropdown de cuenta (mejorados)
+  void _toggleAccountDropdown() {
+    if (_isAccountDropdownOpen) {
+      _removeAccountDropdown();
+    } else {
+      _showAccountDropdown();
+    }
+  }
+
+  void _showAccountDropdown() {
+    // Cerrar el dropdown de notificaciones si está abierto
+    if (_isNotificationDropdownOpen) {
+      _removeNotificationDropdown();
+    }
+
+    // Si ya está abierto, no hacer nada
+    if (_isAccountDropdownOpen) {
+      return;
+    }
+
+    final overlay = Overlay.of(context);
+    final RenderBox? renderBox =
+        _avatarKey.currentContext?.findRenderObject() as RenderBox?;
+
+    if (renderBox == null) {
+      return;
+    }
+
+    final size = renderBox.size;
+    final offset = renderBox.localToGlobal(Offset.zero);
+
+    _accountOverlayEntry = OverlayEntry(
+      builder:
+          (context) => Stack(
+            children: [
+              // Área invisible para detectar taps fuera del dropdown
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () {
+                    _removeAccountDropdown();
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(color: Colors.transparent),
+                ),
+              ),
+              // El dropdown
+              Positioned(
+                left:
+                    offset.dx +
+                    size.width -
+                    200, // 200 es el ancho del dropdown
+                top: offset.dy + size.height + 8,
+                child: GestureDetector(
+                  // Prevenir que los taps dentro del dropdown lo cierren
+                  onTap: () {
+                    debugPrint("Tap dentro del dropdown - manteniendo abierto");
+                  },
+                  child: AccountDropdown(
+                    onProfile: () {
+                      debugPrint("Perfil presionado - cerrando dropdown");
+                      _removeAccountDropdown();
+                      // Aquí puedes navegar a la pantalla de perfil
+                    },
+                    onSettings: () {
+                      context.read<SidebarBloc>().add(
+                        const SidebarRouteSelected('Configuración'),
+                      );
+                      _removeAccountDropdown();
+                    },
+                    onHelp: () {
+                      debugPrint("Ayuda presionada - cerrando dropdown");
+                      _removeAccountDropdown();
+                      // Aquí puedes navegar a la pantalla de ayuda
+                    },
+                    onLogout: () {
+                      _handleLogout(context);
+                      _removeAccountDropdown();
+                      // Aquí puedes implementar la lógica de logout
                     },
                   ),
                 ),
@@ -74,24 +209,56 @@ class _HeaderWidgetState extends State<HeaderWidget> {
           ),
     );
 
-    overlay.insert(_overlayEntry!);
+    overlay.insert(_accountOverlayEntry!);
     setState(() {
-      _isDropdownOpen = true;
+      _isAccountDropdownOpen = true;
     });
+    debugPrint("Dropdown de cuenta abierto exitosamente");
   }
 
-  void _removeDropdown() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-    setState(() {
-      _isDropdownOpen = false;
-    });
+  void _removeAccountDropdown() {
+    if (_accountOverlayEntry != null) {
+      _accountOverlayEntry!.remove();
+      _accountOverlayEntry = null;
+      if (mounted) {
+        setState(() {
+          _isAccountDropdownOpen = false;
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
-    _removeDropdown();
+    _removeNotificationDropdown();
+    _removeAccountDropdown();
     super.dispose();
+  }
+
+  void _handleLogout(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final bool? confirmLogout = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const ConfirmLogoutDialog(),
+    );
+
+    if (confirmLogout == true) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext loadingContext) {
+          return PopScope(
+            canPop: false,
+            child: CustomLoadingHotech(
+              overlay: true,
+              message: l10n.loggingOutMessage,
+            ),
+          );
+        },
+      );
+      context.read<AuthBloc>().add(const AuthLogoutRequested());
+    }
   }
 
   void _openDrawer() {
@@ -120,8 +287,6 @@ class _HeaderWidgetState extends State<HeaderWidget> {
 
   @override
   Widget build(BuildContext context) {
-    bool isMobilePlatform = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
-
     return BlocBuilder<SidebarBloc, SidebarState>(
       buildWhen:
           (previous, current) =>
@@ -130,9 +295,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
       builder: (context, sidebarState) {
         return Container(
           height: widget.preferredSize.height,
-          padding: EdgeInsets.symmetric(
-            horizontal: isMobilePlatform ? 10.0 : 24.0,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: _isMobile ? 10.0 : 24.0),
           decoration: BoxDecoration(
             color: Colors.white,
             boxShadow: [
@@ -146,7 +309,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
           ),
           child: Row(
             children: [
-              if (isMobilePlatform)
+              if (_isMobile)
                 Container(
                   width: MediaQuery.of(context).size.width * 0.1,
                   height: MediaQuery.of(context).size.width * 0.1,
@@ -172,37 +335,52 @@ class _HeaderWidgetState extends State<HeaderWidget> {
               else
                 const _Breadcrumbs(),
               const Spacer(),
+              // Notificaciones
               CompositedTransformTarget(
-                link: _layerLink,
+                link: _notificationLayerLink,
                 child: IconButton(
-                  key: _iconKey,
+                  key: _notificationIconKey,
                   icon: Icon(
-                    _isDropdownOpen
+                    _isNotificationDropdownOpen
                         ? Icons.notifications
                         : Icons.notifications_none_outlined,
                   ),
                   color: AppColors.headerIcons,
                   tooltip: 'Notificaciones',
-                  onPressed: _toggleDropdown,
+                  onPressed: _toggleNotificationDropdown,
                 ),
               ),
               const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.nightlight_round),
-                color: AppColors.headerIcons,
-                tooltip: 'Modo Oscuro',
-                onPressed: () {},
-              ),
-              const SizedBox(width: 16),
-              const CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.indigo,
-                child: Text(
-                  'JP',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+              // Avatar con dropdown (simplificado)
+              GestureDetector(
+                key: _avatarKey,
+                onTap: _toggleAccountDropdown,
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(22),
+                      border:
+                          _isAccountDropdownOpen
+                              ? Border.all(
+                                color: Colors.indigo.withOpacity(0.3),
+                                width: 2,
+                              )
+                              : null,
+                    ),
+                    child: const CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Colors.indigo,
+                      child: Text(
+                        'JP',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),

@@ -12,7 +12,7 @@ class InlineDatePickerField extends StatefulWidget {
   final DateTime? firstDate;
   final DateTime? lastDate;
   final double? calendarWidth;
-  final double? calendarHeight; // NUEVA PROPIEDAD
+  final double? calendarHeight;
 
   const InlineDatePickerField({
     super.key,
@@ -24,7 +24,7 @@ class InlineDatePickerField extends StatefulWidget {
     this.firstDate,
     this.lastDate,
     this.calendarWidth,
-    this.calendarHeight, // NUEVA PROPIEDAD OPCIONAL
+    this.calendarHeight,
   });
 
   @override
@@ -218,7 +218,12 @@ class _InlineDatePickerFieldState extends State<InlineDatePickerField> {
   Widget _buildWeekdayHeaders() {
     const weekdays = ['lu', 'ma', 'mi', 'ju', 'vi', 'sá', 'do'];
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.only(
+        left: 8,
+        right: 8,
+        // ✅ SIN padding vertical - eliminado completamente
+      ),
+      height: 24, // ✅ Altura fija para controlar el espacio exacto
       child: Row(
         children:
             weekdays
@@ -231,6 +236,7 @@ class _InlineDatePickerFieldState extends State<InlineDatePickerField> {
                           fontWeight: FontWeight.w600,
                           fontSize: 12,
                           color: Colors.grey[600],
+                          height: 1.0, // ✅ Altura de línea compacta
                         ),
                       ),
                     ),
@@ -251,14 +257,22 @@ class _InlineDatePickerFieldState extends State<InlineDatePickerField> {
     final daysInMonth = lastDayOfMonth.day;
     final totalCells = ((daysInMonth + firstWeekday) / 7).ceil() * 7;
 
-    return Container(
-      padding: const EdgeInsets.all(8),
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: 8,
+        right: 8,
+        bottom: 8,
+        top: 4, // ✅ Mínimo padding top para separar ligeramente de headers
+      ),
       child: GridView.builder(
         shrinkWrap: true,
+        padding: EdgeInsets.zero, // ✅ Sin padding interno del GridView
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 7,
           childAspectRatio: 1,
+          mainAxisSpacing: 2, // ✅ Espaciado mínimo entre filas
+          crossAxisSpacing: 2, // ✅ Espaciado mínimo entre columnas
         ),
         itemCount: totalCells,
         itemBuilder: (context, index) {
@@ -294,7 +308,7 @@ class _InlineDatePickerFieldState extends State<InlineDatePickerField> {
           return GestureDetector(
             onTap: isDisabled ? null : () => _selectDate(currentDate),
             child: Container(
-              margin: const EdgeInsets.all(2),
+              // ✅ Sin margin adicional para hacer las celdas más compactas
               decoration: BoxDecoration(
                 color:
                     isSelected
@@ -302,7 +316,9 @@ class _InlineDatePickerFieldState extends State<InlineDatePickerField> {
                         : isToday
                         ? Theme.of(context).primaryColor.withOpacity(0.1)
                         : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(
+                  6,
+                ), // ✅ Radius ligeramente menor
                 border:
                     isToday && !isSelected
                         ? Border.all(
@@ -328,6 +344,7 @@ class _InlineDatePickerFieldState extends State<InlineDatePickerField> {
                             ? FontWeight.w600
                             : FontWeight.normal,
                     fontSize: 14,
+                    height: 1.0, // ✅ Altura de línea compacta
                   ),
                 ),
               ),

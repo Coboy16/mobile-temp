@@ -814,12 +814,6 @@ abstract class AppLocalizations {
   /// **'Resend Code'**
   String get otpVerificationResendButtonForRegistration;
 
-  /// No description provided for @emailAlreadyRegisteredError.
-  ///
-  /// In en, this message translates to:
-  /// **'This email is already registered. Please try logging in or use a different email.'**
-  String get emailAlreadyRegisteredError;
-
   /// No description provided for @otpRequestLoadingMessage.
   ///
   /// In en, this message translates to:
@@ -1071,6 +1065,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The code you entered is not valid. Please check it and try again.'**
   String get invalidOtpMessage;
+
+  /// No description provided for @logoutConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get logoutConfirmTitle;
+
+  /// No description provided for @logoutConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to sign out? You will need to sign in again to access the system.'**
+  String get logoutConfirmMessage;
+
+  /// No description provided for @logout.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get logout;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @passwordRecoveryErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Not Found'**
+  String get passwordRecoveryErrorTitle;
+
+  /// No description provided for @passwordRecoveryErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This email address is not registered in the system. Please verify and try again.'**
+  String get passwordRecoveryErrorMessage;
+
+  /// No description provided for @accept.
+  ///
+  /// In en, this message translates to:
+  /// **'Understood'**
+  String get accept;
+
+  /// No description provided for @accountBlockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Temporarily Blocked'**
+  String get accountBlockedTitle;
+
+  /// No description provided for @accountBlockedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been temporarily blocked for security reasons. Please try again after 2 hours or contact the administrator if you need immediate assistance.'**
+  String get accountBlockedMessage;
+
+  /// No description provided for @invalidCredentialsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Credentials'**
+  String get invalidCredentialsTitle;
+
+  /// No description provided for @invalidCredentialsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect username or password. Please verify your information and try again.'**
+  String get invalidCredentialsMessage;
+
+  /// No description provided for @userAlreadyExistsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'User Already Exists'**
+  String get userAlreadyExistsTitle;
+
+  /// No description provided for @emailAlreadyRegisteredError.
+  ///
+  /// In en, this message translates to:
+  /// **'User already exists, please sign in.'**
+  String get emailAlreadyRegisteredError;
+
+  /// No description provided for @passwordMismatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords Don\'t Match'**
+  String get passwordMismatchTitle;
+
+  /// No description provided for @passwordMismatchMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The passwords entered do not match. Please verify and try again.'**
+  String get passwordMismatchMessage;
+
+  /// No description provided for @registrationErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration Error'**
+  String get registrationErrorTitle;
+
+  /// No description provided for @registrationErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not complete the registration. Please try again.'**
+  String get registrationErrorMessage;
+
+  /// No description provided for @otpVerificationErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect Code'**
+  String get otpVerificationErrorTitle;
+
+  /// No description provided for @autoLoginFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Login Failed'**
+  String get autoLoginFailedTitle;
+
+  /// No description provided for @formValidationErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Incomplete Form'**
+  String get formValidationErrorTitle;
+
+  /// No description provided for @googleSignInCancelledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration Cancelled'**
+  String get googleSignInCancelledTitle;
+
+  /// No description provided for @passwordChangeSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Password Updated'**
+  String get passwordChangeSuccessTitle;
+
+  /// No description provided for @emailNotProvidedErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Email Required'**
+  String get emailNotProvidedErrorTitle;
+
+  /// No description provided for @otpVerificationSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Code Verified'**
+  String get otpVerificationSuccessTitle;
+
+  /// No description provided for @operationErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get operationErrorTitle;
+
+  /// No description provided for @authLoginErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication Error'**
+  String get authLoginErrorTitle;
+
+  /// No description provided for @googleLoginErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Error'**
+  String get googleLoginErrorTitle;
+
+  /// No description provided for @loginSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome!'**
+  String get loginSuccessTitle;
+
+  /// No description provided for @loginSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You have successfully signed in. Redirecting to the system...'**
+  String get loginSuccessMessage;
+
+  /// No description provided for @loginSuccessGoogleMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in successful. Accessing the system...'**
+  String get loginSuccessGoogleMessage;
+
+  /// No description provided for @returnToLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Going Back'**
+  String get returnToLoginTitle;
+
+  /// No description provided for @returnToLoginMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Returning to the login screen.'**
+  String get returnToLoginMessage;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure? This action is irreversible and all your data will be permanently deleted.'**
+  String get deleteAccountMessage;
+
+  /// No description provided for @deleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, Delete'**
+  String get deleteConfirm;
+
+  /// No description provided for @accountDeletedSuccessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Deleted'**
+  String get accountDeletedSuccessTitle;
+
+  /// No description provided for @userIdNotAvailableError.
+  ///
+  /// In en, this message translates to:
+  /// **'User ID not available to delete the account.'**
+  String get userIdNotAvailableError;
 }
 
 class _AppLocalizationsDelegate

@@ -21,7 +21,7 @@ class DocumentUploaderUniversal extends StatelessWidget {
     super.key,
     this.onFilesChanged,
     this.allowedExtensions = const ['pdf', 'jpg', 'jpeg', 'png'],
-    this.maxFileSizeMB = 5,
+    this.maxFileSizeMB = 2,
     this.maxFiles = 1,
     this.allowMultiple = false,
   });

@@ -262,7 +262,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
           return Scaffold(
             key: _scaffoldKey,
-            drawer: useDrawerLayout ? const SidebarWidget() : null,
+            drawer:
+                useDrawerLayout
+                    ? const SidebarWidget(
+                      isDrawer: true,
+                    ) // ✅ Pasar isDrawer: true
+                    : null,
             drawerScrimColor: Colors.black.withOpacity(0.5),
             onDrawerChanged: (isOpened) {
               debugPrint(
@@ -291,7 +296,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SidebarWidget(),
+        const SidebarWidget(
+          isDrawer: false,
+        ), // ✅ Explícitamente isDrawer: false para web
         Expanded(
           child: Column(
             children: [

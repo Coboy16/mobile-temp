@@ -43,11 +43,10 @@ class RequestScreen extends StatelessWidget {
                         ? _headerWidgetMobile(context, localizations, theme)
                         : _buildHeader(context, localizations, theme),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: isMobilePlatform ? 10 : 24),
 
               // 2. Barra de Filtros/Búsqueda
-              isMobilePlatform ? FilterBarMobile() : FilterBarMobile(),
-
+              isMobilePlatform ? FilterBarMobile() : FilterBar(),
               SizedBox(height: 20),
 
               // 3. Tarjetas de Resumen
